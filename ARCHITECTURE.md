@@ -42,9 +42,9 @@ flowchart LR
     API --> DB
     AUTH --> DB
     AUTH -.SSO.-> GOOG
-    CRON -->|poll semanal| SEN
+    CRON -->|poll diario| SEN
     SEN -.fallback.-> BCN
-    CRON -->|sync semanal| LOBBY
+    CRON -->|sync diario| LOBBY
     CRON --> DB
     CRON -.alertas.-> SLACK
     API -.chat agentes.-> OAI
@@ -74,7 +74,7 @@ sequenceDiagram
 
     U->>P: Agrega boletín (ej 15322-05)
     P->>DB: INSERT legal_projects
-    Note over P,S: cada lunes (Vercel cron) o manual
+    Note over P,S: cada 6h (auto-update) / diario (Vercel cron) / manual
     P->>S: fetchProjectStatus(boletín)
     S-->>P: etapa, urgencia, último trámite
     P->>DB: INSERT project_snapshot + diff vs anterior
@@ -87,13 +87,13 @@ sequenceDiagram
 - Scraper: `lib/legal/congress-scraper.ts` (Senado primero, BCN como fallback; si ambos fallan **lanza error** — nunca guarda un snapshot vacío).
 - Diff: `lib/legal/diff-engine.ts` compara snapshot nuevo vs anterior campo a campo.
 - Notificaciones: `lib/legal/slack-notifier.ts`.
-- Entradas: cron `/api/cron/legal-poll` (Vercel, lunes), `/api/legal/poll` (manual con API key), botón "Actualizar" por proyecto (`/api/legal/projects/[id]/refresh`).
+- Entradas: auto-updater integrado (`instrumentation.ts` → `lib/legal/auto-updater.ts`, cada `AUTO_UPDATE_INTERVAL_HOURS` horas en local/self-hosted), cron `/api/cron/legal-poll` (Vercel, diario), `/api/legal/poll` (manual con API key), botón "Actualizar" por proyecto (`/api/legal/projects/[id]/refresh`).
 
 ### 2. Sincronización de lobby
 
 - `lib/legal/leylobby-service.ts`: API oficial (requiere `LEYLOBBY_API_KEY` + códigos de institución).
 - `lib/legal/infolobby-service.ts`: feed público de InfoLobby (fallback sin key).
-- Entradas: cron `/api/cron/lobby-sync` (lunes) o `bun run scripts/sync-lobby.ts`.
+- Entradas: auto-updater integrado (mismo ciclo que el poll), cron `/api/cron/lobby-sync` (Vercel, diario), botón de sincronizar en la pestaña Lobby, o `bun run scripts/sync-lobby.ts`.
 - Si una audiencia nueva involucra instituciones clave (CMF, Banco Central, etc.), se notifica a Slack.
 - El cruce lobby ↔ proyectos (`/api/legal/lobby/crossref`) busca menciones de boletines y materias comunes.
 
@@ -112,7 +112,7 @@ pages/
   legal/changes.tsx      ← timeline de cambios detectados
   api/legal/projects/…   ← CRUD + refresh + chat
   api/legal/lobby/…      ← búsqueda, analytics, crossref, sync, chat
-  api/cron/…             ← jobs semanales (Vercel cron, ver vercel.json)
+  api/cron/…             ← jobs diarios (Vercel cron, ver vercel.json)
   api/auth/[...all].ts   ← BetterAuth (login, SSO Google)
 components/legal/        ← componentes del dashboard
 lib/legal/               ← scrapers, diff, notificaciones, servicios de lobby
@@ -132,7 +132,7 @@ El repo incluye `CLAUDE.md` / `AGENTS.md` con las convenciones del proyecto, as�
 1. **Levantar**: pídele al agente *"levanta el proyecto"* — va a correr `docker compose up -d`, `./scripts/setup.sh` (crea `.env` con secreto generado, instala deps, migra) y `bun run dev`.
 2. **Crear tu usuario**: *"créame un usuario admin@miempresa.com"* → `bun run scripts/create-user.ts admin@miempresa.com 'clave' 'Nombre'`.
 3. **Cargar proyectos**: *"agrega los boletines 15322-05 y 16821-19 al tracker con prioridad alta"* — el agente puede insertarlos vía la página `/legal/projects/new`, la API, o un seed. También puedes pedirle *"busca en el Senado proyectos sobre protección de datos y agrégalos"* (usa `scripts/bulk-sync.ts` + el buscador del cache).
-4. **Seguimiento**: el cron semanal hace el resto; localmente puedes forzarlo con el botón "Actualizar" del dashboard o `curl -X POST /api/legal/poll -H "x-api-key: …"`.
+4. **Seguimiento**: la actualización automática hace el resto (cada 6h con la app corriendo; diaria en Vercel); puedes forzarla con `curl -X POST /api/legal/poll -H "x-api-key: …"`.
 5. **Lobby**: *"sincroniza las audiencias de lobby"* → `bun run scripts/sync-lobby.ts`.
 
 ### Opción B: manual
@@ -149,4 +149,4 @@ Desde el portal: pestaña **Proyectos** para ver el radar y agregar boletines nu
 
 ### Producción (Vercel)
 
-El deploy en Vercel activa los crons de `vercel.json` (poll de proyectos y sync de lobby, cada lunes). Configura las env vars y aplica migraciones contra tu Postgres productivo; guía completa en el README.
+El deploy en Vercel activa los crons de `vercel.json` (poll de proyectos y sync de lobby, diarios); para más frecuencia está el workflow `.github/workflows/auto-update.yml` (cada 6h vía GitHub Actions, requiere secrets `APP_URL` y `CRON_SECRET`). Configura las env vars y aplica migraciones contra tu Postgres productivo; guía completa en el README.

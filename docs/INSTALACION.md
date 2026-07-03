@@ -94,9 +94,16 @@ Abre <http://localhost:3000> en tu navegador e inicia sesión con el usuario que
 
 ## ¿Los datos se actualizan solos?
 
-**No. Corriendo en tu computador, la aplicación no se actualiza sola.** No hay ningún proceso en segundo plano: los datos del Senado y de lobby se refrescan **solo cuando algo lo pide**. Los botones "Actualizar" de la interfaz refrescan lo que ya está guardado en tu base de datos, **no** traen datos nuevos desde el Senado.
+**Sí — mientras la aplicación esté prendida.** La app trae un actualizador integrado: cada **6 horas** consulta al Senado por los proyectos en seguimiento y sincroniza las audiencias de lobby, sin que hagas nada. Además, al arrancarla revisa si los datos llevan mucho tiempo sin refrescarse y los pone al día a los pocos minutos.
 
-### Actualizar a mano (cuando corre en tu computador)
+Dos cosas que conviene entender:
+
+- La app solo puede actualizarse **mientras está corriendo** (Docker Desktop abierto + `bun run dev` andando). Si el computador está apagado o cerraste la terminal, no pasa nada hasta que la vuelvas a abrir — y al abrirla, se pone al día sola.
+- Puedes cambiar la frecuencia editando `AUTO_UPDATE_INTERVAL_HOURS` en el archivo `.env` (número de horas; `0` la desactiva).
+
+Los botones "Actualizar" de la interfaz solo refrescan lo que ya está guardado en tu base de datos; la actualización de verdad la hace el actualizador integrado (o las opciones de abajo).
+
+### Actualizar a mano, sin esperar el ciclo
 
 Con la aplicación corriendo (`bun run dev`):
 
@@ -114,23 +121,23 @@ Con la aplicación corriendo (`bun run dev`):
   bun run scripts/bulk-sync.ts
   ```
 
-### Actualización automática (sin tocar nada)
+### Actualización 24/7 (aunque tu computador esté apagado)
 
-Para que se actualice sola necesitas que **algo llame al endpoint de actualización según un horario**. Opciones, de más simple a más artesanal:
+Para que se actualice siempre —sin depender de que alguien tenga la app abierta— hay que publicarla en un servidor. Opciones, de más simple a más artesanal:
 
-1. **Publicarla en Vercel** (recomendado). El archivo [`vercel.json`](../vercel.json) ya trae dos tareas programadas: actualización de proyectos de ley los **lunes a las 12:00 UTC** y sincronización de lobby los **lunes a las 07:00 UTC**. Puedes cambiar la frecuencia editando ese archivo (formato [cron](https://vercel.com/docs/cron-jobs)). Ver [README → Deploy](../README.md#deploy-vercel).
-2. **Un cron externo** apuntando a tu instancia: cualquier servicio de tareas programadas (cron de un servidor, GitHub Actions, cron-job.org) que haga `POST /api/legal/poll` con el header `x-api-key` (definiendo un `LEGAL_POLL_API_KEY` propio en `.env`). Requiere que la aplicación esté accesible desde internet.
-3. **Tu propio computador**: técnicamente puedes programar el comando `curl` de arriba con el programador de tareas de tu sistema, pero exige que tu computador esté **encendido y con la app corriendo** en ese momento — por eso no lo recomendamos como solución permanente.
+1. **Publicarla en Vercel** (recomendado). El archivo [`vercel.json`](../vercel.json) ya trae dos tareas programadas **diarias**: actualización de proyectos de ley a las 12:00 UTC y sincronización de lobby a las 07:00 UTC. (El plan gratuito de Vercel permite máximo una ejecución al día por tarea; con plan pagado puedes subir la frecuencia editando ese archivo, formato [cron](https://vercel.com/docs/cron-jobs).) Ver [README → Deploy](../README.md#deploy-vercel).
+2. **GitHub Actions** (gratis, complementa a Vercel). La repo incluye [`auto-update.yml`](../.github/workflows/auto-update.yml), que llama a los endpoints de actualización **cada 6 horas**. Para activarlo, en GitHub ve a **Settings → Secrets and variables → Actions** y crea dos secrets: `APP_URL` (la URL pública de tu app) y `CRON_SECRET` (el mismo valor que configuraste en la app). Sin esos secrets el workflow no hace nada.
+3. **Un cron externo** apuntando a tu instancia: cualquier servicio de tareas programadas (cron de un servidor, cron-job.org) que haga `POST /api/legal/poll` con el header `x-api-key` (definiendo un `LEGAL_POLL_API_KEY` propio en `.env`). Requiere que la aplicación esté accesible desde internet.
 
 ### ¿Y es "en vivo"?
 
-Ni siquiera en Vercel es en vivo en sentido estricto: es una **revisión programada** (semanal por defecto, configurable a diaria o cada pocas horas). Para este caso de uso es suficiente — la tramitación legislativa se mueve en días, no en segundos — y evita saturar la API pública del Senado.
+No en sentido estricto: es una **revisión periódica** (cada 6 horas local, diaria en Vercel, cada 6 horas con GitHub Actions). Para este caso de uso es suficiente — la tramitación legislativa se mueve en días, no en segundos — y evita saturar la API pública del Senado.
 
-| Escenario | ¿Se actualiza sola? | Frecuencia |
-|-----------|--------------------|------------|
-| Corriendo en tu computador (`bun run dev`) | ❌ No | Solo cuando la actualizas a mano |
-| Publicada en Vercel | ✅ Sí | Lunes por semana (configurable en `vercel.json`) |
-| Cualquier servidor + cron externo | ✅ Sí | La que definas en el cron |
+| Escenario | ¿Se actualiza sola? | Frecuencia por defecto |
+|-----------|--------------------|------------------------|
+| Corriendo en tu computador (`bun run dev`) | ✅ Sí, mientras esté prendida | Cada 6 h (`AUTO_UPDATE_INTERVAL_HOURS`) |
+| Publicada en Vercel | ✅ Sí, 24/7 | Diaria (`vercel.json`) |
+| Vercel/servidor + GitHub Actions | ✅ Sí, 24/7 | Cada 6 h (`auto-update.yml`) |
 
 ---
 
