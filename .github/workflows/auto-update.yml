@@ -1,0 +1,38 @@
+# Actualización programada desde GitHub Actions (opcional).
+#
+# Útil si la app está desplegada en el plan Hobby de Vercel (cuyos cron jobs
+# corren máximo una vez al día) o en cualquier otro hosting sin cron propio:
+# este workflow llama a los endpoints de actualización cada 6 horas.
+#
+# Para activarlo, define dos secrets en GitHub (Settings → Secrets and
+# variables → Actions):
+#   APP_URL      — URL pública de la app (ej: https://radar.tuempresa.com)
+#   CRON_SECRET  — el mismo valor de la env var CRON_SECRET de la app
+#
+# Sin esos secrets, el workflow no hace nada (termina en verde sin llamar a nadie).
+name: Actualización programada
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # cada 6 horas
+  workflow_dispatch: # permite ejecutarlo a mano desde la pestaña Actions
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Actualizar proyectos de ley y lobby
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Secrets APP_URL y/o CRON_SECRET no configurados — no hay nada que actualizar."
+            echo "Ver instrucciones en el encabezado de .github/workflows/auto-update.yml"
+            exit 0
+          fi
+          echo "Actualizando proyectos de ley…"
+          curl -fsS --max-time 290 -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/legal-poll"
+          echo
+          echo "Sincronizando audiencias de lobby…"
+          curl -fsS --max-time 290 -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/lobby-sync"

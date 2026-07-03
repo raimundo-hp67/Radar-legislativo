@@ -7,6 +7,12 @@ const envSchema = z.object({
   // Legal Tracker
   SLACK_WEBHOOK_URL: z.string().optional(),
   LEGAL_POLL_API_KEY: z.string().optional().default('change-me-in-production'),
+  // Built-in auto-updater interval (hours) for self-hosted/local runs.
+  // 0 disables it. Ignored on Vercel (cron jobs do this work there).
+  AUTO_UPDATE_INTERVAL_HOURS: z.preprocess(
+    (v) => (v === '' || v === undefined ? undefined : v),
+    z.coerce.number().min(0).default(6),
+  ),
   // Vercel Cron authentication
   CRON_SECRET: z.string().optional(),
   // Google SSO (OAuth). When both are set, "Continue with Google" is enabled.

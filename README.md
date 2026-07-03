@@ -20,6 +20,8 @@ bun run dev
 
 Abre http://localhost:3000, inicia sesión con el usuario que creaste, y listo.
 
+> 🧭 **¿Nunca has usado una terminal?** Sigue la **[guía de instalación paso a paso](./docs/INSTALACION.md)**, escrita para personas sin experiencia en código (incluye cómo instalar Bun, Docker y Git, y cómo mantener los datos actualizados).
+
 > 💡 Si usas un agente de código (Claude Code, Codex, Cursor), basta con pedirle *"levanta el proyecto y créame un usuario"* — el repo incluye `CLAUDE.md`/`AGENTS.md` con todo el contexto que necesita.
 
 ## Funcionalidades
@@ -56,6 +58,7 @@ Lo único indispensable es **Postgres** y un **secreto de sesión**. Con eso ya 
 | `SLACK_WEBHOOK_URL` | Alertas y resumen semanal en Slack | Crea un [Incoming Webhook](https://api.slack.com/messaging/webhooks) en tu workspace de Slack |
 | `OPENAI_API_KEY` | Chats de análisis con IA (Proyectos, Investigación y Lobby) | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
 | `LEYLOBBY_API_KEY` + `LEYLOBBY_INSTITUCIONES` | Fuente oficial de Ley de Lobby (en vez del feed público de InfoLobby) | Solicita una key en el [portal de Ley de Lobby](https://www.leylobby.gob.cl); en `LEYLOBBY_INSTITUCIONES` pon los códigos de institución separados por coma (ej: `AI060,AE001`) |
+| `AUTO_UPDATE_INTERVAL_HOURS` | Frecuencia (en horas) del actualizador automático integrado cuando corre local/self-hosted; default `6`, `0` desactiva | Es solo un número, no requiere key |
 | `LEGAL_POLL_API_KEY` | Protege `/api/legal/poll` (polling manual vía curl o cron externo) | Inventa un string aleatorio |
 | `CRON_SECRET` | Protege `/api/cron/*` en Vercel | Solo deploy en Vercel: defínelo en el dashboard del proyecto y Vercel lo envía automáticamente |
 | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` + `AUTH_ALLOWED_EMAIL_DOMAIN` | Login con Google (SSO) — mejora de seguridad **totalmente opcional** | Ver [Google SSO (opcional)](#google-sso-opcional) |
@@ -104,6 +107,24 @@ bun run scripts/bulk-sync.ts
 bun run scripts/sync-lobby.ts
 ```
 
+### ¿Los datos se actualizan solos?
+
+**Sí, en todos los escenarios:**
+
+- **Corriendo en tu computador**: mientras la app esté prendida (`bun run dev`), el actualizador integrado refresca proyectos de ley y audiencias de lobby cada **6 horas** (configurable con `AUTO_UPDATE_INTERVAL_HOURS` en `.env`; `0` lo desactiva). Además, al arrancar la app revisa si los datos están vencidos y los pone al día a los pocos minutos.
+- **Publicada en Vercel**: los cron jobs de `vercel.json` actualizan proyectos y lobby **una vez al día** (el máximo que permite el plan gratuito de Vercel).
+- **Más frecuencia en producción**: el workflow [`auto-update.yml`](./.github/workflows/auto-update.yml) llama a los endpoints de actualización **cada 6 horas desde GitHub Actions**; para activarlo solo define los secrets `APP_URL` y `CRON_SECRET` en la repo (Settings → Secrets and variables → Actions).
+
+Y para forzar una actualización inmediata:
+
+| Cómo actualizar a mano | Qué actualiza |
+|------------------------|---------------|
+| Botón de sincronizar en la pestaña **Lobby** | Audiencias de lobby |
+| `curl -X POST http://localhost:3000/api/legal/poll -H "x-api-key: $LEGAL_POLL_API_KEY"` | Proyectos en seguimiento (detecta cambios + alertas Slack) |
+| `bun run scripts/bulk-sync.ts` | Cache del buscador de proyectos del Senado |
+
+Detalles en la [guía de instalación → ¿Los datos se actualizan solos?](./docs/INSTALACION.md#los-datos-se-actualizan-solos).
+
 ### Verificar conexiones
 
 Con la app corriendo y sesión iniciada:
@@ -114,14 +135,29 @@ Con la app corriendo y sesión iniciada:
 
 ---
 
-## Deploy (Vercel)
+## Ponerla en vivo (Vercel, sin servidores propios)
 
-1. Importa el repo en Vercel.
-2. Configura las env vars: `DATABASE_URL` (ej: Neon/Supabase/RDS), `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` y las opcionales que quieras.
-3. Define `CRON_SECRET` para que los crons queden protegidos. `vercel.json` ya trae los dos cron jobs:
-   - `/api/cron/legal-poll` — lunes 12:00 UTC (poll de proyectos + digest a Slack)
-   - `/api/cron/lobby-sync` — lunes 07:00 UTC (sync de audiencias de lobby)
-4. Aplica las migraciones contra tu base de producción: `DATABASE_URL=... bun run db:migrate`.
+Con esto la app queda disponible 24/7 en una URL pública, actualizándose sola cada día. Todo tiene plan gratuito.
+
+1. **Base de datos**: crea un Postgres gratis en [Neon](https://neon.tech) (o [Supabase](https://supabase.com)) y copia la *connection string*. Sirve la URL con pooler — la app la detecta y se configura sola.
+2. **Vercel**: en [vercel.com/new](https://vercel.com/new) importa esta repo (rama `main`) y despliega.
+3. **Env vars** (Vercel → Settings → Environment Variables):
+   - `DATABASE_URL` — la connection string del paso 1
+   - `BETTER_AUTH_SECRET` — genera uno con `openssl rand -base64 32`
+   - `BETTER_AUTH_URL` — la URL que te asignó Vercel (ej: `https://radar-legislativo.vercel.app`)
+   - `CRON_SECRET` — un string aleatorio; protege los crons y sin él no corren
+   - las opcionales que quieras (`SLACK_WEBHOOK_URL`, `OPENAI_API_KEY`, …). Redespliega después de definirlas.
+4. **Migraciones y primer usuario** (desde tu computador, apuntando a la base productiva):
+   ```bash
+   DATABASE_URL='postgresql://...' bun run db:migrate
+   DATABASE_URL='postgresql://...' bun run scripts/create-user.ts tu@email.com 'una-clave-segura' 'Tu Nombre'
+   ```
+5. **Listo.** Los cron jobs de `vercel.json` actualizan la data a diario:
+   - `/api/cron/legal-poll` — 12:00 UTC (poll de proyectos + digest a Slack)
+   - `/api/cron/lobby-sync` — 07:00 UTC (sync de audiencias de lobby)
+6. **(Opcional) Actualización cada 6 horas**: define los secrets `APP_URL` y `CRON_SECRET` en GitHub (Settings → Secrets and variables → Actions) y el workflow [`auto-update.yml`](./.github/workflows/auto-update.yml) hará el resto.
+
+> Los endpoints de scraping declaran `maxDuration = 300` (5 min), el máximo con Fluid Compute (el default en proyectos nuevos de Vercel). Si tu proyecto es Hobby legacy sin Fluid, Vercel lo limitará a 60s en el build — suficiente salvo que sigas muchísimos proyectos.
 
 ## Seguridad
 

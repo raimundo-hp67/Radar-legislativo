@@ -3,11 +3,11 @@
   "crons": [
     {
       "path": "/api/cron/legal-poll",
-      "schedule": "0 12 * * 1"
+      "schedule": "0 12 * * *"
     },
     {
       "path": "/api/cron/lobby-sync",
-      "schedule": "0 7 * * 1"
+      "schedule": "0 7 * * *"
     }
   ]
 }
