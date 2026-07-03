@@ -12,7 +12,7 @@ SECRET=$(openssl rand -base64 32)
 cp .env.example .env
 
 # Set BETTER_AUTH_SECRET in .env
-sed -i '' "s|^BETTER_AUTH_SECRET=.*|BETTER_AUTH_SECRET=$SECRET|" .env
+sed -i.bak "s|^BETTER_AUTH_SECRET=.*|BETTER_AUTH_SECRET=$SECRET|" .env && rm -f .env.bak
 
 echo "================================================"
 echo "[SETUP] Installing dependencies..."
