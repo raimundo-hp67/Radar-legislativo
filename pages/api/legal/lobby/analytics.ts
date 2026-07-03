@@ -73,9 +73,10 @@ export default protectedHandler(async (
     ]);
 
     return res.status(200).json({
-      total: totalResult[0].value,
-      uniqueInstitutions: uniqueInstitutions[0].value,
-      uniquePeople: uniquePeople[0].value,
+      total: Number(totalResult[0].value),
+      // COUNT(DISTINCT ...) llega como string (bigint de Postgres): normalizar
+      uniqueInstitutions: Number(uniqueInstitutions[0].value),
+      uniquePeople: Number(uniquePeople[0].value),
       topInstitutions: topInstitutions.map((r) => ({
         name: r.name,
         count: r.count,

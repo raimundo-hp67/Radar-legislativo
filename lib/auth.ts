@@ -7,6 +7,12 @@ import { env } from '~/config/env';
 /** Google SSO is enabled when both OAuth credentials are configured. */
 export const isGoogleSsoEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 
+/**
+ * CLI escape hatch used by scripts/create-user.ts to provision accounts.
+ * Only honored for that process; never set it on a deployed server.
+ */
+const allowCliProvisioning = process.env.AUTH_PROVISION === '1';
+
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
@@ -15,8 +21,8 @@ export const auth = betterAuth({
     enabled: true,
     // Password-based self-signup stays off: emails are not verified, so anyone
     // could claim an allowed-domain address. Accounts are provisioned via
-    // Google SSO (verified emails) or manually.
-    disableSignUp: true,
+    // Google SSO (verified emails) or scripts/create-user.ts.
+    disableSignUp: !allowCliProvisioning,
   },
   ...(isGoogleSsoEnabled
     ? {
@@ -43,6 +49,9 @@ export const auth = betterAuth({
         // auto-provisioned on their first SSO login; everyone else is
         // rejected. When unset, all account creation is blocked (fail closed).
         before: async (user) => {
+          if (allowCliProvisioning) {
+            return;
+          }
           const domain = env.AUTH_ALLOWED_EMAIL_DOMAIN?.trim().toLowerCase();
           const email = user.email?.toLowerCase() ?? '';
           if (domain && email.endsWith(`@${domain}`)) {

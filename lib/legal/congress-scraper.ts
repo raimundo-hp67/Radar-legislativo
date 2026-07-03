@@ -22,8 +22,12 @@ export async function fetchProjectStatus(boletin: string): Promise<ScrapedData> 
     return bcnData;
   }
 
-  // Last resort
-  return createEmptyResult(boletin, sourceUrl);
+  // Both sources failed: surface the failure instead of returning an empty
+  // snapshot — storing all-null data would poison the diff history and
+  // produce false "change detected" alerts on the next poll.
+  throw new Error(
+    `No se pudo obtener el estado del boletín ${boletin}: ni el Senado ni la BCN respondieron con datos`,
+  );
 }
 
 /**
