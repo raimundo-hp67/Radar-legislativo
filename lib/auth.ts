@@ -4,8 +4,8 @@ import { APIError } from 'better-auth/api';
 import { db } from '~/db';
 import { env } from '~/config/env';
 
-// Set to true to disable all new signups
-const SIGNUPS_DISABLED = true;
+/** Google SSO is enabled when both OAuth credentials are configured. */
+export const isGoogleSsoEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
@@ -13,7 +13,21 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: 'pg' }),
   emailAndPassword: {
     enabled: true,
+    // Password-based self-signup stays off: emails are not verified, so anyone
+    // could claim an allowed-domain address. Accounts are provisioned via
+    // Google SSO (verified emails) or manually.
+    disableSignUp: true,
   },
+  ...(isGoogleSsoEnabled
+    ? {
+        socialProviders: {
+          google: {
+            clientId: env.GOOGLE_CLIENT_ID!,
+            clientSecret: env.GOOGLE_CLIENT_SECRET!,
+          },
+        },
+      }
+    : {}),
   // Throttle auth endpoints (login brute force, signup spam). In-memory store;
   // per-instance on serverless, which still blunts single-source bursts.
   rateLimit: {
@@ -24,12 +38,21 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        before: async () => {
-          if (SIGNUPS_DISABLED) {
-            throw new APIError('FORBIDDEN', {
-              message: 'Los registros están deshabilitados. Esta aplicación es de uso interno.',
-            });
+        // Runs for every new account, including first-time Google SSO logins.
+        // When AUTH_ALLOWED_EMAIL_DOMAIN is set, users of that domain are
+        // auto-provisioned on their first SSO login; everyone else is
+        // rejected. When unset, all account creation is blocked (fail closed).
+        before: async (user) => {
+          const domain = env.AUTH_ALLOWED_EMAIL_DOMAIN?.trim().toLowerCase();
+          const email = user.email?.toLowerCase() ?? '';
+          if (domain && email.endsWith(`@${domain}`)) {
+            return;
           }
+          throw new APIError('FORBIDDEN', {
+            message: domain
+              ? `Solo cuentas @${domain} pueden acceder a esta aplicación.`
+              : 'Los registros están deshabilitados. Esta aplicación es de uso interno.',
+          });
         },
       },
     },

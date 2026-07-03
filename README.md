@@ -31,6 +31,8 @@ Lo único indispensable es **Postgres** y un **secreto de sesión**. Con eso ya 
 
 | Variable | Habilita | Cómo obtenerla |
 |----------|----------|----------------|
+| `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Login con Google (SSO) | Ver [Configurar Google SSO](#configurar-google-sso) |
+| `AUTH_ALLOWED_EMAIL_DOMAIN` | Auto-registro vía SSO para un dominio (ej: `tuempresa.com`) | Es tu propio dominio de Google Workspace |
 | `SLACK_WEBHOOK_URL` | Alertas y resumen semanal en Slack | Crea un [Incoming Webhook](https://api.slack.com/messaging/webhooks) en tu workspace de Slack |
 | `OPENAI_API_KEY` | Chats de análisis con IA (Proyectos, Investigación y Lobby) | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
 | `LEYLOBBY_API_KEY` + `LEYLOBBY_INSTITUCIONES` | Fuente oficial de Ley de Lobby (en vez del feed público de InfoLobby) | Solicita una key en el [portal de Ley de Lobby](https://www.leylobby.gob.cl); en `LEYLOBBY_INSTITUCIONES` pon los códigos de institución separados por coma (ej: `AI060,AE001`) |
@@ -58,7 +60,23 @@ bun run dev
 
 Abre http://localhost:3000.
 
-> **Nota sobre cuentas:** el registro de usuarios nuevos viene deshabilitado (`SIGNUPS_DISABLED` en `lib/auth.ts`). Para crear tu primer usuario, cambia ese flag a `false`, regístrate en `/signup` con un formulario propio o crea el usuario vía la API de BetterAuth, y vuelve a activarlo.
+> **Nota sobre cuentas:** el registro con email/contraseña está deshabilitado (los emails no se verifican, así que cualquiera podría reclamar una dirección ajena). La forma soportada de crear cuentas es **Google SSO con dominio permitido** (ver abajo): configura `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `AUTH_ALLOWED_EMAIL_DOMAIN`, y cada persona de tu dominio queda registrada automáticamente en su primer login con Google.
+
+### Configurar Google SSO
+
+1. En [Google Cloud Console](https://console.cloud.google.com/apis/credentials) crea un proyecto (o usa uno existente) y ve a **APIs & Services → Credentials → Create Credentials → OAuth client ID**, tipo **Web application**.
+2. En **Authorized redirect URIs** agrega:
+   - Local: `http://localhost:3000/api/auth/callback/google`
+   - Producción: `https://tu-dominio.com/api/auth/callback/google`
+3. Copia el Client ID y Client Secret a tu `.env`:
+   ```
+   GOOGLE_CLIENT_ID=...
+   GOOGLE_CLIENT_SECRET=...
+   AUTH_ALLOWED_EMAIL_DOMAIN=tuempresa.com
+   ```
+4. Reinicia la app. En `/login` aparece **"Continuar con Google"**; cualquier usuario `@tuempresa.com` entra y su cuenta se crea sola la primera vez. Usuarios de otros dominios son rechazados.
+
+Si `AUTH_ALLOWED_EMAIL_DOMAIN` no está definido, ninguna cuenta nueva puede crearse (ni por SSO): la app queda cerrada a los usuarios ya existentes.
 
 ### Cargar datos
 
@@ -97,7 +115,7 @@ Con la app corriendo y sesión iniciada:
 
 - **Autenticación**: todos los endpoints de datos (`/api/legal/*`) exigen sesión (devuelven `401` sin ella). El único endpoint público es `/api/legal/health`, que solo expone conteos.
 - **Rate limiting**: todos los endpoints autenticados tienen límite por usuario y ruta (100 req/min por defecto). Los endpoints caros son más estrictos: chats con IA 20 req/5 min, syncs y scrapers 5 req/10 min. Los públicos se limitan por IP (`/health` 30 req/min, `/poll` 6 req/hora). Al exceder el límite se responde `429` con header `Retry-After`. El limitador es en memoria: en serverless aplica por instancia (suficiente contra ráfagas; para límites globales estrictos usa un store compartido tipo Redis).
-- **Login**: los endpoints de BetterAuth tienen su propio rate limit (20 req/min) contra fuerza bruta, y el registro de cuentas viene deshabilitado.
+- **Login**: los endpoints de BetterAuth tienen su propio rate limit (20 req/min) contra fuerza bruta. El registro con email/contraseña está deshabilitado; las cuentas se crean solo vía Google SSO (emails verificados por Google) y únicamente para el dominio configurado en `AUTH_ALLOWED_EMAIL_DOMAIN`.
 - **Crons y polling fail-closed**: en producción, `/api/cron/*` rechaza todo si `CRON_SECRET` no está configurado, y `/api/legal/poll` rechaza la API key por defecto (`change-me-in-production`). Las comparaciones de secretos son en tiempo constante.
 
 ## Fuentes de datos

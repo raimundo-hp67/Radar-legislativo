@@ -9,6 +9,13 @@ const envSchema = z.object({
   LEGAL_POLL_API_KEY: z.string().optional().default('change-me-in-production'),
   // Vercel Cron authentication
   CRON_SECRET: z.string().optional(),
+  // Google SSO (OAuth). When both are set, "Continue with Google" is enabled.
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  // When set, users with this email domain are auto-provisioned on their
+  // first Google SSO login (e.g. "example.com"). When unset, all account
+  // creation is blocked.
+  AUTH_ALLOWED_EMAIL_DOMAIN: z.string().optional(),
   // OpenAI for the lobby / projects analysis chat agents
   OPENAI_API_KEY: z.string().optional(),
   // Official Ley de Lobby API (leylobby.gob.cl). When set, used as the primary
