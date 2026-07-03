@@ -20,6 +20,8 @@ bun run dev
 
 Abre http://localhost:3000, inicia sesión con el usuario que creaste, y listo.
 
+> 🧭 **¿Nunca has usado una terminal?** Sigue la **[guía de instalación paso a paso](./docs/INSTALACION.md)**, escrita para personas sin experiencia en código (incluye cómo instalar Bun, Docker y Git, y cómo mantener los datos actualizados).
+
 > 💡 Si usas un agente de código (Claude Code, Codex, Cursor), basta con pedirle *"levanta el proyecto y créame un usuario"* — el repo incluye `CLAUDE.md`/`AGENTS.md` con todo el contexto que necesita.
 
 ## Funcionalidades
@@ -103,6 +105,19 @@ bun run scripts/bulk-sync.ts
 # Sincronizar audiencias de lobby
 bun run scripts/sync-lobby.ts
 ```
+
+### ¿Los datos se actualizan solos?
+
+Corriendo localmente (`bun run dev`), **no**: los datos se refrescan solo cuando algo lo pide. Publicada en Vercel, **sí**: los cron jobs de `vercel.json` actualizan proyectos y lobby cada lunes (frecuencia configurable).
+
+| Cómo actualizar | Qué actualiza |
+|-----------------|---------------|
+| Botón de sincronizar en la pestaña **Lobby** | Audiencias de lobby |
+| `curl -X POST http://localhost:3000/api/legal/poll -H "x-api-key: $LEGAL_POLL_API_KEY"` | Proyectos en seguimiento (detecta cambios + alertas Slack) |
+| `bun run scripts/bulk-sync.ts` | Cache del buscador de proyectos del Senado |
+| Deploy en Vercel (o cron externo a `/api/legal/poll`) | Todo lo anterior, automático y programado |
+
+Detalles y opciones en la [guía de instalación → ¿Los datos se actualizan solos?](./docs/INSTALACION.md#los-datos-se-actualizan-solos).
 
 ### Verificar conexiones
 
