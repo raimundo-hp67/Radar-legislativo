@@ -69,15 +69,15 @@ export function LobbyTab({ boletin, projectTitle }: LobbyTabProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <RefreshCw className="h-8 w-8 animate-spin text-zinc-400" />
+        <RefreshCw className="h-8 w-8 animate-spin text-stone-400" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-lg border bg-white p-6 text-center dark:border-zinc-800 dark:bg-zinc-900">
-        <p className="text-zinc-500 dark:text-zinc-400">
+      <div className="rounded-lg border bg-white p-6 text-center dark:border-stone-800 dark:bg-stone-900">
+        <p className="text-stone-500 dark:text-stone-400">
           {error instanceof Error ? error.message : 'Error al cargar datos de lobby'}
         </p>
         <Button
@@ -98,17 +98,17 @@ export function LobbyTab({ boletin, projectTitle }: LobbyTabProps) {
   return (
     <div className="space-y-4">
       {/* Header with refresh button */}
-      <div className="flex items-center justify-between rounded-lg border bg-gradient-to-r from-violet-50 to-purple-50 p-4 dark:border-zinc-800 dark:from-violet-950/30 dark:to-purple-950/30">
+      <div className="flex items-center justify-between rounded-lg border bg-gradient-to-r from-rose-50 to-purple-50 p-4 dark:border-stone-800 dark:from-rose-950/30 dark:to-purple-950/30">
         <div>
-          <h3 className="flex items-center gap-2 font-semibold text-zinc-800 dark:text-zinc-200">
-            <Briefcase className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+          <h3 className="flex items-center gap-2 font-semibold text-stone-800 dark:text-stone-200">
+            <Briefcase className="h-5 w-5 text-rose-600 dark:text-rose-400" />
             Actividad de Lobby
           </h3>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
             Audiencias relacionadas con este proyecto desde InfoLobby
           </p>
           {lastFetched && (
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-stone-500">
               Última actualización:
               {' '}
               {new Date(lastFetched).toLocaleDateString('es-CL', {
@@ -136,21 +136,21 @@ export function LobbyTab({ boletin, projectTitle }: LobbyTabProps) {
       {/* Audiencias list */}
       {audiencias.length === 0
         ? (
-            <div className="rounded-lg border bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                <Users className="h-6 w-6 text-zinc-400" />
+            <div className="rounded-lg border bg-white p-8 text-center dark:border-stone-800 dark:bg-stone-900">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800">
+                <Users className="h-6 w-6 text-stone-400" />
               </div>
-              <p className="mt-4 text-zinc-600 dark:text-zinc-400">
+              <p className="mt-4 text-stone-600 dark:text-stone-400">
                 No se encontraron audiencias de lobby automáticamente
               </p>
-              <p className="mt-1 text-sm text-zinc-500">
+              <p className="mt-1 text-sm text-stone-500">
                 Haz clic en &quot;Buscar Audiencias&quot; o busca directamente en InfoLobby:
               </p>
               <a
                 href={infoLobbySearchUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700"
+                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700"
               >
                 Buscar en InfoLobby
                 <ExternalLink className="h-4 w-4" />
@@ -171,7 +171,7 @@ export function LobbyTab({ boletin, projectTitle }: LobbyTabProps) {
           href="https://www.infolobby.cl"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+          className="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-300"
         >
           Datos provistos por InfoLobby - Consejo para la Transparencia
           <ExternalLink className="h-3 w-3" />
@@ -183,13 +183,13 @@ export function LobbyTab({ boletin, projectTitle }: LobbyTabProps) {
 
 function AudienciaCard({ audiencia }: { audiencia: LobbyAudiencia }) {
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="rounded-lg border bg-white p-4 shadow-sm transition hover:shadow-md dark:border-stone-800 dark:bg-stone-900">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           {/* Header with date and type */}
           <div className="mb-2 flex flex-wrap items-center gap-2">
             {audiencia.fecha && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+              <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-700 dark:bg-stone-800 dark:text-stone-300">
                 <Calendar className="h-3 w-3" />
                 {new Date(audiencia.fecha).toLocaleDateString('es-CL', {
                   day: 'numeric',
@@ -199,12 +199,12 @@ function AudienciaCard({ audiencia }: { audiencia: LobbyAudiencia }) {
               </span>
             )}
             {audiencia.tipoAudiencia && (
-              <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-700 dark:bg-violet-900/50 dark:text-violet-300">
+              <span className="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-medium text-rose-700 dark:bg-rose-900/50 dark:text-rose-300">
                 {audiencia.tipoAudiencia}
               </span>
             )}
             {audiencia.forma && (
-              <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+              <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900/50 dark:text-orange-300">
                 {audiencia.forma}
               </span>
             )}
@@ -215,14 +215,14 @@ function AudienciaCard({ audiencia }: { audiencia: LobbyAudiencia }) {
             {/* Sujeto Pasivo - quien recibe */}
             {audiencia.sujetoPasivo && (
               <div className="flex items-start gap-2">
-                <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
+                <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-stone-400" />
                 <div>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">Recibió a:</p>
-                  <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                  <p className="text-xs text-stone-500 dark:text-stone-400">Recibió a:</p>
+                  <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
                     {audiencia.sujetoPasivo}
                   </p>
                   {audiencia.sujetoPasivoInstitucion && (
-                    <p className="text-xs text-zinc-500">{audiencia.sujetoPasivoInstitucion}</p>
+                    <p className="text-xs text-stone-500">{audiencia.sujetoPasivoInstitucion}</p>
                   )}
                 </div>
               </div>
@@ -231,14 +231,14 @@ function AudienciaCard({ audiencia }: { audiencia: LobbyAudiencia }) {
             {/* Sujeto Activo - quien solicita */}
             {audiencia.sujetoActivo && (
               <div className="flex items-start gap-2">
-                <Users className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
+                <Users className="mt-0.5 h-4 w-4 shrink-0 text-stone-400" />
                 <div>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">Solicitó audiencia:</p>
-                  <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                  <p className="text-xs text-stone-500 dark:text-stone-400">Solicitó audiencia:</p>
+                  <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
                     {audiencia.sujetoActivo}
                   </p>
                   {audiencia.sujetoActivoTipo && (
-                    <p className="text-xs text-zinc-500">{audiencia.sujetoActivoTipo}</p>
+                    <p className="text-xs text-stone-500">{audiencia.sujetoActivoTipo}</p>
                   )}
                 </div>
               </div>
@@ -247,7 +247,7 @@ function AudienciaCard({ audiencia }: { audiencia: LobbyAudiencia }) {
 
           {/* Lugar */}
           {audiencia.lugar && (
-            <div className="mb-2 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="mb-2 flex items-center gap-2 text-sm text-stone-600 dark:text-stone-400">
               <MapPin className="h-3.5 w-3.5" />
               {audiencia.lugar}
             </div>
@@ -256,8 +256,8 @@ function AudienciaCard({ audiencia }: { audiencia: LobbyAudiencia }) {
           {/* Materia */}
           {audiencia.materia && (
             <div className="flex items-start gap-2">
-              <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-400" />
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-stone-400" />
+              <p className="text-sm text-stone-600 dark:text-stone-400">
                 {audiencia.materia}
               </p>
             </div>
@@ -270,7 +270,7 @@ function AudienciaCard({ audiencia }: { audiencia: LobbyAudiencia }) {
             href={audiencia.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 rounded-full p-2 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+            className="shrink-0 rounded-full p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-800 dark:hover:text-stone-300"
             title="Ver en InfoLobby"
           >
             <ExternalLink className="h-4 w-4" />

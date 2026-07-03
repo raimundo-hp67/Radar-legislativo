@@ -109,21 +109,21 @@ export function FilterBadges({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400">Filtros activos</span>
+      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-orange-600 dark:text-orange-400">Filtros activos</span>
       {badges.map((badge) => (
         <span
           key={badge.id}
-          className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-xs shadow-sm dark:border-indigo-800 dark:bg-indigo-950/50"
+          className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs shadow-sm dark:border-orange-800 dark:bg-orange-950/50"
         >
-          <span className="text-indigo-500 dark:text-indigo-400">
+          <span className="text-orange-500 dark:text-orange-400">
             {badge.label}
             :
           </span>
-          <span className="font-semibold text-indigo-700 dark:text-indigo-200">{badge.value}</span>
+          <span className="font-semibold text-orange-700 dark:text-orange-200">{badge.value}</span>
           <button
             type="button"
             onClick={badge.onRemove}
-            className="ml-0.5 rounded-full p-0.5 text-indigo-400 transition hover:bg-indigo-100 hover:text-indigo-700 dark:hover:bg-indigo-800 dark:hover:text-indigo-200"
+            className="ml-0.5 rounded-full p-0.5 text-orange-400 transition hover:bg-orange-100 hover:text-orange-700 dark:hover:bg-orange-800 dark:hover:text-orange-200"
             aria-label={`Eliminar filtro ${badge.label}`}
           >
             <X className="h-3 w-3" />
@@ -135,7 +135,7 @@ export function FilterBadges({
           variant="ghost"
           size="sm"
           onClick={onClearAll}
-          className="h-8 gap-1 px-3 text-xs font-medium text-indigo-600 hover:bg-indigo-50 hover:text-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950 dark:hover:text-indigo-200"
+          className="h-8 gap-1 px-3 text-xs font-medium text-orange-600 hover:bg-orange-50 hover:text-orange-800 dark:text-orange-400 dark:hover:bg-orange-950 dark:hover:text-orange-200"
         >
           <X className="h-3 w-3" />
           Limpiar todos

@@ -65,23 +65,23 @@ export default function ChangesPage(
   });
 
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
+    <div className="min-h-screen bg-stone-50 font-sans dark:bg-black">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <Link
             href="/legal"
-            className="mb-4 inline-flex items-center text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+            className="mb-4 inline-flex items-center text-sm text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             Volver al Dashboard
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-black dark:text-zinc-50">
+              <h1 className="text-3xl font-bold tracking-tight text-black dark:text-stone-50">
                 Cambios Detectados
               </h1>
-              <p className="mt-2 text-zinc-600 dark:text-zinc-400">
+              <p className="mt-2 text-stone-600 dark:text-stone-400">
                 Historial de cambios en los proyectos de ley monitoreados
               </p>
             </div>
@@ -99,13 +99,13 @@ export default function ChangesPage(
         </div>
 
         {/* Filters */}
-        <div className="mb-6 flex flex-wrap items-center gap-4 rounded-lg border bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mb-6 flex flex-wrap items-center gap-4 rounded-lg border bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-zinc-500" />
+            <Filter className="h-4 w-4 text-stone-500" />
             <span className="text-sm font-medium">Filtros:</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-600 dark:text-zinc-400">
+            <span className="text-sm text-stone-600 dark:text-stone-400">
               Relevancia:
             </span>
             <Select value={relevanceFilter} onValueChange={setRelevanceFilter}>
@@ -121,7 +121,7 @@ export default function ChangesPage(
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-600 dark:text-zinc-400">
+            <span className="text-sm text-stone-600 dark:text-stone-400">
               Período:
             </span>
             <Select value={daysFilter} onValueChange={setDaysFilter}>
@@ -140,7 +140,7 @@ export default function ChangesPage(
 
         {/* Results count */}
         {!isLoading && changes && (
-          <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mb-4 text-sm text-stone-600 dark:text-stone-400">
             {changes.length}
             {' '}
             cambio
@@ -155,7 +155,7 @@ export default function ChangesPage(
         {isLoading
           ? (
               <div className="flex items-center justify-center py-12">
-                <RefreshCw className="h-8 w-8 animate-spin text-zinc-400" />
+                <RefreshCw className="h-8 w-8 animate-spin text-stone-400" />
               </div>
             )
           : (

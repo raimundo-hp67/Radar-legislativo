@@ -14,27 +14,27 @@ export default function NewProject(
   _props: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) {
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
+    <div className="min-h-screen bg-stone-50 font-sans dark:bg-black">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <Link
             href="/legal"
-            className="mb-4 inline-flex items-center text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+            className="mb-4 inline-flex items-center text-sm text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             Volver al Dashboard
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight text-black dark:text-zinc-50">
+          <h1 className="text-3xl font-bold tracking-tight text-black dark:text-stone-50">
             Nuevo Proyecto de Ley
           </h1>
-          <p className="mt-2 text-zinc-600 dark:text-zinc-400">
+          <p className="mt-2 text-stone-600 dark:text-stone-400">
             Agrega un nuevo proyecto de ley al seguimiento legislativo
           </p>
         </div>
 
         {/* Form */}
-        <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
           <ProjectForm />
         </div>
       </div>

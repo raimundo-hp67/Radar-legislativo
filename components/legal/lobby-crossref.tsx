@@ -101,8 +101,8 @@ export function LobbyCrossRef() {
   return (
     <div className="space-y-4">
       {/* Cross-ref search */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+      <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+        <p className="mb-3 text-sm font-medium text-stone-700 dark:text-stone-300">
           Cruzar datos: ¿qué organizaciones se reúnen con qué instituciones?
         </p>
         <div className="flex flex-wrap gap-2">
@@ -116,7 +116,7 @@ export function LobbyCrossRef() {
               ))}
             </SelectContent>
           </Select>
-          <ArrowRight className="h-9 w-4 text-slate-400 self-center" />
+          <ArrowRight className="h-9 w-4 text-stone-400 self-center" />
           <Input
             value={orgSearch}
             onChange={(e) => setOrgSearch(e.target.value)}
@@ -134,19 +134,19 @@ export function LobbyCrossRef() {
       {loadingResult
         ? (
             <div className="flex items-center justify-center py-12">
-              <RefreshCw className="h-6 w-6 animate-spin text-blue-500" />
+              <RefreshCw className="h-6 w-6 animate-spin text-orange-500" />
             </div>
           )
         : result?.type === 'institution' && (
           <div className="space-y-4">
-            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 shadow-sm dark:border-blue-900 dark:bg-blue-950/20">
+            <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4 shadow-sm dark:border-orange-900 dark:bg-orange-950/20">
               <div className="flex items-center gap-2 mb-2">
-                <Building2 className="h-5 w-5 text-blue-600" />
-                <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-900 dark:text-blue-200">
+                <Building2 className="h-5 w-5 text-orange-600" />
+                <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-orange-900 dark:text-orange-200">
                   {result.institution}
                 </h3>
               </div>
-              <p className="text-3xl font-semibold tracking-tight text-blue-700 dark:text-blue-300">
+              <p className="text-3xl font-semibold tracking-tight text-orange-700 dark:text-orange-300">
                 {result.totalMeetings}
                 {' '}
                 <span className="text-sm font-normal">audiencias totales</span>
@@ -154,8 +154,8 @@ export function LobbyCrossRef() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h4 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+              <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+                <h4 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">
                   <Users className="h-3.5 w-3.5" />
                   Principales visitantes (activos)
                 </h4>
@@ -163,21 +163,21 @@ export function LobbyCrossRef() {
                   {result.topActivos.map((a, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between cursor-pointer rounded px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700"
+                      className="flex items-center justify-between cursor-pointer rounded px-2 py-1.5 hover:bg-stone-50 dark:hover:bg-stone-700"
                       onClick={() => handlePairClick(activeInst, a.name || '')}
                     >
-                      <span className="text-xs text-slate-700 dark:text-slate-300 line-clamp-1 flex-1 mr-2">
+                      <span className="text-xs text-stone-700 dark:text-stone-300 line-clamp-1 flex-1 mr-2">
                         {a.name || '—'}
                       </span>
-                      <span className="whitespace-nowrap rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                      <span className="whitespace-nowrap rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                         {a.count}
                       </span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h4 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+              <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+                <h4 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">
                   <Building2 className="h-3.5 w-3.5" />
                   Principales funcionarios (pasivos)
                 </h4>
@@ -188,18 +188,18 @@ export function LobbyCrossRef() {
                       className="flex items-center justify-between rounded px-2 py-1.5"
                     >
                       <div className="flex-1 mr-2">
-                        <span className="text-xs text-slate-700 dark:text-slate-300 line-clamp-1">
+                        <span className="text-xs text-stone-700 dark:text-stone-300 line-clamp-1">
                           {p.name || '—'}
                         </span>
                         {p.cargo && (
-                          <span className="text-xs text-slate-400 ml-1">
+                          <span className="text-xs text-stone-400 ml-1">
                             (
                             {p.cargo}
                             )
                           </span>
                         )}
                       </div>
-                      <span className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                      <span className="whitespace-nowrap rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-700 dark:text-stone-300">
                         {p.count}
                       </span>
                     </div>
@@ -230,14 +230,14 @@ export function LobbyCrossRef() {
             </p>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/60">
-                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Fecha</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Sujeto Pasivo</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Sujeto Activo</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Materia</th>
+                <tr className="border-b border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/60">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-stone-500">Fecha</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-stone-500">Sujeto Pasivo</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-stone-500">Sujeto Activo</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-stone-500">Materia</th>
                   <th className="px-3 py-2 w-8" />
                 </tr>
               </thead>
@@ -245,31 +245,31 @@ export function LobbyCrossRef() {
                 {result.audiencias.map((a) => (
                   <tr
                     key={a.id}
-                    className="border-b border-slate-100 dark:border-slate-800/70"
+                    className="border-b border-stone-100 dark:border-stone-800/70"
                   >
-                    <td className="whitespace-nowrap px-3 py-2 text-xs text-slate-600 dark:text-slate-400">
+                    <td className="whitespace-nowrap px-3 py-2 text-xs text-stone-600 dark:text-stone-400">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {a.fecha || '—'}
                       </div>
                     </td>
                     <td className="px-3 py-2">
-                      <p className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                      <p className="text-xs font-medium text-stone-800 dark:text-stone-200">
                         {a.sujetoPasivo || '—'}
                       </p>
                       {a.sujetoPasivoCargo && (
-                        <p className="text-xs text-slate-400">{a.sujetoPasivoCargo}</p>
+                        <p className="text-xs text-stone-400">{a.sujetoPasivoCargo}</p>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-xs text-slate-600 dark:text-slate-400 max-w-[200px]">
+                    <td className="px-3 py-2 text-xs text-stone-600 dark:text-stone-400 max-w-[200px]">
                       <span className="line-clamp-1">{a.sujetoActivo || '—'}</span>
                     </td>
-                    <td className="px-3 py-2 text-xs text-slate-500 max-w-[200px]">
+                    <td className="px-3 py-2 text-xs text-stone-500 max-w-[200px]">
                       <span className="line-clamp-1">{a.materia || '—'}</span>
                     </td>
                     <td className="px-3 py-2">
                       {a.sourceUrl && (
-                        <a href={a.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+                        <a href={a.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:text-orange-700">
                           <ExternalLink className="h-3.5 w-3.5" />
                         </a>
                       )}
@@ -284,28 +284,28 @@ export function LobbyCrossRef() {
 
       {/* Top pairs overview - shown by default */}
       {!activeInst && !loadingOverview && overview?.topPairs && (
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+        <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">
             Top pares institución ↔ visitante por cantidad de reuniones
           </h3>
           <div className="space-y-1">
             {overview.topPairs.map((pair, i) => (
               <div
                 key={i}
-                className="flex items-center gap-2 rounded px-2 py-2 cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-700"
+                className="flex items-center gap-2 rounded px-2 py-2 cursor-pointer transition-colors hover:bg-stone-50 dark:hover:bg-stone-700"
                 onClick={() => handlePairClick(pair.institution || '', pair.activo || '')}
               >
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                   {i + 1}
                 </span>
-                <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate flex-1">
+                <span className="text-xs font-medium text-stone-700 dark:text-stone-300 truncate flex-1">
                   {pair.institution || '—'}
                 </span>
-                <ArrowRight className="h-3 w-3 text-slate-400 flex-shrink-0" />
-                <span className="text-xs text-slate-600 dark:text-slate-400 truncate flex-1">
+                <ArrowRight className="h-3 w-3 text-stone-400 flex-shrink-0" />
+                <span className="text-xs text-stone-600 dark:text-stone-400 truncate flex-1">
                   {pair.activo || '—'}
                 </span>
-                <span className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                <span className="whitespace-nowrap rounded-full bg-stone-100 px-2 py-0.5 text-xs font-semibold text-stone-700 dark:bg-stone-700 dark:text-stone-300">
                   {pair.count}
                 </span>
               </div>
@@ -316,7 +316,7 @@ export function LobbyCrossRef() {
 
       {loadingOverview && !activeInst && (
         <div className="flex items-center justify-center py-12">
-          <RefreshCw className="h-6 w-6 animate-spin text-blue-500" />
+          <RefreshCw className="h-6 w-6 animate-spin text-orange-500" />
         </div>
       )}
     </div>

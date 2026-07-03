@@ -42,13 +42,13 @@ export function SearchBar({ onSearch, placeholder = 'Buscar proyectos...' }: Sea
   };
 
   return (
-    <div className={`relative flex items-center rounded-lg border bg-white transition-all dark:bg-zinc-800 ${
+    <div className={`relative flex items-center rounded-lg border bg-white transition-all dark:bg-stone-800 ${
       isFocused
-        ? 'border-indigo-400 ring-2 ring-indigo-100 dark:border-indigo-500 dark:ring-indigo-900'
-        : 'border-zinc-200 dark:border-zinc-700'
+        ? 'border-orange-400 ring-2 ring-orange-100 dark:border-orange-500 dark:ring-orange-900'
+        : 'border-stone-200 dark:border-stone-700'
     }`}
     >
-      <Search className="ml-3 h-4 w-4 shrink-0 text-zinc-400" />
+      <Search className="ml-3 h-4 w-4 shrink-0 text-stone-400" />
       <input
         type="text"
         value={query}
@@ -56,7 +56,7 @@ export function SearchBar({ onSearch, placeholder = 'Buscar proyectos...' }: Sea
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         placeholder={placeholder}
-        className="h-10 w-full bg-transparent px-3 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:text-zinc-100"
+        className="h-10 w-full bg-transparent px-3 text-sm text-stone-900 placeholder-stone-400 focus:outline-none dark:text-stone-100"
         aria-label="Buscar proyectos"
       />
       {query && (
@@ -65,7 +65,7 @@ export function SearchBar({ onSearch, placeholder = 'Buscar proyectos...' }: Sea
           variant="ghost"
           size="icon"
           onClick={clearSearch}
-          className="mr-1 h-7 w-7 shrink-0 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700"
+          className="mr-1 h-7 w-7 shrink-0 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700"
           aria-label="Limpiar búsqueda"
         >
           <X className="h-4 w-4" />

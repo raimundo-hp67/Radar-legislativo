@@ -276,37 +276,37 @@ export default function LegalDashboard(
   ];
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-50 font-sans dark:bg-slate-950">
+    <div className="relative min-h-screen overflow-hidden bg-stone-50 font-sans dark:bg-stone-950">
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -left-24 top-0 h-[280px] w-[280px] rounded-full bg-blue-200/35 blur-3xl dark:bg-blue-900/20" />
-        <div className="absolute right-0 top-16 h-[220px] w-[220px] rounded-full bg-sky-200/30 blur-3xl dark:bg-sky-900/20" />
+        <div className="absolute -left-24 top-0 h-[280px] w-[280px] rounded-full bg-orange-200/35 blur-3xl dark:bg-orange-900/20" />
+        <div className="absolute right-0 top-16 h-[220px] w-[220px] rounded-full bg-amber-200/30 blur-3xl dark:bg-amber-900/20" />
       </div>
 
       <div className="mx-auto max-w-[1680px] px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="relative mb-6 overflow-hidden rounded-3xl border border-slate-200/40 bg-gradient-to-r from-slate-950 to-slate-800 px-6 py-6 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.9)] dark:border-slate-700/50">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(56,189,248,0.2),transparent_45%)]" />
+        <div className="relative mb-6 overflow-hidden rounded-3xl border border-orange-100 bg-gradient-to-r from-orange-50 via-amber-50/60 to-white px-6 py-6 shadow-sm dark:border-stone-700/50 dark:from-stone-900 dark:via-stone-900 dark:to-stone-800">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(251,146,60,0.14),transparent_45%)]" />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 shadow-md ring-1 ring-white/30">
-                <Scale className="h-6 w-6 text-sky-300" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500 shadow-md shadow-orange-500/25">
+                <Scale className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-white">
+                <h1 className="text-2xl font-bold tracking-tight text-stone-800 dark:text-stone-100">
                   Radar Legislativo
                 </h1>
-                <p className="mt-0.5 text-sm text-slate-300">
+                <p className="mt-0.5 text-sm text-stone-500 dark:text-stone-400">
                   Seguimiento de proyectos de ley y audiencias de lobby en Chile.
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-slate-100 backdrop-blur">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-medium text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Radar legal activo
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-slate-100 backdrop-blur">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
                 <Clock3 className="h-3.5 w-3.5" />
                 Actualización continua
               </span>
@@ -316,8 +316,8 @@ export default function LegalDashboard(
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[272px_1fr]">
           <aside className="lg:sticky lg:top-6 lg:self-start">
-            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
-              <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-2 dark:border-slate-800 dark:bg-slate-900/40">
+            <div className="rounded-2xl border border-stone-200/80 bg-white/90 p-3 shadow-sm backdrop-blur dark:border-stone-800 dark:bg-stone-900/90">
+              <div className="rounded-xl border border-stone-200/80 bg-stone-50/70 p-2 dark:border-stone-800 dark:bg-stone-900/40">
                 <nav aria-label="Navegación principal dashboard legal">
                   {[
                     { label: null, ids: ['inicio'] },
@@ -327,9 +327,9 @@ export default function LegalDashboard(
                   ].map((group, groupIdx) => {
                     const groupItems = navigationItems.filter((n) => group.ids.includes(n.id));
                     return (
-                      <div key={groupIdx} className={cn(groupIdx > 0 && 'mt-3 border-t border-slate-200/70 pt-3 dark:border-slate-700/60')}>
+                      <div key={groupIdx} className={cn(groupIdx > 0 && 'mt-3 border-t border-stone-200/70 pt-3 dark:border-stone-700/60')}>
                         {group.label && (
-                          <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                          <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-400 dark:text-stone-500">
                             {group.label}
                           </p>
                         )}
@@ -340,8 +340,8 @@ export default function LegalDashboard(
                             const sharedClassName = cn(
                               'group relative flex w-full items-center gap-3 rounded-xl border py-2.5 pl-3 pr-2.5 text-left transition-all duration-200',
                               isActive
-                                ? 'border-blue-200 border-l-2 border-l-blue-600 bg-white text-slate-900 shadow-[0_10px_30px_-24px_rgba(37,99,235,0.95)] dark:border-blue-900 dark:border-l-blue-500 dark:bg-slate-900 dark:text-slate-100'
-                                : 'border-transparent text-slate-600 hover:border-slate-200 hover:bg-white dark:text-slate-300 dark:hover:border-slate-700 dark:hover:bg-slate-800',
+                                ? 'border-orange-200 border-l-2 border-l-orange-500 bg-white text-stone-900 shadow-[0_10px_30px_-24px_rgba(234,88,12,0.9)] dark:border-orange-900 dark:border-l-orange-500 dark:bg-stone-900 dark:text-stone-100'
+                                : 'border-transparent text-stone-600 hover:border-stone-200 hover:bg-white dark:text-stone-300 dark:hover:border-stone-700 dark:hover:bg-stone-800',
                             );
 
                             return (
@@ -355,23 +355,23 @@ export default function LegalDashboard(
                                   className={cn(
                                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
                                     isActive
-                                      ? 'bg-blue-600 text-white'
-                                      : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-slate-700',
+                                      ? 'bg-orange-600 text-white'
+                                      : 'bg-stone-100 text-stone-600 group-hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:group-hover:bg-stone-700',
                                   )}
                                 >
                                   <Icon className="h-4 w-4" />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <p className="truncate text-sm font-medium">{item.title}</p>
-                                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">{item.description}</p>
+                                  <p className="truncate text-xs text-stone-500 dark:text-stone-400">{item.description}</p>
                                 </div>
                                 {item.badge && (
                                   <span
                                     className={cn(
                                       'shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold',
                                       isActive
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100',
+                                        ? 'bg-orange-600 text-white'
+                                        : 'bg-stone-100 text-stone-700 dark:bg-stone-700 dark:text-stone-100',
                                     )}
                                   >
                                     {item.badge}
@@ -392,22 +392,22 @@ export default function LegalDashboard(
           <section className="min-w-0 space-y-4">
             {activeTab === 'inicio' && (
               <div className="space-y-4">
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="max-w-2xl">
-                      <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                      <h2 className="text-2xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
                         Centro de operaciones legal
                       </h2>
-                      <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-400">
+                      <p className="mt-1.5 text-sm text-stone-600 dark:text-stone-400">
                         Vista rápida del estado de Proyectos, Lobby e Investigación.
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200">
                           {projects?.length ?? 0}
                           {' '}
                           proyectos en seguimiento
                         </span>
-                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200">
                           {lobbyAnalytics?.total ?? 0}
                           {' '}
                           audiencias de lobby registradas
@@ -417,7 +417,7 @@ export default function LegalDashboard(
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                      className="border-stone-300 bg-white hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800"
                       onClick={() => {
                         queryClient.invalidateQueries({ queryKey: ['legal-projects'] });
                         queryClient.invalidateQueries({ queryKey: ['lobby-analytics'] });
@@ -448,8 +448,8 @@ export default function LegalDashboard(
                   />
                 </div>
 
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                <div className="rounded-2xl border border-stone-200/80 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">
                     Atajos operativos
                   </p>
 
@@ -464,14 +464,14 @@ export default function LegalDashboard(
 
             {activeTab === 'proyectos' && (
               <div className="space-y-4">
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="rounded-2xl border border-stone-200/80 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
-                        <FileText className="h-5 w-5 text-blue-600" />
+                      <h2 className="flex items-center gap-2 text-lg font-semibold text-stone-900 dark:text-stone-100">
+                        <FileText className="h-5 w-5 text-orange-600" />
                         Radar Legislativo
                       </h2>
-                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
                         Seguimiento integral de proyectos de ley, prioridad, estado y cambios relevantes.
                       </p>
                     </div>
@@ -514,14 +514,14 @@ export default function LegalDashboard(
                   />
                 </div>
 
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
                   <QuickFilters
                     activeFilter={quickFilter}
                     onChange={handleQuickFilterChangeWithReset}
                     counts={quickFilterCounts}
                   />
 
-                  <div className="my-3 h-px bg-slate-200 dark:bg-slate-800" />
+                  <div className="my-3 h-px bg-stone-200 dark:bg-stone-800" />
 
                   <div className="flex flex-wrap items-center gap-3">
                     <div className="min-w-[200px] max-w-[280px] flex-1">
@@ -530,10 +530,10 @@ export default function LegalDashboard(
                         placeholder="Buscar..."
                       />
                     </div>
-                    <div className="hidden h-6 w-px bg-slate-200 dark:bg-slate-700 sm:block" />
+                    <div className="hidden h-6 w-px bg-stone-200 dark:bg-stone-700 sm:block" />
                     <ViewSelector value={viewMode} onChange={setViewMode} />
                     <Select value={relevanceFilter} onValueChange={handleRelevanceFilterChange}>
-                      <SelectTrigger className="h-8 w-[90px] border-slate-200 bg-slate-50 text-xs dark:border-slate-700 dark:bg-slate-800">
+                      <SelectTrigger className="h-8 w-[90px] border-stone-200 bg-stone-50 text-xs dark:border-stone-700 dark:bg-stone-800">
                         <SelectValue placeholder="Prioridad" />
                       </SelectTrigger>
                       <SelectContent>
@@ -544,7 +544,7 @@ export default function LegalDashboard(
                       </SelectContent>
                     </Select>
                     <Select value={camaraFilter} onValueChange={handleCamaraFilterChange}>
-                      <SelectTrigger className="h-8 w-[100px] border-slate-200 bg-slate-50 text-xs dark:border-slate-700 dark:bg-slate-800">
+                      <SelectTrigger className="h-8 w-[100px] border-stone-200 bg-stone-50 text-xs dark:border-stone-700 dark:bg-stone-800">
                         <SelectValue placeholder="Cámara" />
                       </SelectTrigger>
                       <SelectContent>
@@ -557,7 +557,7 @@ export default function LegalDashboard(
                 </div>
 
                 {(hasActiveFilters || (filteredProjects && filteredProjects.length !== projects?.length)) && (
-                  <div className="flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950/30 sm:flex-row sm:items-center sm:justify-between">
                     <FilterBadges
                       relevanceFilter={relevanceFilter}
                       camaraFilter={camaraFilter}
@@ -571,7 +571,7 @@ export default function LegalDashboard(
                       onClearSearch={handleClearSearch}
                       onClearAll={handleClearAll}
                     />
-                    <div className="text-sm text-blue-700 dark:text-blue-300">
+                    <div className="text-sm text-orange-700 dark:text-orange-300">
                       Mostrando
                       {' '}
                       <span className="font-semibold">{filteredProjects?.length || 0}</span>
@@ -585,26 +585,26 @@ export default function LegalDashboard(
                   </div>
                 )}
 
-                <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
                   {isLoading
                     ? (
                         <div className="flex items-center justify-center py-16">
                           <div className="flex flex-col items-center gap-3">
-                            <RefreshCw className="h-10 w-10 animate-spin text-blue-600" />
-                            <span className="text-sm text-slate-500">Cargando proyectos...</span>
+                            <RefreshCw className="h-10 w-10 animate-spin text-orange-600" />
+                            <span className="text-sm text-stone-500">Cargando proyectos...</span>
                           </div>
                         </div>
                       )
                     : filteredProjects?.length === 0 && hasActiveFilters
                       ? (
                           <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                              <FileText className="h-7 w-7 text-slate-400" />
+                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800">
+                              <FileText className="h-7 w-7 text-stone-400" />
                             </div>
-                            <p className="mt-4 text-base font-medium text-slate-700 dark:text-slate-300">
+                            <p className="mt-4 text-base font-medium text-stone-700 dark:text-stone-300">
                               Sin resultados para estos filtros
                             </p>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
                               Prueba ajustando o limpiando los filtros activos
                             </p>
                             <Button
@@ -625,7 +625,7 @@ export default function LegalDashboard(
                               viewMode={viewMode}
                             />
                             {(filteredProjects?.length || 0) > 0 && (
-                              <div className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
+                              <div className="border-t border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/50">
                                 <Pagination
                                   currentPage={currentPage}
                                   totalItems={filteredProjects?.length || 0}
@@ -652,7 +652,7 @@ export default function LegalDashboard(
           <button
             type="button"
             onClick={() => setActiveTab('inicio')}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="inline-flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-600 shadow-sm transition-colors hover:bg-stone-100 hover:text-stone-900 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-200"
           >
             ← Volver al inicio
           </button>
@@ -693,39 +693,39 @@ export default function LegalDashboard(
 
 const colorVariants = {
   slate: {
-    iconBg: 'bg-slate-100 dark:bg-slate-800',
-    iconColor: 'text-slate-700 dark:text-slate-200',
-    accent: 'from-slate-300/70 to-transparent dark:from-slate-500/30',
+    iconBg: 'bg-stone-100 dark:bg-stone-800',
+    iconColor: 'text-stone-700 dark:text-stone-200',
+    accent: 'from-stone-300/70 to-transparent dark:from-stone-500/30',
   },
   rose: {
-    iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-    iconColor: 'text-blue-700 dark:text-blue-300',
-    accent: 'from-blue-300/80 to-transparent dark:from-blue-500/30',
+    iconBg: 'bg-orange-100 dark:bg-orange-900/30',
+    iconColor: 'text-orange-700 dark:text-orange-300',
+    accent: 'from-orange-300/80 to-transparent dark:from-orange-500/30',
   },
   amber: {
-    iconBg: 'bg-sky-100 dark:bg-sky-900/30',
-    iconColor: 'text-sky-700 dark:text-sky-300',
-    accent: 'from-sky-300/80 to-transparent dark:from-sky-500/30',
+    iconBg: 'bg-amber-100 dark:bg-amber-900/30',
+    iconColor: 'text-amber-700 dark:text-amber-300',
+    accent: 'from-amber-300/80 to-transparent dark:from-amber-500/30',
   },
   emerald: {
-    iconBg: 'bg-slate-900 dark:bg-slate-700',
-    iconColor: 'text-white dark:text-slate-100',
+    iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
+    iconColor: 'text-emerald-700 dark:text-emerald-300',
     accent: 'from-emerald-300/80 to-transparent dark:from-emerald-500/30',
   },
 };
 
 const shortcutColorMap = {
   blue: {
-    iconBg: 'bg-blue-50 dark:bg-blue-950/40',
-    iconColor: 'text-blue-600 dark:text-blue-400',
+    iconBg: 'bg-orange-50 dark:bg-orange-950/40',
+    iconColor: 'text-orange-600 dark:text-orange-400',
   },
   amber: {
     iconBg: 'bg-amber-50 dark:bg-amber-950/40',
     iconColor: 'text-amber-600 dark:text-amber-400',
   },
   slate: {
-    iconBg: 'bg-slate-100 dark:bg-slate-800',
-    iconColor: 'text-slate-600 dark:text-slate-300',
+    iconBg: 'bg-stone-100 dark:bg-stone-800',
+    iconColor: 'text-stone-600 dark:text-stone-300',
   },
 };
 
@@ -745,13 +745,13 @@ function ShortcutCard({
     <button
       type="button"
       onClick={onClick}
-      className="group flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white p-3 text-left transition-all duration-150 hover:scale-[1.02] hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+      className="group flex items-center gap-2.5 rounded-xl border border-stone-200/80 bg-white p-3 text-left transition-all duration-150 hover:scale-[1.02] hover:border-stone-300 hover:shadow-md dark:border-stone-800 dark:bg-stone-900 dark:hover:border-stone-700"
     >
       <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', variant.iconBg)}>
         <div className={variant.iconColor}>{icon}</div>
       </div>
-      <span className="flex-1 truncate text-xs font-medium text-slate-700 dark:text-slate-300">{label}</span>
-      <ArrowRight className="h-3 w-3 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+      <span className="flex-1 truncate text-xs font-medium text-stone-700 dark:text-stone-300">{label}</span>
+      <ArrowRight className="h-3 w-3 shrink-0 text-stone-400 transition-transform group-hover:transtone-x-0.5" />
     </button>
   );
 }
@@ -769,12 +769,12 @@ function StatCard({
 }) {
   const variant = colorVariants[color];
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
+    <div className="group relative overflow-hidden rounded-2xl border border-stone-200/80 bg-white p-5 shadow-sm transition-all duration-200 hover:-transtone-y-0.5 hover:border-stone-300 hover:shadow-lg dark:border-stone-800 dark:bg-stone-900 dark:hover:border-stone-700">
       <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r', variant.accent)} />
       <div className="flex items-start justify-between">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{title}</span>
-          <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">{value}</p>
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">{title}</span>
+          <p className="mt-2 text-3xl font-semibold tracking-tight text-stone-900 dark:text-white">{value}</p>
         </div>
         <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${variant.iconBg}`}>
           <div className={variant.iconColor}>{icon}</div>
@@ -786,20 +786,20 @@ function StatCard({
 
 const overviewCardVariants = {
   slate: {
-    iconBg: 'bg-blue-100 dark:bg-blue-900/40',
-    iconColor: 'text-blue-700 dark:text-blue-300',
-    border: 'border-slate-200/80 dark:border-slate-800',
-    leftBorder: 'border-l-blue-500',
-    gradient: 'from-white to-blue-50/30 dark:from-slate-900 dark:to-blue-950/20',
-    accent: 'from-blue-300/80 to-transparent dark:from-blue-500/30',
-    linkColor: 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200',
+    iconBg: 'bg-orange-100 dark:bg-orange-900/40',
+    iconColor: 'text-orange-700 dark:text-orange-300',
+    border: 'border-stone-200/80 dark:border-stone-800',
+    leftBorder: 'border-l-orange-500',
+    gradient: 'from-white to-orange-50/30 dark:from-stone-900 dark:to-orange-950/20',
+    accent: 'from-orange-300/80 to-transparent dark:from-orange-500/30',
+    linkColor: 'text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-200',
   },
   indigo: {
     iconBg: 'bg-amber-100 dark:bg-amber-900/40',
     iconColor: 'text-amber-700 dark:text-amber-300',
-    border: 'border-slate-200/80 dark:border-slate-800',
+    border: 'border-stone-200/80 dark:border-stone-800',
     leftBorder: 'border-l-amber-500',
-    gradient: 'from-white to-amber-50/30 dark:from-slate-900 dark:to-amber-950/20',
+    gradient: 'from-white to-amber-50/30 dark:from-stone-900 dark:to-amber-950/20',
     accent: 'from-amber-300/80 to-transparent dark:from-amber-500/30',
     linkColor: 'text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200',
   },
@@ -823,18 +823,18 @@ function OverviewModuleCard({
   const variant = overviewCardVariants[color];
 
   return (
-    <article className={cn('group relative overflow-hidden rounded-2xl border border-l-4 bg-gradient-to-br p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-900', variant.border, variant.leftBorder, variant.gradient)}>
+    <article className={cn('group relative overflow-hidden rounded-2xl border border-l-4 bg-gradient-to-br p-5 shadow-sm transition-all duration-200 hover:-transtone-y-0.5 hover:shadow-md dark:bg-stone-900', variant.border, variant.leftBorder, variant.gradient)}>
       <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r', variant.accent)} />
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{title}</p>
-          <p className="mt-1.5 text-4xl font-bold tracking-tight text-slate-900 dark:text-white">{primaryValue}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">{title}</p>
+          <p className="mt-1.5 text-4xl font-bold tracking-tight text-stone-900 dark:text-white">{primaryValue}</p>
         </div>
         <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', variant.iconBg)}>
           <div className={variant.iconColor}>{icon}</div>
         </div>
       </div>
-      <p className="mt-2.5 text-xs text-slate-500 dark:text-slate-400">{secondaryLine}</p>
+      <p className="mt-2.5 text-xs text-stone-500 dark:text-stone-400">{secondaryLine}</p>
       <button
         type="button"
         className={cn('mt-3 inline-flex items-center gap-1 text-xs font-medium transition-colors', variant.linkColor)}

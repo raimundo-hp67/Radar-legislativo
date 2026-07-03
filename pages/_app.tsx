@@ -5,6 +5,7 @@ import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 
+import '@fontsource-variable/plus-jakarta-sans';
 import '~/assets/globals.css';
 
 const ReactQueryProvider = dynamic(

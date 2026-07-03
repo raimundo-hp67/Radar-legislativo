@@ -67,7 +67,7 @@ export function ViewSelector({ value, onChange }: ViewSelectorProps) {
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-[200px]">
               <p className="font-medium">{option.label}</p>
-              <p className="text-xs text-zinc-400">{option.description}</p>
+              <p className="text-xs text-stone-400">{option.description}</p>
             </TooltipContent>
           </Tooltip>
         ))}

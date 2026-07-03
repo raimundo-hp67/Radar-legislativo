@@ -104,16 +104,16 @@ export default function ProjectDetailPage(
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
-        <RefreshCw className="h-8 w-8 animate-spin text-zinc-400" />
+      <div className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-black">
+        <RefreshCw className="h-8 w-8 animate-spin text-stone-400" />
       </div>
     );
   }
 
   if (!project) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 dark:bg-black">
-        <p className="text-zinc-600 dark:text-zinc-400">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-stone-50 dark:bg-black">
+        <p className="text-stone-600 dark:text-stone-400">
           Proyecto no encontrado
         </p>
         <Link href="/legal">
@@ -124,13 +124,13 @@ export default function ProjectDetailPage(
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
+    <div className="min-h-screen bg-stone-50 font-sans dark:bg-black">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <Link
             href="/legal"
-            className="mb-4 inline-flex items-center text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+            className="mb-4 inline-flex items-center text-sm text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             Volver al Dashboard
@@ -139,7 +139,7 @@ export default function ProjectDetailPage(
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold tracking-tight text-black dark:text-zinc-50">
+                <h1 className="text-3xl font-bold tracking-tight text-black dark:text-stone-50">
                   {project.title}
                 </h1>
                 <RelevanceBadge relevance={project.relevance} />
@@ -149,7 +149,7 @@ export default function ProjectDetailPage(
                   href={`https://www.senado.cl/appsenado/templates/tramitacion/index.php?boletin_ini=${project.boletin}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 font-mono text-sm text-blue-600 hover:underline dark:text-blue-400"
+                  className="flex items-center gap-1 font-mono text-sm text-orange-600 hover:underline dark:text-orange-400"
                 >
                   Boletín
                   {' '}
@@ -157,7 +157,7 @@ export default function ProjectDetailPage(
                   <ExternalLink className="h-3 w-3" />
                 </a>
                 {project.dateIngreso && (
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <span className="text-sm text-stone-600 dark:text-stone-400">
                     Ingreso:
                     {' '}
                     {project.dateIngreso}
@@ -170,14 +170,14 @@ export default function ProjectDetailPage(
 
         {/* Objetivo Section - Prominent */}
         {project.objetivo && (
-          <div className="mb-6 rounded-lg border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100/50 p-5 dark:border-blue-900 dark:from-blue-950/30 dark:to-blue-900/20">
+          <div className="mb-6 rounded-lg border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-orange-100/50 p-5 dark:border-orange-900 dark:from-orange-950/30 dark:to-orange-900/20">
             <div className="flex items-start gap-3">
-              <Target className="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <Target className="mt-0.5 h-5 w-5 text-orange-600 dark:text-orange-400" />
               <div>
-                <h2 className="font-semibold text-blue-800 dark:text-blue-300">
+                <h2 className="font-semibold text-orange-800 dark:text-orange-300">
                   Objetivo del Proyecto
                 </h2>
-                <p className="mt-2 text-zinc-700 dark:text-zinc-300">
+                <p className="mt-2 text-stone-700 dark:text-stone-300">
                   {project.objetivo}
                 </p>
               </div>
@@ -186,29 +186,29 @@ export default function ProjectDetailPage(
         )}
 
         {/* Current Status Card */}
-        <div className="mb-6 rounded-lg border bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mb-6 rounded-lg border bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
           <h2 className="mb-3 font-semibold">Estado Actual</h2>
           <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
             <div>
-              <span className="text-zinc-500 dark:text-zinc-400">Estado:</span>
+              <span className="text-stone-500 dark:text-stone-400">Estado:</span>
               <p className="font-medium">
                 {project.estado || project.latestSnapshot?.stage || '—'}
               </p>
             </div>
             <div>
-              <span className="text-zinc-500 dark:text-zinc-400">Cámara:</span>
+              <span className="text-stone-500 dark:text-stone-400">Cámara:</span>
               <p className="font-medium">
                 {project.camara || project.latestSnapshot?.chamberCurrent || '—'}
               </p>
             </div>
             <div>
-              <span className="text-zinc-500 dark:text-zinc-400">Urgencia:</span>
+              <span className="text-stone-500 dark:text-stone-400">Urgencia:</span>
               <p className="font-medium">
                 {project.urgencia || project.latestSnapshot?.urgency || '—'}
               </p>
             </div>
             <div>
-              <span className="text-zinc-500 dark:text-zinc-400">
+              <span className="text-stone-500 dark:text-stone-400">
                 Último trámite:
               </span>
               <p className="font-medium">
@@ -217,8 +217,8 @@ export default function ProjectDetailPage(
             </div>
           </div>
           {project.latestSnapshot?.lastAction && (
-            <div className="mt-3 border-t pt-3 dark:border-zinc-800">
-              <span className="text-sm text-zinc-500 dark:text-zinc-400">
+            <div className="mt-3 border-t pt-3 dark:border-stone-800">
+              <span className="text-sm text-stone-500 dark:text-stone-400">
                 Descripción último trámite:
               </span>
               <p className="mt-1 text-sm">
@@ -232,12 +232,12 @@ export default function ProjectDetailPage(
         <div className="mb-6 grid gap-6 md:grid-cols-2">
           {/* Autores */}
           {project.autores && (
-            <div className="rounded-lg border bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="rounded-lg border bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
               <div className="mb-3 flex items-center gap-2">
-                <Users className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
+                <Users className="h-5 w-5 text-stone-600 dark:text-stone-400" />
                 <h2 className="font-semibold">Autores / Patrocinadores</h2>
               </div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="text-sm text-stone-600 dark:text-stone-400">
                 {project.autores}
               </p>
             </div>
@@ -245,9 +245,9 @@ export default function ProjectDetailPage(
 
           {/* External Links */}
           {(project.linkProyecto || (project.linkInformes && project.linkInformes.length > 0)) && (
-            <div className="rounded-lg border bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="rounded-lg border bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
               <div className="mb-3 flex items-center gap-2">
-                <Link2 className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
+                <Link2 className="h-5 w-5 text-stone-600 dark:text-stone-400" />
                 <h2 className="font-semibold">Enlaces Externos</h2>
               </div>
               <div className="space-y-2">
@@ -256,7 +256,7 @@ export default function ProjectDetailPage(
                     href={project.linkProyecto}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-blue-600 hover:underline dark:text-blue-400"
+                    className="flex items-center gap-2 text-sm text-orange-600 hover:underline dark:text-orange-400"
                   >
                     <FileText className="h-4 w-4" />
                     Ver proyecto en Cámara
@@ -265,7 +265,7 @@ export default function ProjectDetailPage(
                 )}
                 {project.linkInformes && project.linkInformes.length > 0 && (
                   <div>
-                    <p className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="mb-1 text-xs text-stone-500 dark:text-stone-400">
                       Informes relacionados:
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -275,7 +275,7 @@ export default function ProjectDetailPage(
                           href={link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-1 text-xs text-blue-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-blue-400 dark:hover:bg-zinc-700"
+                          className="inline-flex items-center gap-1 rounded-md bg-stone-100 px-2 py-1 text-xs text-orange-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-orange-400 dark:hover:bg-stone-700"
                         >
                           Informe
                           {' '}
@@ -308,27 +308,27 @@ export default function ProjectDetailPage(
           </TabsList>
 
           <TabsContent value="info" className="mt-4">
-            <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
               <dl className="grid gap-6 md:grid-cols-2">
                 {/* Basic Info */}
                 <div className="space-y-4">
-                  <h3 className="border-b pb-2 text-sm font-semibold text-zinc-900 dark:border-zinc-700 dark:text-zinc-100">
+                  <h3 className="border-b pb-2 text-sm font-semibold text-stone-900 dark:border-stone-700 dark:text-stone-100">
                     Información Básica
                   </h3>
                   <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-sm text-stone-500 dark:text-stone-400">
                       Boletín
                     </dt>
                     <dd className="font-mono">{project.boletin}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-sm text-stone-500 dark:text-stone-400">
                       Título
                     </dt>
                     <dd>{project.title}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-sm text-stone-500 dark:text-stone-400">
                       Relevancia
                     </dt>
                     <dd>
@@ -336,7 +336,7 @@ export default function ProjectDetailPage(
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-sm text-stone-500 dark:text-stone-400">
                       Fecha de Ingreso
                     </dt>
                     <dd>{project.dateIngreso || '—'}</dd>
@@ -345,29 +345,29 @@ export default function ProjectDetailPage(
 
                 {/* Status Info */}
                 <div className="space-y-4">
-                  <h3 className="border-b pb-2 text-sm font-semibold text-zinc-900 dark:border-zinc-700 dark:text-zinc-100">
+                  <h3 className="border-b pb-2 text-sm font-semibold text-stone-900 dark:border-stone-700 dark:text-stone-100">
                     Estado y Tramitación
                   </h3>
                   <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-sm text-stone-500 dark:text-stone-400">
                       Estado
                     </dt>
                     <dd>{project.estado || '—'}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-sm text-stone-500 dark:text-stone-400">
                       Cámara Actual
                     </dt>
                     <dd>{project.camara || '—'}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-sm text-stone-500 dark:text-stone-400">
                       Urgencia
                     </dt>
                     <dd>{project.urgencia || '—'}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-sm text-stone-500 dark:text-stone-400">
                       Comisión
                     </dt>
                     <dd>{project.comision || '—'}</dd>
@@ -376,12 +376,12 @@ export default function ProjectDetailPage(
 
                 {/* Additional Info - Full Width */}
                 <div className="space-y-4 md:col-span-2">
-                  <h3 className="border-b pb-2 text-sm font-semibold text-zinc-900 dark:border-zinc-700 dark:text-zinc-100">
+                  <h3 className="border-b pb-2 text-sm font-semibold text-stone-900 dark:border-stone-700 dark:text-stone-100">
                     Información Adicional
                   </h3>
                   {project.objetivo && (
                     <div>
-                      <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                      <dt className="text-sm text-stone-500 dark:text-stone-400">
                         Objetivo / Resumen
                       </dt>
                       <dd className="whitespace-pre-wrap">{project.objetivo}</dd>
@@ -389,14 +389,14 @@ export default function ProjectDetailPage(
                   )}
                   {project.autores && (
                     <div>
-                      <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                      <dt className="text-sm text-stone-500 dark:text-stone-400">
                         Autores / Patrocinadores
                       </dt>
                       <dd>{project.autores}</dd>
                     </div>
                   )}
                   <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-sm text-stone-500 dark:text-stone-400">
                       Notas
                     </dt>
                     <dd className="whitespace-pre-wrap">
@@ -404,7 +404,7 @@ export default function ProjectDetailPage(
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-sm text-stone-500 dark:text-stone-400">
                       Agregado al seguimiento
                     </dt>
                     <dd>
@@ -425,7 +425,7 @@ export default function ProjectDetailPage(
           </TabsContent>
 
           <TabsContent value="edit" className="mt-4">
-            <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
               <ProjectForm
                 project={project as unknown as LegalProject}
                 onSuccess={handleFormSuccess}

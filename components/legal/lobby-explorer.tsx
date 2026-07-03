@@ -121,25 +121,25 @@ export function LobbyExplorer() {
     <div className="space-y-4">
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Total Audiencias</p>
-          <p className="mt-1 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">{(analytics?.total || 0).toLocaleString()}</p>
+        <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">Total Audiencias</p>
+          <p className="mt-1 text-3xl font-semibold tracking-tight text-stone-900 dark:text-white">{(analytics?.total || 0).toLocaleString()}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Instituciones</p>
-          <p className="mt-1 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">{analytics?.uniqueInstitutions || 0}</p>
+        <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">Instituciones</p>
+          <p className="mt-1 text-3xl font-semibold tracking-tight text-stone-900 dark:text-white">{analytics?.uniqueInstitutions || 0}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Personas</p>
-          <p className="mt-1 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">{(analytics?.uniquePeople || 0).toLocaleString()}</p>
+        <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">Personas</p>
+          <p className="mt-1 text-3xl font-semibold tracking-tight text-stone-900 dark:text-white">{(analytics?.uniquePeople || 0).toLocaleString()}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
         <div className="flex flex-wrap gap-2">
           <div className="relative flex-1 min-w-[180px]">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -transtone-y-1/2 text-stone-400" />
             <Input
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -200,7 +200,7 @@ export function LobbyExplorer() {
 
       {/* Results count */}
       {hasFilters && (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-stone-500">
           {totalCount.toLocaleString()}
           {' '}
           resultado
@@ -209,16 +209,16 @@ export function LobbyExplorer() {
       )}
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
         {isLoading
           ? (
               <div className="flex items-center justify-center py-12">
-                <RefreshCw className="h-6 w-6 animate-spin text-blue-500" />
+                <RefreshCw className="h-6 w-6 animate-spin text-orange-500" />
               </div>
             )
           : audiencias.length === 0
             ? (
-                <div className="py-12 text-center text-sm text-slate-500">
+                <div className="py-12 text-center text-sm text-stone-500">
                   {hasFilters ? 'No se encontraron audiencias con estos filtros.' : 'Usa los filtros para buscar audiencias.'}
                 </div>
               )
@@ -226,22 +226,22 @@ export function LobbyExplorer() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/60">
-                        <th className="px-3 py-2.5 text-left text-xs font-medium text-slate-500">Fecha</th>
-                        <th className="px-3 py-2.5 text-left text-xs font-medium text-slate-500">Sujeto Pasivo</th>
-                        <th className="px-3 py-2.5 text-left text-xs font-medium text-slate-500">Institución</th>
-                        <th className="px-3 py-2.5 text-left text-xs font-medium text-slate-500">Sujeto Activo</th>
-                        <th className="px-3 py-2.5 text-left text-xs font-medium text-slate-500">Materia</th>
-                        <th className="px-3 py-2.5 text-left text-xs font-medium text-slate-500 w-8" />
+                      <tr className="border-b border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/60">
+                        <th className="px-3 py-2.5 text-left text-xs font-medium text-stone-500">Fecha</th>
+                        <th className="px-3 py-2.5 text-left text-xs font-medium text-stone-500">Sujeto Pasivo</th>
+                        <th className="px-3 py-2.5 text-left text-xs font-medium text-stone-500">Institución</th>
+                        <th className="px-3 py-2.5 text-left text-xs font-medium text-stone-500">Sujeto Activo</th>
+                        <th className="px-3 py-2.5 text-left text-xs font-medium text-stone-500">Materia</th>
+                        <th className="px-3 py-2.5 text-left text-xs font-medium text-stone-500 w-8" />
                       </tr>
                     </thead>
                     <tbody>
                       {audiencias.map((a) => (
                         <tr
                           key={a.id}
-                          className="border-b border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800/70 dark:hover:bg-slate-800/40"
+                          className="border-b border-stone-100 transition-colors hover:bg-stone-50 dark:border-stone-800/70 dark:hover:bg-stone-800/40"
                         >
-                          <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-600 dark:text-slate-400">
+                          <td className="whitespace-nowrap px-3 py-2.5 text-xs text-stone-600 dark:text-stone-400">
                             <div className="flex items-center gap-1.5">
                               <Calendar className="h-3 w-3" />
                               {a.fecha || '—'}
@@ -249,29 +249,29 @@ export function LobbyExplorer() {
                           </td>
                           <td className="px-3 py-2.5">
                             <div className="flex items-start gap-1.5">
-                              <User className="h-3 w-3 mt-0.5 text-blue-500 flex-shrink-0" />
+                              <User className="h-3 w-3 mt-0.5 text-orange-500 flex-shrink-0" />
                               <div>
-                                <p className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                                <p className="text-xs font-medium text-stone-800 dark:text-stone-200">
                                   {a.sujetoPasivo || '—'}
                                 </p>
                                 {a.sujetoPasivoCargo && (
-                                  <p className="text-xs text-slate-400">{a.sujetoPasivoCargo}</p>
+                                  <p className="text-xs text-stone-400">{a.sujetoPasivoCargo}</p>
                                 )}
                               </div>
                             </div>
                           </td>
                           <td className="px-3 py-2.5">
                             <div className="flex items-center gap-1.5">
-                              <Building2 className="h-3 w-3 text-slate-400 flex-shrink-0" />
-                              <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1">
+                              <Building2 className="h-3 w-3 text-stone-400 flex-shrink-0" />
+                              <span className="text-xs text-stone-600 dark:text-stone-400 line-clamp-1">
                                 {a.sujetoPasivoInstitucion || '—'}
                               </span>
                             </div>
                           </td>
-                          <td className="px-3 py-2.5 text-xs text-slate-600 dark:text-slate-400 max-w-[180px]">
+                          <td className="px-3 py-2.5 text-xs text-stone-600 dark:text-stone-400 max-w-[180px]">
                             <span className="line-clamp-1">{a.sujetoActivo || '—'}</span>
                           </td>
-                          <td className="px-3 py-2.5 text-xs text-slate-500 max-w-[200px]">
+                          <td className="px-3 py-2.5 text-xs text-stone-500 max-w-[200px]">
                             <span className="line-clamp-1">{a.materia || '—'}</span>
                           </td>
                           <td className="px-3 py-2.5">
@@ -280,7 +280,7 @@ export function LobbyExplorer() {
                                 href={a.sourceUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 hover:text-blue-700"
+                                className="text-orange-500 hover:text-orange-700"
                               >
                                 <ExternalLink className="h-3.5 w-3.5" />
                               </a>
@@ -295,8 +295,8 @@ export function LobbyExplorer() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/60">
-            <span className="text-xs text-slate-500">
+          <div className="flex items-center justify-between border-t border-stone-200 bg-stone-50 px-4 py-2.5 dark:border-stone-800 dark:bg-stone-900/60">
+            <span className="text-xs text-stone-500">
               Página
               {' '}
               {page + 1}
