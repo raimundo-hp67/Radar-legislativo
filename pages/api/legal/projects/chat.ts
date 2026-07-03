@@ -407,4 +407,4 @@ export default protectedHandler(async (
       res.end();
     }
   }
-});
+}, { rateLimit: { limit: 20, windowMs: 5 * 60_000 } });

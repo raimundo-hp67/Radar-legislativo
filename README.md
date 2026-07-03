@@ -93,6 +93,13 @@ Con la app corriendo y sesión iniciada:
    - `/api/cron/lobby-sync` — lunes 07:00 UTC (sync de audiencias de lobby)
 4. Aplica las migraciones contra tu base de producción: `DATABASE_URL=... bun run db:migrate`.
 
+## Seguridad
+
+- **Autenticación**: todos los endpoints de datos (`/api/legal/*`) exigen sesión (devuelven `401` sin ella). El único endpoint público es `/api/legal/health`, que solo expone conteos.
+- **Rate limiting**: todos los endpoints autenticados tienen límite por usuario y ruta (100 req/min por defecto). Los endpoints caros son más estrictos: chats con IA 20 req/5 min, syncs y scrapers 5 req/10 min. Los públicos se limitan por IP (`/health` 30 req/min, `/poll` 6 req/hora). Al exceder el límite se responde `429` con header `Retry-After`. El limitador es en memoria: en serverless aplica por instancia (suficiente contra ráfagas; para límites globales estrictos usa un store compartido tipo Redis).
+- **Login**: los endpoints de BetterAuth tienen su propio rate limit (20 req/min) contra fuerza bruta, y el registro de cuentas viene deshabilitado.
+- **Crons y polling fail-closed**: en producción, `/api/cron/*` rechaza todo si `CRON_SECRET` no está configurado, y `/api/legal/poll` rechaza la API key por defecto (`change-me-in-production`). Las comparaciones de secretos son en tiempo constante.
+
 ## Fuentes de datos
 
 - [Senado de Chile — tramitación de proyectos](https://tramitacion.senado.cl) (API XML pública, sin key)

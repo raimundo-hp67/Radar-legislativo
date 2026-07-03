@@ -32,4 +32,4 @@ export default protectedHandler(async (req: NextApiRequest, res: NextApiResponse
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}, { rateLimit: { limit: 10, windowMs: 10 * 60_000 } });

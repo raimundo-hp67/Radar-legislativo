@@ -289,4 +289,4 @@ export default protectedHandler(async (
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}, { rateLimit: { limit: 20, windowMs: 5 * 60_000 } });

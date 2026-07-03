@@ -6,6 +6,7 @@ import { fetchProjectStatus } from '~/lib/legal/congress-scraper';
 import { diffSnapshots, hasSignificantChanges } from '~/lib/legal/diff-engine';
 import { sendWeeklyDigest, sendSlackAlert } from '~/lib/legal/slack-notifier';
 import { env } from '~/config/env';
+import { rejectUnauthorizedCron } from '~/lib/api/cron-auth';
 import type { PollResult, PollSummary, Relevance } from '~/lib/legal/types';
 
 /**
@@ -18,15 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Verify the request is from Vercel Cron
-  // In production, Vercel automatically adds the Authorization header with CRON_SECRET
-  const authHeader = req.headers.authorization;
-  if (process.env.NODE_ENV === 'production') {
-    if (!authHeader || authHeader !== `Bearer ${env.CRON_SECRET}`) {
-      console.error('Unauthorized cron request');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-  }
+  // Verify the request is from Vercel Cron (fail closed if CRON_SECRET is missing)
+  if (rejectUnauthorizedCron(req, res)) return;
 
   console.log('Starting legal poll cron job...');
 

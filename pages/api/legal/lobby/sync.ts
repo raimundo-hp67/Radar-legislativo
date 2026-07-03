@@ -94,4 +94,4 @@ export default protectedHandler(async function handler(
     stats: { total: 0, lastSync: null, recentCount: 0 },
     error: 'Method not allowed',
   });
-});
+}, { rateLimit: { limit: 5, windowMs: 10 * 60_000 } });

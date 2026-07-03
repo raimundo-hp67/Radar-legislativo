@@ -46,4 +46,4 @@ export default protectedHandler(async (req: NextApiRequest, res: NextApiResponse
     errors,
     targetsChecked: REFRESH_TARGETS.length,
   });
-});
+}, { rateLimit: { limit: 5, windowMs: 10 * 60_000 } });

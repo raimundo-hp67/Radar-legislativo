@@ -14,6 +14,13 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  // Throttle auth endpoints (login brute force, signup spam). In-memory store;
+  // per-instance on serverless, which still blunts single-source bursts.
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 20,
+  },
   databaseHooks: {
     user: {
       create: {

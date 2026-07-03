@@ -90,4 +90,4 @@ export default protectedHandler(async (req, res: NextApiResponse) => {
       message: error instanceof Error ? error.message : 'Error desconocido',
     });
   }
-});
+}, { rateLimit: { limit: 10, windowMs: 10 * 60_000 } });

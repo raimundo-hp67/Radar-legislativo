@@ -100,4 +100,4 @@ export default protectedHandler(async (req, res: NextApiResponse) => {
   }
 
   return res.status(200).json(results);
-});
+}, { rateLimit: { limit: 5, windowMs: 10 * 60_000 } });

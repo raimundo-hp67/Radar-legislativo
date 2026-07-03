@@ -4,18 +4,14 @@ import { lobbyAudiencias } from '~/db/schema';
 import { gte } from 'drizzle-orm';
 import { syncLobby } from '~/lib/legal/infolobby-service';
 import { notifyLobbyActividad } from '~/lib/legal/slack-notifier';
+import { rejectUnauthorizedCron } from '~/lib/api/cron-auth';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  // Verify cron secret for security (production only)
-  const authHeader = req.headers.authorization;
-  if (process.env.NODE_ENV === 'production') {
-    if (!authHeader || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-  }
+  // Verify the request is from Vercel Cron (fail closed if CRON_SECRET is missing)
+  if (rejectUnauthorizedCron(req, res)) return;
 
   console.log('[lobby-sync] Cron triggered at', new Date().toISOString());
 

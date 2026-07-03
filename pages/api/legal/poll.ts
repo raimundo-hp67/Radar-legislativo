@@ -7,20 +7,35 @@ import { fetchRecentChangesFromSenado } from '~/lib/legal/senado-xml-parser';
 import { diffSnapshots, hasSignificantChanges } from '~/lib/legal/diff-engine';
 import { sendSlackDigest, sendSlackAlert } from '~/lib/legal/slack-notifier';
 import { env } from '~/config/env';
+import { safeEqual } from '~/lib/api/cron-auth';
+import { applyRateLimit, getClientIp } from '~/lib/api/rate-limit';
 import type { PollResult, PollSummary, Relevance } from '~/lib/legal/types';
 
+const DEFAULT_POLL_API_KEY = 'change-me-in-production';
+
 /**
- * Poll endpoint - called by GitHub Actions weekly
- * Protected by API key in x-api-key header
+ * Manual poll endpoint - callable via curl or an external cron.
+ * Protected by API key in x-api-key header.
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Validate API key
+  // Throttle before touching auth: this endpoint triggers heavy scraping.
+  if (applyRateLimit(req, res, `ip:${getClientIp(req)}:poll`, { limit: 6, windowMs: 60 * 60_000 })) {
+    return;
+  }
+
+  // In production, refuse to run with the well-known default key (fail closed).
+  if (process.env.NODE_ENV === 'production' && env.LEGAL_POLL_API_KEY === DEFAULT_POLL_API_KEY) {
+    console.error('LEGAL_POLL_API_KEY still has its default value — rejecting poll request');
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+
+  // Validate API key (constant-time comparison)
   const apiKey = req.headers['x-api-key'];
-  if (!apiKey || apiKey !== env.LEGAL_POLL_API_KEY) {
+  if (typeof apiKey !== 'string' || !safeEqual(apiKey, env.LEGAL_POLL_API_KEY)) {
     return res.status(401).json({ error: 'Invalid API key' });
   }
 

@@ -128,4 +128,4 @@ export default protectedHandler(async (
       details: errMsg,
     });
   }
-});
+}, { rateLimit: { limit: 5, windowMs: 10 * 60_000 } });

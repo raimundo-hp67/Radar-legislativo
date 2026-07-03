@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { db } from '~/db';
 import { legalProjects, projectSnapshots } from '~/db/schema';
 import { sql } from 'drizzle-orm';
+import { applyRateLimit, getClientIp } from '~/lib/api/rate-limit';
 
 // Public health check endpoint to verify database connection and data
 export default async function handler(
@@ -10,6 +11,11 @@ export default async function handler(
 ) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Public endpoint: throttle per IP
+  if (applyRateLimit(req, res, `ip:${getClientIp(req)}:health`, { limit: 30, windowMs: 60_000 })) {
+    return;
   }
 
   try {

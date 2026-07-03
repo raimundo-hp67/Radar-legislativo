@@ -117,4 +117,4 @@ export default protectedHandler(async (req, res: NextApiResponse) => {
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}, { rateLimit: { limit: 10, windowMs: 10 * 60_000 } });
