@@ -2,6 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { runPoll } from '~/lib/legal/poll-runner';
 import { rejectUnauthorizedCron } from '~/lib/api/cron-auth';
 
+// Vercel: polling every tracked project (fetch + 500ms delay each) can take minutes
+export const maxDuration = 300;
+
 /**
  * Cron endpoint for Vercel - called automatically on the schedule in vercel.json
  * Protected by Vercel's CRON_SECRET header verification

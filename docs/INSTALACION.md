@@ -6,7 +6,7 @@ Esta guía explica cómo instalar y usar Radar Legislativo **sin saber programar
 
 Depende de tu caso. Hay dos formas de "usar" Radar Legislativo:
 
-1. **Solo quieres usar la aplicación** (ver proyectos de ley, audiencias, alertas). Si alguien de tu equipo ya la publicó en internet (por ejemplo con Vercel, ver [README → Deploy](../README.md#deploy-vercel)), **no necesitas instalar nada**: solo un navegador y el usuario y contraseña que te hayan creado. Este es el camino recomendado para equipos no técnicos.
+1. **Solo quieres usar la aplicación** (ver proyectos de ley, audiencias, alertas). Si alguien de tu equipo ya la publicó en internet (por ejemplo con Vercel, ver [README → Ponerla en vivo](../README.md#ponerla-en-vivo-vercel-sin-servidores-propios)), **no necesitas instalar nada**: solo un navegador y el usuario y contraseña que te hayan creado. Este es el camino recomendado para equipos no técnicos.
 
 2. **Quieres instalarla y correrla en tu propio computador**. Entonces sí necesitas tres programas gratuitos: **Docker Desktop**, **Git** y **Bun**. Esta guía te lleva de la mano por cada uno. Ninguno es opcional:
    - **Bun** es el "motor" que ejecuta el código de la aplicación.
@@ -125,7 +125,7 @@ Con la aplicación corriendo (`bun run dev`):
 
 Para que se actualice siempre —sin depender de que alguien tenga la app abierta— hay que publicarla en un servidor. Opciones, de más simple a más artesanal:
 
-1. **Publicarla en Vercel** (recomendado). El archivo [`vercel.json`](../vercel.json) ya trae dos tareas programadas **diarias**: actualización de proyectos de ley a las 12:00 UTC y sincronización de lobby a las 07:00 UTC. (El plan gratuito de Vercel permite máximo una ejecución al día por tarea; con plan pagado puedes subir la frecuencia editando ese archivo, formato [cron](https://vercel.com/docs/cron-jobs).) Ver [README → Deploy](../README.md#deploy-vercel).
+1. **Publicarla en Vercel** (recomendado). El archivo [`vercel.json`](../vercel.json) ya trae dos tareas programadas **diarias**: actualización de proyectos de ley a las 12:00 UTC y sincronización de lobby a las 07:00 UTC. (El plan gratuito de Vercel permite máximo una ejecución al día por tarea; con plan pagado puedes subir la frecuencia editando ese archivo, formato [cron](https://vercel.com/docs/cron-jobs).) Ver [README → Ponerla en vivo](../README.md#ponerla-en-vivo-vercel-sin-servidores-propios).
 2. **GitHub Actions** (gratis, complementa a Vercel). La repo incluye [`auto-update.yml`](../.github/workflows/auto-update.yml), que llama a los endpoints de actualización **cada 6 horas**. Para activarlo, en GitHub ve a **Settings → Secrets and variables → Actions** y crea dos secrets: `APP_URL` (la URL pública de tu app) y `CRON_SECRET` (el mismo valor que configuraste en la app). Sin esos secrets el workflow no hace nada.
 3. **Un cron externo** apuntando a tu instancia: cualquier servicio de tareas programadas (cron de un servidor, cron-job.org) que haga `POST /api/legal/poll` con el header `x-api-key` (definiendo un `LEGAL_POLL_API_KEY` propio en `.env`). Requiere que la aplicación esté accesible desde internet.
 

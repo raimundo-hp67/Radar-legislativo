@@ -25,6 +25,9 @@ interface SyncPostResponse {
 
 type SyncResponse = StatsResponse | SyncPostResponse;
 
+// Vercel: syncing months of audiencias against external APIs can take minutes
+export const maxDuration = 300;
+
 export default protectedHandler(async function handler(
   req: NextApiRequest,
   res: NextApiResponse<SyncResponse>,

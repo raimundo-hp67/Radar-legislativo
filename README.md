@@ -135,14 +135,29 @@ Con la app corriendo y sesión iniciada:
 
 ---
 
-## Deploy (Vercel)
+## Ponerla en vivo (Vercel, sin servidores propios)
 
-1. Importa el repo en Vercel.
-2. Configura las env vars: `DATABASE_URL` (ej: Neon/Supabase/RDS), `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` y las opcionales que quieras.
-3. Define `CRON_SECRET` para que los crons queden protegidos. `vercel.json` ya trae los dos cron jobs:
-   - `/api/cron/legal-poll` — lunes 12:00 UTC (poll de proyectos + digest a Slack)
-   - `/api/cron/lobby-sync` — lunes 07:00 UTC (sync de audiencias de lobby)
-4. Aplica las migraciones contra tu base de producción: `DATABASE_URL=... bun run db:migrate`.
+Con esto la app queda disponible 24/7 en una URL pública, actualizándose sola cada día. Todo tiene plan gratuito.
+
+1. **Base de datos**: crea un Postgres gratis en [Neon](https://neon.tech) (o [Supabase](https://supabase.com)) y copia la *connection string*. Sirve la URL con pooler — la app la detecta y se configura sola.
+2. **Vercel**: en [vercel.com/new](https://vercel.com/new) importa esta repo (rama `main`) y despliega.
+3. **Env vars** (Vercel → Settings → Environment Variables):
+   - `DATABASE_URL` — la connection string del paso 1
+   - `BETTER_AUTH_SECRET` — genera uno con `openssl rand -base64 32`
+   - `BETTER_AUTH_URL` — la URL que te asignó Vercel (ej: `https://radar-legislativo.vercel.app`)
+   - `CRON_SECRET` — un string aleatorio; protege los crons y sin él no corren
+   - las opcionales que quieras (`SLACK_WEBHOOK_URL`, `OPENAI_API_KEY`, …). Redespliega después de definirlas.
+4. **Migraciones y primer usuario** (desde tu computador, apuntando a la base productiva):
+   ```bash
+   DATABASE_URL='postgresql://...' bun run db:migrate
+   DATABASE_URL='postgresql://...' bun run scripts/create-user.ts tu@email.com 'una-clave-segura' 'Tu Nombre'
+   ```
+5. **Listo.** Los cron jobs de `vercel.json` actualizan la data a diario:
+   - `/api/cron/legal-poll` — 12:00 UTC (poll de proyectos + digest a Slack)
+   - `/api/cron/lobby-sync` — 07:00 UTC (sync de audiencias de lobby)
+6. **(Opcional) Actualización cada 6 horas**: define los secrets `APP_URL` y `CRON_SECRET` en GitHub (Settings → Secrets and variables → Actions) y el workflow [`auto-update.yml`](./.github/workflows/auto-update.yml) hará el resto.
+
+> Los endpoints de scraping declaran `maxDuration = 300` (5 min), el máximo con Fluid Compute (el default en proyectos nuevos de Vercel). Si tu proyecto es Hobby legacy sin Fluid, Vercel lo limitará a 60s en el build — suficiente salvo que sigas muchísimos proyectos.
 
 ## Seguridad
 

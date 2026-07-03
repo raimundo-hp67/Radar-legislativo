@@ -6,6 +6,9 @@ import { applyRateLimit, getClientIp } from '~/lib/api/rate-limit';
 
 const DEFAULT_POLL_API_KEY = 'change-me-in-production';
 
+// Vercel: polling every tracked project (fetch + 500ms delay each) can take minutes
+export const maxDuration = 300;
+
 /**
  * Manual poll endpoint - callable via curl or an external cron.
  * Protected by API key in x-api-key header.

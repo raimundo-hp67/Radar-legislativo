@@ -6,6 +6,9 @@ import { syncLobby } from '~/lib/legal/infolobby-service';
 import { notifyLobbyActividad } from '~/lib/legal/slack-notifier';
 import { rejectUnauthorizedCron } from '~/lib/api/cron-auth';
 
+// Vercel: syncing months of audiencias against external APIs can take minutes
+export const maxDuration = 300;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
