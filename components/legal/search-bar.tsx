@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 
@@ -13,14 +13,28 @@ export function SearchBar({ onSearch, placeholder = 'Buscar proyectos...' }: Sea
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
-  // Debounce search
+  // Keep the latest callback in a ref: parents often recreate onSearch on
+  // every render, and having it as an effect dependency re-fired the debounce
+  // (calling onSearch with a stale/empty query) on unrelated re-renders —
+  // e.g. resetting the table to page 1 right after changing page.
+  const onSearchRef = useRef(onSearch);
   useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
+  // Debounce search: fire only when the typed query actually changes.
+  const isFirstRun = useRef(true);
+  useEffect(() => {
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
-      onSearch(query);
+      onSearchRef.current(query);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [query, onSearch]);
+  }, [query]);
 
   const clearSearch = () => {
     setQuery('');

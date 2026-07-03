@@ -310,7 +310,9 @@ export default protectedHandler(async (
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'OPENAI_API_KEY not configured' });
+    return res.status(503).json({
+      error: 'El asistente de IA no está configurado. Agrega OPENAI_API_KEY a las variables de entorno para habilitarlo.',
+    });
   }
 
   try {

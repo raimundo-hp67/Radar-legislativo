@@ -334,9 +334,10 @@ interface VirtuosoAudiencia {
 
 /**
  * Fetch all audiencias for a given year/month from the VirtuosoLobby API.
- * Returns the raw array or an empty array on failure.
+ * Returns the raw array, or `null` when the fetch itself failed — callers
+ * must distinguish "no data for this month" ([]) from "source unreachable".
  */
-async function fetchMonthAudiencias(year: number, month: number): Promise<VirtuosoAudiencia[]> {
+async function fetchMonthAudiencias(year: number, month: number): Promise<VirtuosoAudiencia[] | null> {
   const url = `${INFOLOBBY_BASE}/VirtuosoLobby/Listado/Audiencia/1/${year}/${month}/0`;
   try {
     const response = await fetch(url, {
@@ -348,13 +349,13 @@ async function fetchMonthAudiencias(year: number, month: number): Promise<Virtuo
     });
     if (!response.ok) {
       console.warn(`[InfoLobby] HTTP ${response.status} for ${url}`);
-      return [];
+      return null;
     }
     const data = await response.json() as VirtuosoAudiencia[];
     return Array.isArray(data) ? data : [];
   } catch (error) {
     console.warn(`[InfoLobby] Failed to fetch ${url}:`, error instanceof Error ? error.message : String(error));
-    return [];
+    return null;
   }
 }
 
@@ -377,6 +378,7 @@ export async function syncLobbyFromInfoLobby(options: {
   const { months = 6, verbose = false } = options;
 
   const result: SyncLobbyResult = { inserted: 0, skipped: 0, errors: 0 };
+  let failedFetches = 0;
 
   // Build the list of (year, month) pairs going backwards from today
   const now = new Date();
@@ -392,6 +394,11 @@ export async function syncLobbyFromInfoLobby(options: {
     }
 
     const rawItems = await fetchMonthAudiencias(year, month);
+    if (rawItems === null) {
+      failedFetches += 1;
+      result.errors += 1;
+      continue;
+    }
     if (rawItems.length === 0) {
       if (verbose) console.log(`[InfoLobby]   → 0 items`);
       continue;
@@ -454,6 +461,15 @@ export async function syncLobbyFromInfoLobby(options: {
       console.error(`[InfoLobby] DB insert error for ${year}/${month}:`, error instanceof Error ? error.message : String(error));
       result.errors += rows.length;
     }
+  }
+
+  // Every single month failed to download: the source is unreachable.
+  // Reporting "0 inserted" as success here would be indistinguishable from
+  // "no new audiencias" — fail loudly instead.
+  if (failedFetches === monthsToFetch.length) {
+    throw new Error(
+      'No se pudo conectar a InfoLobby: ninguna de las consultas respondió. Revisa tu conexión o intenta más tarde.',
+    );
   }
 
   if (verbose) {

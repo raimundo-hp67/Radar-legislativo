@@ -1,6 +1,7 @@
 'use client';
 
 import type { AppProps } from 'next/app';
+import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 
@@ -22,8 +23,15 @@ const ReactQueryProvider = dynamic(
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <ReactQueryProvider>
-      <Component {...pageProps} />
-    </ReactQueryProvider>
+    <>
+      <Head>
+        <title>Radar Legislativo</title>
+        <meta name="description" content="Seguimiento de proyectos de ley y audiencias de lobby en Chile" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+      <ReactQueryProvider>
+        <Component {...pageProps} />
+      </ReactQueryProvider>
+    </>
   );
 }

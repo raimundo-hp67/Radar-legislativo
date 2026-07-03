@@ -3,6 +3,7 @@ import { protectedHandler } from '~/lib/api/protected-handler';
 import {
   searchProjects,
   searchByBoletin,
+  getSearchCacheStats,
   DEFAULT_SEARCH_KEYWORDS,
   type SearchResult,
 } from '~/lib/legal/project-search';
@@ -11,6 +12,7 @@ type SearchResponse = {
   results: SearchResult[]
   query: string
   count: number
+  cacheEmpty?: boolean
 } | {
   error: string
 };
@@ -58,10 +60,19 @@ export default protectedHandler(async (
       limit: 30,
     });
 
+    // "Sin resultados" y "la caché nunca se sincronizó" son indistinguibles
+    // para el usuario: avisar al frontend cuando la caché está vacía.
+    let cacheEmpty = false;
+    if (results.length === 0) {
+      const stats = await getSearchCacheStats();
+      cacheEmpty = stats.totalProjects === 0;
+    }
+
     return res.status(200).json({
       results,
       query: keywords.join(', '),
       count: results.length,
+      cacheEmpty,
     });
   } catch (error) {
     console.error('Search error:', error);

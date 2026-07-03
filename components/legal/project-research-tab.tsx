@@ -154,6 +154,7 @@ export function ProjectResearchTab() {
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [cacheEmpty, setCacheEmpty] = useState(false);
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -175,6 +176,7 @@ export function ProjectResearchTab() {
       const res = await fetch(`/api/legal/search?q=${encodeURIComponent(keywords)}`);
       const data = await res.json();
       setSearchResults(res.ok ? (data.results ?? []) : []);
+      setCacheEmpty(res.ok ? Boolean(data.cacheEmpty) : false);
     } catch {
       setSearchResults([]);
     } finally {
@@ -383,7 +385,21 @@ export function ProjectResearchTab() {
                   : searchResults.length === 0
                     ? (
                         <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
-                          <p className="text-xs text-slate-500">Sin resultados para esa búsqueda</p>
+                          {cacheEmpty
+                            ? (
+                                <>
+                                  <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                                    La caché de búsqueda está vacía
+                                  </p>
+                                  <p className="mt-1 max-w-xs text-xs text-slate-500">
+                                    Este buscador consulta una copia local del catálogo del Senado.
+                                    Sincronízala primero con
+                                    {' '}
+                                    <code className="rounded bg-slate-100 px-1 py-0.5 dark:bg-slate-800">bun run scripts/bulk-sync.ts</code>
+                                  </p>
+                                </>
+                              )
+                            : <p className="text-xs text-slate-500">Sin resultados para esa búsqueda</p>}
                         </div>
                       )
                     : (

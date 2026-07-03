@@ -37,7 +37,11 @@ export function LoginForm({ ssoEnabled = false }: { ssoEnabled?: boolean }) {
     const { error } = await signIn.email({ email, password });
 
     if (error) {
-      setError(error.message || 'No se pudo iniciar sesión');
+      // better-auth devuelve mensajes en inglés: traducir los comunes
+      const message = error.message === 'Invalid email or password'
+        ? 'Email o contraseña incorrectos'
+        : error.message || 'No se pudo iniciar sesión';
+      setError(message);
       setLoading(false);
     } else {
       router.push(returnTo);
