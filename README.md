@@ -7,6 +7,17 @@
 
 Seguimiento de **proyectos de ley del Congreso de Chile** y **audiencias de lobby** (Ley 20.730), con detección de cambios, alertas a Slack y agentes de análisis con IA.
 
+![Dashboard de proyectos de ley](./assets/dashboard-proyectos.png)
+
+<details>
+<summary>📸 Más capturas: resumen ejecutivo y detalle de proyecto</summary>
+
+![Resumen ejecutivo](./assets/dashboard-inicio.png)
+
+![Detalle de proyecto con historial de cambios](./assets/proyecto-detalle.png)
+
+</details>
+
 ## Empezar en 3 pasos
 
 Solo necesitas [Bun](https://bun.sh/docs/installation) y [Docker Desktop](https://docs.docker.com/get-docker/) instalados. **No se necesita ninguna API key** para partir.
