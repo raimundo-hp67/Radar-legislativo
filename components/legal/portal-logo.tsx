@@ -5,11 +5,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Scale, Pencil, X, Loader2 } from 'lucide-react';
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024; // 2 MB
-const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
+const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp'];
 
 /**
  * Logo del portal, personalizable: al pasar el mouse aparece un lápiz que
- * abre el selector de archivos; la imagen subida (PNG/JPG/WebP/SVG, máx 2 MB)
+ * abre el selector de archivos; la imagen subida (PNG/JPG/WebP, máx 2 MB)
  * reemplaza el ícono por defecto para todos los usuarios. La X lo quita.
  */
 export function PortalLogo() {
@@ -50,7 +50,7 @@ export function PortalLogo() {
   const handleFile = (file: File | undefined) => {
     if (!file) return;
     if (!ACCEPTED.includes(file.type)) {
-      setError('Formato no soportado: usa PNG, JPG, WebP o SVG.');
+      setError('Formato no soportado: usa PNG, JPG o WebP.');
       return;
     }
     if (file.size > MAX_FILE_BYTES) {
@@ -86,7 +86,7 @@ export function PortalLogo() {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={mutation.isPending}
-          title="Personaliza el portal: sube tu logo (PNG, JPG, WebP o SVG, máx 2 MB)"
+          title="Personaliza el portal: sube tu logo (PNG, JPG o WebP, máx 2 MB)"
           className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 opacity-0 shadow-sm transition-opacity hover:text-slate-800 focus-visible:opacity-100 group-hover:opacity-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-white"
         >
           {mutation.isPending

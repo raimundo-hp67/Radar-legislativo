@@ -60,11 +60,19 @@ export function rateLimit(key: string, options: RateLimitOptions): RateLimitResu
   return { allowed: true, remaining: options.limit - entry.count, retryAfter };
 }
 
-/** Best-effort client IP (behind Vercel/proxies, first x-forwarded-for hop). */
+/**
+ * Best-effort client IP. x-forwarded-for is attacker-controlled unless a
+ * trusted proxy rewrites it, so it is only honored on Vercel (which does)
+ * or when the operator sets TRUST_PROXY=1 behind their own proxy. Otherwise
+ * the socket address is used, so spoofed headers can't reset IP rate limits.
+ */
 export function getClientIp(req: NextApiRequest): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) {
-    return forwarded.split(',')[0].trim();
+  const trustProxy = Boolean(process.env.VERCEL) || process.env.TRUST_PROXY === '1';
+  if (trustProxy) {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (typeof forwarded === 'string' && forwarded.length > 0) {
+      return forwarded.split(',')[0].trim();
+    }
   }
   return req.socket.remoteAddress ?? 'unknown';
 }
