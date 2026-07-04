@@ -1,0 +1,34 @@
+# CI de calidad: lint, tipos, tests y build en cada push/PR.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Instalar dependencias
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Tipos
+        run: bun run typecheck
+
+      - name: Tests
+        run: bun test
+
+      - name: Build
+        run: bun run build
+        env:
+          # El build no toca la base de datos; solo necesita que el schema
+          # de env valide (secreto dummy exclusivo de CI).
+          BETTER_AUTH_SECRET: ci-dummy-secret-0123456789abcdef0123456789abcdef
