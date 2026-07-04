@@ -219,7 +219,25 @@ export function LobbyExplorer() {
           : audiencias.length === 0
             ? (
                 <div className="py-12 text-center text-sm text-stone-500">
-                  {hasFilters ? 'No se encontraron audiencias con estos filtros.' : 'Usa los filtros para buscar audiencias.'}
+                  {(analytics?.total ?? 0) === 0
+                    ? (
+                        <>
+                          <p className="font-medium text-stone-700 dark:text-stone-300">Aún no hay audiencias en la base de datos.</p>
+                          <p className="mt-1">
+                            Pulsa el botón
+                            {' '}
+                            <span className="font-semibold">&quot;Sincronizar Lobby&quot;</span>
+                            {' '}
+                            (arriba) para traerlas, o corre
+                            {' '}
+                            <code className="rounded bg-stone-100 px-1 dark:bg-stone-800">bun run scripts/sync-lobby.ts</code>
+                            .
+                          </p>
+                        </>
+                      )
+                    : hasFilters
+                      ? 'No se encontraron audiencias con estos filtros.'
+                      : 'Usa los filtros para buscar audiencias.'}
                 </div>
               )
             : (

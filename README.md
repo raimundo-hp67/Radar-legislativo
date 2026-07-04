@@ -1,6 +1,22 @@
 # Radar Legislativo
 
+[![CI](https://github.com/raimundo-hp67/Radar-legislativo/actions/workflows/ci.yml/badge.svg)](https://github.com/raimundo-hp67/Radar-legislativo/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black)
+![Bun](https://img.shields.io/badge/Bun-runtime-f9f1e1)
+
 Seguimiento de **proyectos de ley del Congreso de Chile** y **audiencias de lobby** (Ley 20.730), con detección de cambios, alertas a Slack y agentes de análisis con IA.
+
+![Dashboard de proyectos de ley](./assets/dashboard-proyectos.png)
+
+<details>
+<summary>📸 Más capturas: resumen ejecutivo y detalle de proyecto</summary>
+
+![Resumen ejecutivo](./assets/dashboard-inicio.png)
+
+![Detalle de proyecto con historial de cambios](./assets/proyecto-detalle.png)
+
+</details>
 
 ## Empezar en 3 pasos
 
@@ -27,9 +43,25 @@ Abre http://localhost:3000, inicia sesión con el usuario que creaste, y listo.
 ## Funcionalidades
 
 - **Radar legislativo**: seguimiento de proyectos de ley por boletín, con estado, etapa, urgencia, comisión y detección automática de cambios (snapshots + diff).
-- **Lobby**: sincronización de audiencias de lobby desde la API oficial de [Ley de Lobby](https://www.leylobby.gob.cl) (o el feed público de InfoLobby como fallback), explorador, analytics y cruce con proyectos de ley.
-- **Alertas**: notificaciones a Slack ante cambios en proyectos de alta prioridad y nuevas audiencias en instituciones clave, más un resumen semanal.
+- **Lobby**: sincronización de audiencias de lobby desde la API oficial de [Ley de Lobby](https://www.leylobby.gob.cl) (o el feed público de InfoLobby como fallback), con explorador, analytics y cruces institución ↔ organización/persona ("¿quién se reúne con quién?").
+- **Alertas**: notificaciones a Slack ante cambios en proyectos de alta prioridad y nuevas audiencias en las instituciones que tú vigiles, más un resumen periódico.
 - **Investigación**: agentes de chat (OpenAI) para analizar proyectos y audiencias en lenguaje natural.
+
+📖 ¿Boletín? ¿Relevancia HIGH? ¿Snapshot? → **[Glosario](./docs/GLOSARIO.md)** con cada término y su efecto en la herramienta.
+
+## Adaptar el radar a tu tema
+
+El proyecto se distribuye configurado para **regulación financiera/fintech como ejemplo**, pero sirve para cualquier área (salud, minería, educación, medio ambiente…). Todo lo temático vive en **un solo archivo**: [`config/radar.config.ts`](./config/radar.config.ts):
+
+| Qué defines ahí | Controla |
+|-----------------|----------|
+| `searchKeywords` | Keywords por defecto del buscador de proyectos |
+| `lobbyWatchKeywords` | Qué instituciones disparan alertas de lobby a Slack |
+| `cacheSeedBoletines` | Boletines del refresco rápido del cache |
+| `lobbySearchTargets` | Búsquedas temáticas de audiencias |
+| `suggestedQuestions` / `quickKeywords` / `lobbySuggestedQuestions` | Preguntas y chips sugeridos en los chats de IA |
+
+Edita las listas, reinicia la app, y el radar es tuyo. Los proyectos de ley que sigues los eliges tú siempre (por boletín); esta config solo define defaults y alertas.
 
 ## Stack
 
@@ -65,6 +97,19 @@ Lo único indispensable es **Postgres** y un **secreto de sesión**. Con eso ya 
 
 Si una variable opcional no está configurada, la funcionalidad asociada simplemente se desactiva (la app avisa, no falla).
 
+### Fuente oficial de Ley de Lobby, paso a paso
+
+Sin key, el módulo de lobby ya funciona con el feed público de InfoLobby. Si quieres la fuente oficial:
+
+1. **Pide la key**: en [leylobby.gob.cl](https://www.leylobby.gob.cl) → sección **API** (menú inferior) hay un formulario de solicitud de acceso; la key llega por email (los tiempos dependen del servicio).
+2. **Encuentra los códigos de institución**: cada institución pública tiene un código (ej: `AI060`). El catálogo completo se consulta en la propia API una vez que tienes key: `https://www.leylobby.gob.cl/api/v1/instituciones` (con header `X-Api-Key`). Los prefijos indican el tipo: `AI` organismos autónomos e instituciones, `AE` ministerios/administración del Estado, etc.
+3. **Configura `.env`**:
+   ```
+   LEYLOBBY_API_KEY=tu-key
+   LEYLOBBY_INSTITUCIONES=AI060,AE001
+   ```
+   Pon las instituciones que te interese vigilar (separadas por coma) y reinicia la app. Los syncs siguientes usarán la fuente oficial; si algo falla, la app vuelve sola al feed público.
+
 ---
 
 ## Gestión de usuarios
@@ -81,31 +126,39 @@ bun run scripts/create-user.ts colega@email.com 'una-clave-segura' 'Nombre Coleg
 
 Si además quieres que la gente de tu organización entre con su cuenta de Google —sin contraseñas y con auto-registro para tu dominio— puedes activar SSO. **No es un requisito**: si no tienes permisos para crear credenciales OAuth en tu Google Workspace, simplemente ignora esta sección y usa el script de usuarios.
 
-1. En [Google Cloud Console](https://console.cloud.google.com/apis/credentials) crea un proyecto y ve a **APIs & Services → Credentials → Create Credentials → OAuth client ID**, tipo **Web application**.
-2. En **Authorized redirect URIs** agrega:
+1. En [Google Cloud Console](https://console.cloud.google.com/apis/credentials) crea un proyecto y configura primero la **OAuth consent screen** (APIs & Services → OAuth consent screen): tipo *Internal* si tienes Google Workspace (lo más simple), o *External* + tu email como test user mientras la app esté en modo "Testing".
+2. Ve a **APIs & Services → Credentials → Create Credentials → OAuth client ID**, tipo **Web application**.
+3. En **Authorized redirect URIs** agrega:
    - Local: `http://localhost:3000/api/auth/callback/google`
    - Producción: `https://tu-dominio.com/api/auth/callback/google`
-3. Copia el Client ID y Client Secret a tu `.env`:
+4. Copia el Client ID y Client Secret a tu `.env`:
    ```
    GOOGLE_CLIENT_ID=...
    GOOGLE_CLIENT_SECRET=...
    AUTH_ALLOWED_EMAIL_DOMAIN=tuempresa.com
    ```
-4. Reinicia la app. En `/login` aparece **"Continuar con Google"**; cualquier usuario `@tuempresa.com` entra y su cuenta se crea sola la primera vez. Usuarios de otros dominios son rechazados.
+5. Reinicia la app. En `/login` aparece **"Continuar con Google"**; cualquier usuario `@tuempresa.com` entra y su cuenta se crea sola la primera vez. Usuarios de otros dominios son rechazados.
 
 ### Cargar datos
 
+Cada script puebla una cosa distinta; puedes correrlos en cualquier orden:
+
 ```bash
-# Proyectos de ley de ejemplo (fintech/pagos/regulación financiera)
+# 1. Proyectos de ley de ejemplo → pestaña Proyectos
+#    (temática financiera de muestra; bórralos cuando cargues los tuyos)
 bun run scripts/seed-legal-projects.ts
 bun run scripts/seed-proyectos.ts
 
-# Poblar el cache de proyectos del Senado (habilita el buscador)
+# 2. Cache de proyectos del Senado → habilita el buscador de Investigación
+#    ⏱️ demora varios minutos (respeta la API pública); acepta rango: bulk-sync.ts 16000 17000
 bun run scripts/bulk-sync.ts
 
-# Sincronizar audiencias de lobby
+# 3. Audiencias de lobby → pestaña Lobby
+#    (lo mismo que el botón "Sincronizar Lobby" de la app; acepta --months N)
 bun run scripts/sync-lobby.ts
 ```
+
+Tus proyectos reales los agregas por la interfaz: pestaña **Proyectos → Agregar Proyecto** (necesitas el [boletín](./docs/GLOSARIO.md#boletín)).
 
 ### ¿Los datos se actualizan solos?
 
@@ -159,11 +212,31 @@ Con esto la app queda disponible 24/7 en una URL pública, actualizándose sola 
 
 > Los endpoints de scraping declaran `maxDuration = 300` (5 min), el máximo con Fluid Compute (el default en proyectos nuevos de Vercel). Si tu proyecto es Hobby legacy sin Fluid, Vercel lo limitará a 60s en el build — suficiente salvo que sigas muchísimos proyectos.
 
+## Costos y privacidad
+
+**¿Cuánto cuesta operarlo?** Puede ser **$0/mes**:
+
+| Componente | Plan gratis | Notas |
+|------------|-------------|-------|
+| Hosting (Vercel Hobby) | $0 | Suficiente; cron jobs limitados a 1/día |
+| Postgres (Neon free) | $0 | ~0.5 GB, de sobra para años de datos de este tipo |
+| Fuentes de datos (Senado, InfoLobby, Ley de Lobby) | $0 | APIs públicas del Estado |
+| Slack (webhook) | $0 | Cualquier workspace |
+| **OpenAI (opcional)** | ~US$0.01–0.05 por conversación | Los chats usan `gpt-4o`; pago por uso con tope configurable en tu cuenta de OpenAI. Sin key, la app funciona igual (sin chats) |
+
+**¿Dónde van los datos?** Todo lo que maneja la app (proyectos de ley, audiencias de lobby) es **información pública** del Estado de Chile; lo único propio son tus notas, prioridades y usuarios, que viven en **tu** Postgres. Dos envíos a terceros que debes conocer:
+
+- Con `OPENAI_API_KEY` configurada, las conversaciones de los chats (y los datos que el agente consulta para responder) **se envían a la API de OpenAI**.
+- Con `SLACK_WEBHOOK_URL` configurada, las alertas y resúmenes **se publican en tu canal de Slack**. El agente de Investigación también puede enviar alertas a Slack si se lo pides en el chat.
+
+Si no configuras esas keys, nada sale de tu infraestructura.
+
 ## Seguridad
 
 - **Autenticación**: todos los endpoints de datos (`/api/legal/*`) exigen sesión (devuelven `401` sin ella). El único endpoint público es `/api/legal/health`, que solo expone conteos.
 - **Rate limiting**: todos los endpoints autenticados tienen límite por usuario y ruta (100 req/min por defecto). Los endpoints caros son más estrictos: chats con IA 20 req/5 min, syncs y scrapers 5 req/10 min. Los públicos se limitan por IP (`/health` 30 req/min, `/poll` 6 req/hora). Al exceder el límite se responde `429` con header `Retry-After`. El limitador es en memoria: en serverless aplica por instancia (suficiente contra ráfagas; para límites globales estrictos usa un store compartido tipo Redis).
 - **Login**: los endpoints de BetterAuth tienen su propio rate limit (20 req/min) contra fuerza bruta. El registro abierto está deshabilitado; las cuentas se crean con `scripts/create-user.ts` o, si activas el SSO opcional, vía Google (emails verificados) solo para el dominio de `AUTH_ALLOWED_EMAIL_DOMAIN`.
+- **`AUTH_PROVISION`**: variable interna que usa `scripts/create-user.ts` para levantar momentáneamente la restricción de registro **en el proceso del script**. Nunca la definas en un servidor desplegado: dejaría el registro abierto.
 - **Crons y polling fail-closed**: en producción, `/api/cron/*` rechaza todo si `CRON_SECRET` no está configurado, y `/api/legal/poll` rechaza la API key por defecto (`change-me-in-production`). Las comparaciones de secretos son en tiempo constante.
 
 ## Fuentes de datos

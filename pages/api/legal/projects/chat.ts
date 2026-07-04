@@ -164,7 +164,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           keywords: {
             type: 'array',
             items: { type: 'string' },
-            description: 'Palabras clave para buscar (ej: ["fintech", "pagos"])',
+            description: 'Palabras clave para buscar (ej: ["protección de datos", "energía"])',
           },
           limit: { type: 'number', description: 'Máximo de resultados (default 15)' },
         },
@@ -235,7 +235,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
         properties: {
           title: {
             type: 'string',
-            description: 'Título corto y descriptivo de la alerta (ej: "Proyecto Fintech avanza a 2° trámite")',
+            description: 'Título corto y descriptivo de la alerta (ej: "Proyecto prioritario avanza a 2° trámite")',
           },
           message: {
             type: 'string',

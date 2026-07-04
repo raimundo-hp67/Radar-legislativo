@@ -7,8 +7,8 @@ import { ilike, count, desc, sql, and } from 'drizzle-orm';
 
 const SYSTEM_PROMPT = `Eres un analista experto en lobby y relaciones institucionales en Chile. 
 Tienes acceso a una base de datos de audiencias de lobby registradas en InfoLobby (Ley 20.730).
-Los datos cubren audiencias desde 2024 en adelante, de instituciones como el Congreso, CMF, Banco Central, 
-Superintendencias, y ministerios relevantes.
+Los datos cubren audiencias desde 2024 en adelante, de instituciones públicas chilenas (Congreso, 
+ministerios, superintendencias y organismos reguladores).
 
 Responde en español de Chile. Sé conciso y analítico. Cuando des datos, cita números específicos.
 Si no tienes datos suficientes para responder, dilo claramente.
@@ -138,7 +138,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
       parameters: {
         type: 'object',
         properties: {
-          institution: { type: 'string', description: 'Nombre de la institución (ej: Banco Central, CMF, Senado)' },
+          institution: { type: 'string', description: 'Nombre de la institución (ej: Senado, Ministerio de Hacienda)' },
         },
         required: ['institution'],
       },

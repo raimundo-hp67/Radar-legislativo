@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
+import { radarConfig } from '~/config/radar.config';
+import { AiUnavailableNotice } from '~/components/legal/ai-unavailable-notice';
 
 interface Message {
   role: 'user' | 'assistant'
@@ -33,24 +35,10 @@ interface SearchResultItem {
   url: string
 }
 
-const SUGGESTED_QUESTIONS = [
-  '¿Qué proyectos de fintech están en trámite?',
-  '¿Cuál es el estado del proyecto sobre open banking?',
-  '¿Qué proyectos de alta prioridad estamos monitoreando?',
-  '¿Qué cambios recientes han tenido nuestros proyectos?',
-  '¿Hay proyectos sobre protección de datos financieros?',
-];
+// Preguntas y chips vienen de la configuración temática (config/radar.config.ts)
+const SUGGESTED_QUESTIONS = radarConfig.suggestedQuestions;
 
-const QUICK_KEYWORDS = [
-  'fintech',
-  'open banking',
-  'pagos electrónicos',
-  'ciberseguridad',
-  'protección de datos',
-  'CMF',
-  'criptomonedas',
-  'inteligencia artificial',
-];
+const QUICK_KEYWORDS = radarConfig.quickKeywords;
 
 // ─── Inline markdown renderer ────────────────────────────────────────────────
 
@@ -335,7 +323,7 @@ export function ProjectResearchTab() {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="fintech, pagos, datos..."
+                placeholder={radarConfig.searchPlaceholder}
                 className="flex-1 text-sm"
               />
               <Button
@@ -466,6 +454,7 @@ export function ProjectResearchTab() {
         <div className="flex h-[700px] flex-col overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
           {/* Messages list */}
           <div className="flex-1 overflow-y-auto p-4">
+            <AiUnavailableNotice />
             {messages.length === 0 && (
               <div className="flex h-full flex-col items-center justify-center text-center">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 shadow-sm dark:bg-orange-900/30">

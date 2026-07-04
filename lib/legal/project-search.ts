@@ -6,6 +6,7 @@
 import { db } from '~/db';
 import { projectCache } from '~/db/schema';
 import { eq, ilike, or, desc, sql, and } from 'drizzle-orm';
+import { radarConfig } from '~/config/radar.config';
 
 export interface SearchResult {
   boletin: string
@@ -26,31 +27,8 @@ export interface SearchOptions {
   activeOnly?: boolean
 }
 
-// Default keywords for tracking financial-regulation bills
-export const DEFAULT_SEARCH_KEYWORDS = [
-  'fintech',
-  'open banking',
-  'banca abierta',
-  'pagos electrónicos',
-  'transferencias',
-  'datos financieros',
-  'API bancaria',
-  'sistema de pagos',
-  'interoperabilidad financiera',
-  'protección de datos',
-  'ciberseguridad',
-  'fraude financiero',
-  'ley fintech',
-  'regulación financiera',
-  'CMF',
-  'instituciones financieras',
-  'tarjetas de crédito',
-  'tarjetas de débito',
-  'pago instantáneo',
-  'billetera digital',
-  'criptomonedas',
-  'inteligencia artificial',
-];
+// Default search keywords come from the theme config (config/radar.config.ts)
+export const DEFAULT_SEARCH_KEYWORDS = radarConfig.searchKeywords;
 
 /**
  * Search projects in local cache by keywords

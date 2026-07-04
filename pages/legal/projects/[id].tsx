@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import type { InferGetServerSidePropsType } from 'next';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as z from 'zod';
 import { ArrowLeft, ExternalLink, RefreshCw, FileText, Users, Target, Link2, Briefcase } from 'lucide-react';
 import { requireAuth, serializeUser } from '~/lib/ssr/require-auth';
@@ -102,6 +102,18 @@ export default function ProjectDetailPage(
     setActiveTab('info');
   };
 
+  const refreshMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/legal/projects/${id}/refresh`, { method: 'POST' });
+      if (!response.ok) throw new Error('No se pudo actualizar desde el Senado');
+      return response.json();
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['legal-project', id] });
+      queryClient.invalidateQueries({ queryKey: ['legal-projects'] });
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-black">
@@ -165,7 +177,23 @@ export default function ProjectDetailPage(
                 )}
               </div>
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refreshMutation.mutate()}
+              disabled={refreshMutation.isPending}
+              title="Consulta el Senado ahora y guarda un snapshot nuevo"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
+              {refreshMutation.isPending ? 'Consultando…' : 'Actualizar del Senado'}
+            </Button>
           </div>
+          {refreshMutation.isError && (
+            <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+              No se pudo actualizar desde el Senado. Intenta de nuevo en unos minutos.
+            </p>
+          )}
         </div>
 
         {/* Objetivo Section - Prominent */}

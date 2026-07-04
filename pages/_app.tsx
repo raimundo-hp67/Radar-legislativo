@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { useState } from 'react';
 
 import '@fontsource-variable/plus-jakarta-sans';
-import '~/assets/globals.css';
+import '~/styles/globals.css';
 
 const ReactQueryProvider = dynamic(
   () => import('@tanstack/react-query').then((mod) => {

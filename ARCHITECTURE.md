@@ -94,8 +94,8 @@ sequenceDiagram
 - `lib/legal/leylobby-service.ts`: API oficial (requiere `LEYLOBBY_API_KEY` + códigos de institución).
 - `lib/legal/infolobby-service.ts`: feed público de InfoLobby (fallback sin key).
 - Entradas: auto-updater integrado (mismo ciclo que el poll), cron `/api/cron/lobby-sync` (Vercel, diario), botón de sincronizar en la pestaña Lobby, o `bun run scripts/sync-lobby.ts`.
-- Si una audiencia nueva involucra instituciones clave (CMF, Banco Central, etc.), se notifica a Slack.
-- El cruce lobby ↔ proyectos (`/api/legal/lobby/crossref`) busca menciones de boletines y materias comunes.
+- Si una audiencia nueva involucra alguna de las instituciones vigiladas (configurables en `config/radar.config.ts` → `lobbyWatchKeywords`), se notifica a Slack.
+- La pestaña Cruces (`/api/legal/lobby/crossref`) cruza **instituciones (sujeto pasivo) ↔ organizaciones/personas (sujeto activo)**: responde "¿quién se reúne con quién y cuántas veces?". No cruza contra proyectos de ley.
 
 ### 3. Agentes de análisis (opcional, requiere `OPENAI_API_KEY`)
 

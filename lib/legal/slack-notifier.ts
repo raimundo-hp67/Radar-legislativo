@@ -1,4 +1,5 @@
 import { env } from '~/config/env';
+import { radarConfig } from '~/config/radar.config';
 import { formatChanges } from './diff-engine';
 import type { PollResult } from './types';
 import type { LobbyAudiencia } from '~/db/schema';
@@ -249,13 +250,8 @@ export { formatProjectBlock };
 
 // ─── Lobby Activity Notifications ────────────────────────────────────────────
 
-const LOBBY_WATCH_KEYWORDS = [
-  'CMF',
-  'Comisión para el Mercado Financiero',
-  'Banco Central',
-  'Coordinación de Mercados de Capitales',
-  'Mercado de Capitales',
-];
+// Watched institutions come from the theme config (config/radar.config.ts)
+const LOBBY_WATCH_KEYWORDS = radarConfig.lobbyWatchKeywords;
 
 /**
  * Send a Slack alert when audiencias involving key financial institutions are
@@ -345,7 +341,7 @@ export async function notifyLobbyActividad(audiencias: LobbyAudiencia[]): Promis
   });
 
   await postToSlack(webhookUrl, {
-    text: `🤝 ${relevant.length} nueva(s) audiencia(s) de lobby en CMF / Banco Central / Mercado de Capitales`,
+    text: `🤝 ${relevant.length} nueva(s) audiencia(s) de lobby en ${radarConfig.lobbyAlertLabel}`,
     blocks,
   });
 }
