@@ -93,7 +93,7 @@ Abre <http://localhost:3000> en tu navegador e inicia sesión con el usuario que
 ## Recorrido por la interfaz
 
 - **Inicio**: resumen ejecutivo (cuántos proyectos sigues, cuántas audiencias hay, cambios y alertas) y atajos.
-- **Tu logo**: pasa el mouse sobre el ícono del encabezado y pulsa el lápiz para subir el logotipo de tu organización (PNG, JPG, WebP o SVG, hasta 2 MB) — el portal queda personalizado para todo tu equipo. La X lo quita.
+- **Tu logo**: pasa el mouse sobre el ícono del encabezado y pulsa el lápiz para subir el logotipo de tu organización (PNG, JPG o WebP, hasta 2 MB) — el portal queda personalizado para todo tu equipo. La X lo quita.
 - **Proyectos**: tu radar. Agrega proyectos con el botón **"Agregar Proyecto"** (necesitas el [boletín](./GLOSARIO.md#boletín)); cada proyecto tiene página de detalle con su historial de cambios (snapshots) y un botón **"Actualizar del Senado"** para consultarlo al instante.
 - **Lobby**: tres sub-pestañas — **Explorador** (busca audiencias por institución, cargo, fecha o texto), **Cruces** (quién se reúne con quién: institución ↔ organización/persona) y **Agente IA** (pregúntale en lenguaje natural; requiere `OPENAI_API_KEY`). El botón **"Sincronizar Lobby"** trae audiencias nuevas.
 - **Investigación**: buscador sobre el cache de proyectos del Senado (se llena con `bulk-sync`, ver abajo) + un agente de IA que analiza tus proyectos y, si se lo pides, **envía alertas a Slack**.
@@ -155,6 +155,46 @@ No en sentido estricto: es una **revisión periódica** (cada 6 horas local, dia
 | Corriendo en tu computador (`bun run dev`) | ✅ Sí, mientras esté prendida | Cada 6 h (`AUTO_UPDATE_INTERVAL_HOURS`) |
 | Publicada en Vercel | ✅ Sí, 24/7 | Diaria (`vercel.json`) |
 | Vercel/servidor + GitHub Actions | ✅ Sí, 24/7 | Cada 6 h (`auto-update.yml`) |
+
+---
+
+## Recomendaciones de seguridad (en simple)
+
+La aplicación viene protegida por diseño: nadie puede ver nada sin usuario y contraseña, no existe el "regístrate gratis" (las cuentas las creas solo tú), y ha sido auditada. Pero la seguridad también depende de cómo la uses. Estas son las reglas de oro, sin tecnicismos:
+
+### Cuentas y contraseñas
+
+1. **Una cuenta por persona, nunca compartidas.** Dentro de la aplicación **todos los usuarios pueden ver, editar y borrar todo** (no hay "roles" ni permisos parciales). Crea cuentas solo para personas de tu confianza directa.
+2. **Contraseñas largas y únicas** (idealmente una frase de 4+ palabras, o generada por un gestor de contraseñas como 1Password o Bitwarden). Nunca reutilices la contraseña de tu correo.
+3. **Cuando alguien deja el equipo, elimina su cuenta el mismo día:**
+
+   ```bash
+   bun run scripts/delete-user.ts expersona@email.com
+   ```
+
+   Eso cierra sus sesiones abiertas y revoca su acceso al instante.
+4. Si tu organización usa Google Workspace, **activa el login con Google** ([README → Google SSO](../README.md#google-sso-opcional)): menos contraseñas que administrar y solo entra gente de tu dominio.
+
+### El archivo `.env` es la llave maestra
+
+Dentro de la carpeta del proyecto hay un archivo llamado `.env` que contiene los secretos de la aplicación. **Trátalo como la llave de tu oficina**: no lo envíes por correo ni WhatsApp, no lo subas a carpetas compartidas (Drive/Dropbox), no se lo muestres a nadie que no lo necesite. Si crees que alguien lo vio, cambia el valor de `BETTER_AUTH_SECRET` por uno nuevo (genera otro con `openssl rand -base64 32`) — eso cierra todas las sesiones abiertas de inmediato.
+
+### En tu computador
+
+- **Bloquea la pantalla** cuando te levantes (la app queda con sesión iniciada en tu navegador).
+- No la instales en computadores compartidos sin que cada persona tenga su propia sesión de sistema.
+- **Respalda tus datos** cada cierto tiempo ([cómo hacerlo](#respaldar-tus-datos)) y guarda el respaldo en un lugar seguro: tus notas y prioridades son estrategia de tu estudio.
+
+### Si la publicas en internet (Vercel)
+
+- Usa siempre la dirección **https://** (Vercel la entrega automáticamente — nunca configures un dominio sin candado).
+- Define `CRON_SECRET` y cambia `LEGAL_POLL_API_KEY` por textos largos e impredecibles (la app **rechaza** el valor de fábrica en producción, no lo dejes pasar).
+- Si configuraste la IA (`OPENAI_API_KEY`), ponle un **límite de gasto mensual** en tu cuenta de OpenAI (Settings → Limits): cualquier usuario de tu portal puede usar los chats, y los chats cuestan dinero.
+- Recuerda que con Slack/OpenAI configurados, **parte de la información viaja a esos servicios** (detalle en [README → Costos y privacidad](../README.md#costos-y-privacidad)).
+
+### Mantente al día
+
+Las actualizaciones traen también correcciones de seguridad. Una vez al mes, ejecuta los tres comandos de [Actualizar la aplicación](#actualizar-la-aplicación-a-una-versión-nueva). Y si descubres algo que parezca una falla de seguridad, repórtala en privado siguiendo [SECURITY.md](../SECURITY.md).
 
 ---
 

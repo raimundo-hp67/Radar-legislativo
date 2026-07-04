@@ -41,7 +41,7 @@ export default async function handler(
     console.error('Health check error:', error);
     return res.status(500).json({
       status: 'unhealthy',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: 'Database connection failed',
     });
   }
 }
