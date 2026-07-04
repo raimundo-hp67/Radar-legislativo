@@ -5,6 +5,7 @@ import { Send, Bot, User, RefreshCw, Sparkles } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { radarConfig } from '~/config/radar.config';
+import { AiUnavailableNotice } from '~/components/legal/ai-unavailable-notice';
 
 interface Message {
   role: 'user' | 'assistant'
@@ -79,6 +80,7 @@ export function LobbyAgent() {
     <div className="flex h-[600px] flex-col rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <AiUnavailableNotice />
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30 mb-4">

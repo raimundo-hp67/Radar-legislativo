@@ -3,6 +3,7 @@ import { db } from '~/db';
 import { legalProjects, projectSnapshots } from '~/db/schema';
 import { sql } from 'drizzle-orm';
 import { applyRateLimit, getClientIp } from '~/lib/api/rate-limit';
+import { env } from '~/config/env';
 
 // Public health check endpoint to verify database connection and data
 export default async function handler(
@@ -28,6 +29,12 @@ export default async function handler(
       database: 'connected',
       projectCount: Number(projectCount[0].count),
       snapshotCount: Number(snapshotCount[0].count),
+      // Feature flags (solo booleanos de configuración, nunca los valores)
+      features: {
+        ai: Boolean(env.OPENAI_API_KEY),
+        slack: Boolean(env.SLACK_WEBHOOK_URL),
+        leylobby: Boolean(env.LEYLOBBY_API_KEY),
+      },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

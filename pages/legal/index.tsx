@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, type ComponentType } from 'react';
 import type { InferGetServerSidePropsType } from 'next';
+import { useRouter } from 'next/router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as z from 'zod';
 import {
@@ -14,6 +15,8 @@ import {
   Clock3,
   ShieldCheck,
   Scale,
+  History,
+  Plus,
 } from 'lucide-react';
 import { requireAuth, serializeUser } from '~/lib/ssr/require-auth';
 import { Button } from '~/components/ui/button';
@@ -101,6 +104,7 @@ export default function LegalDashboard(
   _props: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<number | null>(null);
   const [viewMode, setViewMode] = useViewMode();
@@ -429,6 +433,38 @@ export default function LegalDashboard(
                   </div>
                 </div>
 
+                {(projects?.length ?? 0) === 0 && (
+                  <div className="rounded-2xl border border-dashed border-orange-300 bg-orange-50/60 p-5 dark:border-orange-900 dark:bg-orange-950/20">
+                    <p className="font-semibold text-stone-900 dark:text-stone-100">
+                      👋 Primer uso: aún no hay proyectos en seguimiento
+                    </p>
+                    <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-stone-700 dark:text-stone-300">
+                      <li>
+                        <button type="button" onClick={() => router.push('/legal/projects/new')} className="font-medium text-orange-700 underline dark:text-orange-400">
+                          Agrega tu primer proyecto de ley
+                        </button>
+                        {' '}
+                        (o carga ejemplos con
+                        {' '}
+                        <code className="rounded bg-stone-100 px-1 dark:bg-stone-800">bun run scripts/seed-legal-projects.ts</code>
+                        )
+                      </li>
+                      <li>
+                        Sincroniza audiencias en la pestaña
+                        {' '}
+                        <button type="button" onClick={() => setActiveTab('lobby')} className="font-medium text-orange-700 underline dark:text-orange-400">
+                          Lobby
+                        </button>
+                      </li>
+                      <li>
+                        Habilita el buscador de Investigación con
+                        {' '}
+                        <code className="rounded bg-stone-100 px-1 dark:bg-stone-800">bun run scripts/bulk-sync.ts</code>
+                      </li>
+                    </ol>
+                  </div>
+                )}
+
                 <div className="grid gap-3 sm:grid-cols-2">
                   <OverviewModuleCard
                     title="Proyectos"
@@ -457,6 +493,7 @@ export default function LegalDashboard(
                     <ShortcutCard icon={<FileText className="h-4 w-4" />} label="Pipeline legislativo" onClick={() => setActiveTab('proyectos')} color="blue" />
                     <ShortcutCard icon={<Handshake className="h-4 w-4" />} label="Audiencias de lobby" onClick={() => setActiveTab('lobby')} color="amber" />
                     <ShortcutCard icon={<Search className="h-4 w-4" />} label="Investigación" onClick={() => setActiveTab('investigacion')} color="slate" />
+                    <ShortcutCard icon={<History className="h-4 w-4" />} label="Cambios detectados" onClick={() => router.push('/legal/changes')} color="slate" />
                   </div>
                 </div>
               </div>
@@ -476,14 +513,20 @@ export default function LegalDashboard(
                       </p>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => queryClient.invalidateQueries({ queryKey: ['legal-projects'] })}
-                    >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Actualizar
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => queryClient.invalidateQueries({ queryKey: ['legal-projects'] })}
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Actualizar
+                      </Button>
+                      <Button size="sm" onClick={() => router.push('/legal/projects/new')}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Agregar Proyecto
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
