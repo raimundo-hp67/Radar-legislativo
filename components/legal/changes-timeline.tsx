@@ -25,7 +25,7 @@ export function ChangesTimeline({ changes }: ChangesTimelineProps) {
   if (changes.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="text-stone-500 dark:text-stone-400">
+        <p className="text-slate-500 dark:text-slate-400">
           No se han detectado cambios en los proyectos monitoreados.
         </p>
       </div>
@@ -61,18 +61,18 @@ function ChangeCard({ change }: { change: ChangeEntry }) {
   });
 
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+    <div className="rounded-lg border bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-medium text-orange-600 dark:text-orange-400">
+            <span className="font-mono text-sm font-medium text-cyan-600 dark:text-cyan-400">
               {change.boletin}
             </span>
             <RelevanceBadge relevance={change.relevance} />
           </div>
           <h3 className="font-medium">{change.title}</h3>
         </div>
-        <div className="text-right text-sm text-stone-500 dark:text-stone-400">
+        <div className="text-right text-sm text-slate-500 dark:text-slate-400">
           <div>{formattedDate}</div>
           <div>{formattedTime}</div>
         </div>
@@ -80,14 +80,14 @@ function ChangeCard({ change }: { change: ChangeEntry }) {
 
       {change.changes && change.changes.length > 0 && (
         <div className="mt-4 space-y-2">
-          <h4 className="text-sm font-medium text-stone-700 dark:text-stone-300">
+          <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">
             Cambios detectados:
           </h4>
           <ul className="space-y-1" aria-label="Lista de cambios detectados">
             {change.changes.map((c, idx) => (
               <li
                 key={`${change.id}-${c.field}-${idx}`}
-                className="flex items-start gap-2 text-sm text-stone-600 dark:text-stone-400"
+                className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
               >
                 <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-yellow-500" />
                 <span>
@@ -112,13 +112,13 @@ function ChangeCard({ change }: { change: ChangeEntry }) {
         </div>
       )}
 
-      <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4 text-sm dark:border-stone-800">
+      <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4 text-sm dark:border-slate-800">
         <div>
-          <span className="text-stone-500 dark:text-stone-400">Estado actual:</span>
+          <span className="text-slate-500 dark:text-slate-400">Estado actual:</span>
           <p className="font-medium">{change.stage || '—'}</p>
         </div>
         <div>
-          <span className="text-stone-500 dark:text-stone-400">Cámara:</span>
+          <span className="text-slate-500 dark:text-slate-400">Cámara:</span>
           <p className="font-medium">{change.chamberCurrent || '—'}</p>
         </div>
       </div>
@@ -134,7 +134,7 @@ export function SnapshotTimeline({ snapshots }: SnapshotTimelineProps) {
   if (snapshots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
-        <p className="text-stone-500 dark:text-stone-400">
+        <p className="text-slate-500 dark:text-slate-400">
           No hay historial de snapshots disponible.
         </p>
       </div>
@@ -146,16 +146,16 @@ export function SnapshotTimeline({ snapshots }: SnapshotTimelineProps) {
       {snapshots.map((snapshot, idx) => (
         <div
           key={snapshot.id}
-          className="relative rounded-lg border bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
+          className="relative rounded-lg border bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
         >
           {idx === 0 && (
-            <span className="absolute -top-2 right-4 rounded bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+            <span className="absolute -top-2 right-4 rounded bg-cyan-100 px-2 py-0.5 text-xs font-medium text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">
               Más reciente
             </span>
           )}
 
           <div className="flex items-start justify-between">
-            <div className="text-sm text-stone-500 dark:text-stone-400">
+            <div className="text-sm text-slate-500 dark:text-slate-400">
               {safeParseDate(snapshot.fetchedAt).toLocaleDateString('es-CL', {
                 year: 'numeric',
                 month: 'long',
@@ -168,26 +168,26 @@ export function SnapshotTimeline({ snapshots }: SnapshotTimelineProps) {
 
           <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-stone-500 dark:text-stone-400">Estado:</span>
+              <span className="text-slate-500 dark:text-slate-400">Estado:</span>
               <p className="font-medium">{snapshot.stage || '—'}</p>
             </div>
             <div>
-              <span className="text-stone-500 dark:text-stone-400">Cámara:</span>
+              <span className="text-slate-500 dark:text-slate-400">Cámara:</span>
               <p className="font-medium">{snapshot.chamberCurrent || '—'}</p>
             </div>
             <div>
-              <span className="text-stone-500 dark:text-stone-400">Urgencia:</span>
+              <span className="text-slate-500 dark:text-slate-400">Urgencia:</span>
               <p className="font-medium">{snapshot.urgency || '—'}</p>
             </div>
             <div>
-              <span className="text-stone-500 dark:text-stone-400">Último trámite:</span>
+              <span className="text-slate-500 dark:text-slate-400">Último trámite:</span>
               <p className="font-medium">{snapshot.lastActionDate || '—'}</p>
             </div>
           </div>
 
           {snapshot.lastAction && (
             <div className="mt-3 text-sm">
-              <span className="text-stone-500 dark:text-stone-400">
+              <span className="text-slate-500 dark:text-slate-400">
                 Descripción último trámite:
               </span>
               <p className="mt-1">{snapshot.lastAction}</p>

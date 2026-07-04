@@ -81,8 +81,8 @@ export function AlertsModule({ projects }: AlertsModuleProps) {
   if (alerts.length === 0) {
     return (
       <div className="text-center py-4">
-        <CheckCircle className="h-8 w-8 mx-auto mb-2 text-orange-500" />
-        <p className="text-sm text-stone-500 dark:text-stone-400">
+        <CheckCircle className="h-8 w-8 mx-auto mb-2 text-cyan-500" />
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Sin alertas pendientes
         </p>
       </div>
@@ -97,10 +97,10 @@ export function AlertsModule({ projects }: AlertsModuleProps) {
           href={`/legal/projects/${alert.projectId}`}
           className={`block rounded-lg p-3 transition-colors hover:opacity-90 ${
             alert.severity === 'critical'
-              ? 'bg-stone-900 dark:bg-stone-800'
+              ? 'bg-slate-900 dark:bg-slate-800'
               : alert.severity === 'warning'
-                ? 'bg-orange-50 border border-orange-200 dark:bg-orange-950/30 dark:border-orange-900'
-                : 'bg-stone-50 border border-stone-200 dark:bg-stone-800 dark:border-stone-700'
+                ? 'bg-cyan-50 border border-cyan-200 dark:bg-cyan-950/30 dark:border-cyan-900'
+                : 'bg-slate-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700'
           }`}
         >
           <div className="flex items-start gap-2">
@@ -108,17 +108,17 @@ export function AlertsModule({ projects }: AlertsModuleProps) {
               {alert.type === 'high-change' && (
                 <TrendingUp
                   className={`h-4 w-4 ${
-                    alert.severity === 'critical' ? 'text-white' : 'text-orange-600'
+                    alert.severity === 'critical' ? 'text-white' : 'text-cyan-600'
                   }`}
                 />
               )}
               {alert.type === 'stale' && (
-                <Clock className="h-4 w-4 text-stone-500" />
+                <Clock className="h-4 w-4 text-slate-500" />
               )}
               {alert.type === 'urgent' && (
                 <AlertCircle
                   className={`h-4 w-4 ${
-                    alert.severity === 'critical' ? 'text-white' : 'text-orange-600'
+                    alert.severity === 'critical' ? 'text-white' : 'text-cyan-600'
                   }`}
                 />
               )}
@@ -129,13 +129,13 @@ export function AlertsModule({ projects }: AlertsModuleProps) {
                   alert.severity === 'critical'
                     ? 'text-white'
                     : alert.severity === 'warning'
-                      ? 'text-orange-700 dark:text-orange-400'
-                      : 'text-stone-700 dark:text-stone-300'
+                      ? 'text-cyan-700 dark:text-cyan-400'
+                      : 'text-slate-700 dark:text-slate-300'
                 }`}
               >
                 {alert.title}
               </p>
-              <p className={`text-xs truncate ${alert.severity === 'critical' ? 'text-stone-300' : 'text-stone-600 dark:text-stone-400'}`}>
+              <p className={`text-xs truncate ${alert.severity === 'critical' ? 'text-slate-300' : 'text-slate-600 dark:text-slate-400'}`}>
                 {alert.message}
               </p>
             </div>
@@ -143,7 +143,7 @@ export function AlertsModule({ projects }: AlertsModuleProps) {
         </Link>
       ))}
       {alerts.length > 10 && (
-        <p className="text-xs text-center text-stone-500 dark:text-stone-400 pt-2">
+        <p className="text-xs text-center text-slate-500 dark:text-slate-400 pt-2">
           +
           {alerts.length - 10}
           {' '}

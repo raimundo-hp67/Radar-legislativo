@@ -126,7 +126,7 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
             disabled={isEditing}
           />
           {isEditing && (
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-slate-500">
               El boletín no se puede modificar
             </p>
           )}
@@ -240,8 +240,8 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
       </div>
 
       {/* Objetivo - Prominent section */}
-      <div className="space-y-2 rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950/30">
-        <Label htmlFor="objetivo" className="text-orange-700 dark:text-orange-300">
+      <div className="space-y-2 rounded-lg border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-900 dark:bg-cyan-950/30">
+        <Label htmlFor="objetivo" className="text-cyan-700 dark:text-cyan-300">
           Objetivo / Resumen del Proyecto
         </Label>
         <Textarea
@@ -250,7 +250,7 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
           onChange={(e) => setFormData({ ...formData, objetivo: e.target.value })}
           placeholder="Describe brevemente el objetivo principal del proyecto de ley..."
           rows={3}
-          className="border-orange-200 dark:border-orange-800"
+          className="border-cyan-200 dark:border-cyan-800"
         />
       </div>
 
@@ -295,7 +295,7 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
           </div>
           {formData.linkInformes.length === 0
             ? (
-                <p className="text-sm text-stone-500">No hay links agregados</p>
+                <p className="text-sm text-slate-500">No hay links agregados</p>
               )
             : (
                 <div className="space-y-2">

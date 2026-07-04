@@ -38,16 +38,16 @@ export function LobbyDashboard() {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl border border-stone-200/80 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-stone-900 dark:text-stone-100">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/60">
-                <Handshake className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/60">
+                <Handshake className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               Lobby Estratégico
             </h2>
-            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Exploración de audiencias, cruces entre actores e investigación asistida por IA.
             </p>
           </div>
@@ -66,14 +66,14 @@ export function LobbyDashboard() {
           </Button>
         </div>
         {syncLog && (
-          <p className="mt-2 border-t border-stone-100 pt-2 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
+          <p className="mt-2 border-t border-slate-100 pt-2 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
             {syncLog}
           </p>
         )}
       </section>
 
       <Tabs defaultValue="explorer" className="w-full">
-        <TabsList className="mb-4 h-auto w-full flex-wrap rounded-2xl border border-stone-200/80 bg-white p-1 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+        <TabsList className="mb-4 h-auto w-full flex-wrap rounded-2xl border border-slate-200/80 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <TabsTrigger value="explorer" className="gap-1.5 text-xs">
             <Search className="h-3.5 w-3.5" />
             Explorador

@@ -37,7 +37,7 @@ export function Pagination({
   return (
     <div className="flex flex-col items-center justify-between gap-4 px-4 py-4 sm:flex-row">
       {/* Items info */}
-      <div className="text-sm text-stone-600 dark:text-stone-400">
+      <div className="text-sm text-slate-600 dark:text-slate-400">
         {totalItems === 0
           ? (
               'Sin resultados'
@@ -46,15 +46,15 @@ export function Pagination({
               <>
                 Mostrando
                 {' '}
-                <span className="font-semibold text-stone-800 dark:text-stone-200">{startItem}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{startItem}</span>
                 {' '}
                 a
                 {' '}
-                <span className="font-semibold text-stone-800 dark:text-stone-200">{endItem}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{endItem}</span>
                 {' '}
                 de
                 {' '}
-                <span className="font-semibold text-stone-800 dark:text-stone-200">{totalItems}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{totalItems}</span>
                 {' '}
                 proyectos
               </>
@@ -65,7 +65,7 @@ export function Pagination({
       <div className="flex items-center gap-4">
         {/* Page size selector */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
             Por página
           </span>
           <Select
@@ -75,7 +75,7 @@ export function Pagination({
               onPageChange(1); // Reset to first page when changing page size
             }}
           >
-            <SelectTrigger className="w-[70px] border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800">
+            <SelectTrigger className="w-[70px] border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -95,7 +95,7 @@ export function Pagination({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 border-stone-200 bg-white hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:hover:bg-stone-700"
+              className="h-8 w-8 border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
               onClick={() => onPageChange(currentPage - 1)}
               disabled={!canGoPrevious}
               aria-label="Página anterior"
@@ -103,18 +103,18 @@ export function Pagination({
               <ChevronLeft className="h-4 w-4" />
             </Button>
 
-            <div className="flex items-center gap-1 rounded-lg bg-stone-100 px-3 py-1.5 dark:bg-stone-800">
-              <span className="text-sm text-stone-600 dark:text-stone-300">
-                <span className="font-semibold text-stone-900 dark:text-white">{currentPage}</span>
+            <div className="flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 dark:bg-slate-800">
+              <span className="text-sm text-slate-600 dark:text-slate-300">
+                <span className="font-semibold text-slate-900 dark:text-white">{currentPage}</span>
                 {' / '}
-                <span className="text-stone-500 dark:text-stone-400">{totalPages}</span>
+                <span className="text-slate-500 dark:text-slate-400">{totalPages}</span>
               </span>
             </div>
 
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 border-stone-200 bg-white hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:hover:bg-stone-700"
+              className="h-8 w-8 border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
               onClick={() => onPageChange(currentPage + 1)}
               disabled={!canGoNext}
               aria-label="Página siguiente"
