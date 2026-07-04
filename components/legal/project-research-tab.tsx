@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
+import { radarConfig } from '~/config/radar.config';
 
 interface Message {
   role: 'user' | 'assistant'
@@ -33,24 +34,10 @@ interface SearchResultItem {
   url: string
 }
 
-const SUGGESTED_QUESTIONS = [
-  '¿Qué proyectos de fintech están en trámite?',
-  '¿Cuál es el estado del proyecto sobre open banking?',
-  '¿Qué proyectos de alta prioridad estamos monitoreando?',
-  '¿Qué cambios recientes han tenido nuestros proyectos?',
-  '¿Hay proyectos sobre protección de datos financieros?',
-];
+// Preguntas y chips vienen de la configuración temática (config/radar.config.ts)
+const SUGGESTED_QUESTIONS = radarConfig.suggestedQuestions;
 
-const QUICK_KEYWORDS = [
-  'fintech',
-  'open banking',
-  'pagos electrónicos',
-  'ciberseguridad',
-  'protección de datos',
-  'CMF',
-  'criptomonedas',
-  'inteligencia artificial',
-];
+const QUICK_KEYWORDS = radarConfig.quickKeywords;
 
 // ─── Inline markdown renderer ────────────────────────────────────────────────
 
@@ -335,7 +322,7 @@ export function ProjectResearchTab() {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="fintech, pagos, datos..."
+                placeholder={radarConfig.searchPlaceholder}
                 className="flex-1 text-sm"
               />
               <Button

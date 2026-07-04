@@ -4,19 +4,15 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, RefreshCw, Sparkles } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
+import { radarConfig } from '~/config/radar.config';
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
 }
 
-const SUGGESTED_QUESTIONS = [
-  '¿Cuántas veces se ha reunido el Banco Central con asociaciones del retail financiero?',
-  '¿Quién del Senado ha tenido más audiencias sobre fintech?',
-  '¿Qué temas se han discutido más en la CMF este año?',
-  '¿Cuáles son las instituciones con más audiencias de lobby?',
-  '¿Quién se ha reunido más con la Superintendencia de Bancos?',
-];
+// Preguntas sugeridas desde la configuración temática (config/radar.config.ts)
+const SUGGESTED_QUESTIONS = radarConfig.lobbySuggestedQuestions;
 
 export function LobbyAgent() {
   const [messages, setMessages] = useState<Message[]>([]);

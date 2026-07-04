@@ -6,6 +6,7 @@
 import { db } from '~/db';
 import { projectCache } from '~/db/schema';
 import { eq, sql } from 'drizzle-orm';
+import { radarConfig } from '~/config/radar.config';
 
 interface SenadoProjectXml {
   boletin: string
@@ -21,15 +22,9 @@ interface SenadoProjectXml {
   autores: string[]
 }
 
-// Priority boletins for fintech/financial legislation
-// Reduced to 5 to stay within Vercel's 10s timeout
-const FINTECH_BOLETINS = [
-  '14570', // Ley Fintech (publicada 2023)
-  '15034', // Seguridad cajas bancarias
-  '18079', // 2026 - nacionalidad
-  '18081', // 2026
-  '18083', // 2026
-];
+// Seed boletins for the quick cache refresh — defined per-theme in
+// config/radar.config.ts (kept short to stay within serverless timeouts)
+const SEED_BOLETINS = radarConfig.cacheSeedBoletines;
 
 /**
  * Fetch a single project by boletin number (optimized timeout)
@@ -213,7 +208,7 @@ export async function syncRecentProjects(): Promise<{
 
   // Fetch all boletins in parallel (max ~3s per request, all at once)
   const results = await Promise.allSettled(
-    FINTECH_BOLETINS.map((b) => fetchProjectByBoletin(b)),
+    SEED_BOLETINS.map((b) => fetchProjectByBoletin(b)),
   );
 
   const projects: SenadoProjectXml[] = [];
@@ -223,11 +218,11 @@ export async function syncRecentProjects(): Promise<{
     if (result.status === 'fulfilled' && result.value) {
       projects.push(result.value);
     } else if (result.status === 'rejected') {
-      fetchErrors.push(`Boletin ${FINTECH_BOLETINS[index]}: ${result.reason}`);
+      fetchErrors.push(`Boletin ${SEED_BOLETINS[index]}: ${result.reason}`);
     }
   });
 
-  console.log(`Fetched ${projects.length}/${FINTECH_BOLETINS.length} projects in ${Date.now() - startTime}ms`);
+  console.log(`Fetched ${projects.length}/${SEED_BOLETINS.length} projects in ${Date.now() - startTime}ms`);
 
   if (projects.length === 0) {
     return {

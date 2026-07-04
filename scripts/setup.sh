@@ -77,7 +77,7 @@ if [ -t 0 ]; then
 
   # ── 5. Datos de ejemplo ─────────────────────────────────────────────────
   say "Datos de ejemplo"
-  read -r -p "¿Cargar proyectos de ley de ejemplo (regulación financiera chilena)? [S/n] " SEED
+  read -r -p "¿Cargar proyectos de ley de ejemplo? (temática financiera de muestra; puedes borrarlos) [S/n] " SEED
   if [ "${SEED:-S}" != "n" ] && [ "${SEED:-S}" != "N" ]; then
     bun run scripts/seed-legal-projects.ts
     bun run scripts/seed-proyectos.ts

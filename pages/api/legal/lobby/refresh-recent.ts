@@ -3,15 +3,13 @@ import { protectedHandler } from '~/lib/api/protected-handler';
 import { db } from '~/db';
 import { lobbyAudiencias } from '~/db/schema';
 import { fetchAndPrepareAudiencias } from '~/lib/legal/infolobby-service';
+import { radarConfig } from '~/config/radar.config';
 
-// Key institutions and topics to refresh
-const REFRESH_TARGETS = [
-  { boletin: 'CMF', title: 'Comisión para el Mercado Financiero fintech pagos emisoras no bancarias' },
-  { boletin: 'BCCH', title: 'Banco Central de Chile medios de pago sistema de pagos' },
-  { boletin: 'HACIENDA', title: 'Ministerio de Hacienda fintech servicios financieros digitales' },
-  { boletin: 'UAF', title: 'Unidad de Análisis Financiero lavado de activos fintech' },
-  { boletin: 'FINTEC', title: 'fintech medios de pago emisores no bancarios pagos digitales' },
-];
+// Institutions/topics to refresh come from the theme config (config/radar.config.ts)
+const REFRESH_TARGETS = radarConfig.lobbySearchTargets.map((t) => ({
+  boletin: t.code,
+  title: t.query,
+}));
 
 export default protectedHandler(async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== 'POST') {

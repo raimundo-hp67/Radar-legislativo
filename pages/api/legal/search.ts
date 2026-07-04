@@ -41,8 +41,8 @@ export default protectedHandler(async (
     // Search by keywords
     let keywords: string[] = [];
 
-    if (preset === 'fintech') {
-      // Use the default financial-regulation keywords
+    if (preset === 'default' || preset === 'fintech') {
+      // Theme keywords from config/radar.config.ts ('fintech' kept as legacy alias)
       keywords = DEFAULT_SEARCH_KEYWORDS.slice(0, 5); // Use top 5 keywords
     } else if (q && typeof q === 'string') {
       // Use custom query
@@ -51,7 +51,7 @@ export default protectedHandler(async (
 
     if (keywords.length === 0) {
       return res.status(400).json({
-        error: 'Se requiere al menos una palabra clave (q=keyword1,keyword2) o preset=fintech',
+        error: 'Se requiere al menos una palabra clave (q=keyword1,keyword2) o preset=default',
       });
     }
 
