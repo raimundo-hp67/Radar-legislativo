@@ -301,12 +301,12 @@ export function ProjectResearchTab() {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl border border-stone-200/80 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-stone-900 dark:text-stone-100">
-          <Search className="h-5 w-5 text-orange-600" />
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <Search className="h-5 w-5 text-cyan-600" />
           Investigación Legislativa
         </h2>
-        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           Búsqueda de proyectos, análisis de contexto y asistencia conversacional para investigación jurídica.
         </p>
       </section>
@@ -314,8 +314,8 @@ export function ProjectResearchTab() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_1fr]">
         {/* ── Left Panel: Search ───────────────────────────────────────────── */}
         <div className="flex flex-col gap-4">
-          <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
-            <h3 className="mb-3 text-sm font-semibold text-stone-700 dark:text-stone-300">
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <h3 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
               Buscar Proyectos de Ley
             </h3>
 
@@ -341,7 +341,7 @@ export function ProjectResearchTab() {
                   key={kw}
                   type="button"
                   onClick={() => handleKeywordClick(kw)}
-                  className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs text-stone-600 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:border-orange-600 dark:hover:bg-orange-950/30 dark:hover:text-orange-300"
+                  className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-600 transition-colors hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-cyan-600 dark:hover:bg-cyan-950/30 dark:hover:text-cyan-300"
                 >
                   {kw}
                 </button>
@@ -351,21 +351,21 @@ export function ProjectResearchTab() {
 
           {/* Search Results */}
           <div
-            className="flex-1 overflow-y-auto rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900"
+            className="flex-1 overflow-y-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
             style={{ maxHeight: '560px' }}
           >
             {isSearching
               ? (
                   <div className="flex items-center justify-center py-12">
-                    <RefreshCw className="h-5 w-5 animate-spin text-orange-500" />
-                    <span className="ml-2 text-xs text-stone-500">Buscando...</span>
+                    <RefreshCw className="h-5 w-5 animate-spin text-cyan-500" />
+                    <span className="ml-2 text-xs text-slate-500">Buscando...</span>
                   </div>
                 )
               : !hasSearched
                   ? (
                       <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
-                        <FileText className="h-8 w-8 text-stone-300 dark:text-stone-600" />
-                        <p className="mt-3 text-xs text-stone-500 dark:text-stone-400">
+                        <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
                           Busca proyectos por palabra clave o usa las etiquetas rápidas
                         </p>
                       </div>
@@ -376,48 +376,48 @@ export function ProjectResearchTab() {
                           {cacheEmpty
                             ? (
                                 <>
-                                  <p className="text-xs font-medium text-stone-600 dark:text-stone-300">
+                                  <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
                                     La caché de búsqueda está vacía
                                   </p>
-                                  <p className="mt-1 max-w-xs text-xs text-stone-500">
+                                  <p className="mt-1 max-w-xs text-xs text-slate-500">
                                     Este buscador consulta una copia local del catálogo del Senado.
                                     Sincronízala primero con
                                     {' '}
-                                    <code className="rounded bg-stone-100 px-1 py-0.5 dark:bg-stone-800">bun run scripts/bulk-sync.ts</code>
+                                    <code className="rounded bg-slate-100 px-1 py-0.5 dark:bg-slate-800">bun run scripts/bulk-sync.ts</code>
                                   </p>
                                 </>
                               )
-                            : <p className="text-xs text-stone-500">Sin resultados para esa búsqueda</p>}
+                            : <p className="text-xs text-slate-500">Sin resultados para esa búsqueda</p>}
                         </div>
                       )
                     : (
-                        <div className="divide-y divide-stone-100 dark:divide-stone-800">
-                          <div className="px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                          <div className="px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                             {searchResults.length}
                             {' resultados'}
                           </div>
                           {searchResults.map((r) => (
                             <div
                               key={r.boletin}
-                              className="group px-4 py-3 transition-colors hover:bg-stone-50 dark:hover:bg-stone-800/50"
+                              className="group px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-2">
-                                    <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs font-semibold text-stone-600 dark:bg-stone-800 dark:text-stone-400">
+                                    <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                                       {r.boletin}
                                     </span>
                                     {r.estado && (
-                                      <span className="truncate text-xs text-stone-400">
+                                      <span className="truncate text-xs text-slate-400">
                                         {r.estado}
                                       </span>
                                     )}
                                   </div>
-                                  <p className="mt-1 line-clamp-2 text-xs font-medium leading-snug text-stone-800 dark:text-stone-200">
+                                  <p className="mt-1 line-clamp-2 text-xs font-medium leading-snug text-slate-800 dark:text-slate-200">
                                     {r.titulo}
                                   </p>
                                   {r.fechaIngreso && (
-                                    <p className="mt-0.5 text-xs text-stone-400">
+                                    <p className="mt-0.5 text-xs text-slate-400">
                                       {r.fechaIngreso}
                                       {r.camara ? ` · ${r.camara}` : ''}
                                     </p>
@@ -427,7 +427,7 @@ export function ProjectResearchTab() {
                                   <button
                                     type="button"
                                     onClick={() => askAboutProject(r)}
-                                    className="rounded-md p-1 text-stone-400 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-950/30 dark:hover:text-orange-400"
+                                    className="rounded-md p-1 text-slate-400 hover:bg-cyan-50 hover:text-cyan-600 dark:hover:bg-cyan-950/30 dark:hover:text-cyan-400"
                                     title="Preguntar al agente"
                                   >
                                     <Bot className="h-3.5 w-3.5" />
@@ -436,7 +436,7 @@ export function ProjectResearchTab() {
                                     href={r.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="rounded-md p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+                                    className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
                                     title="Ver en sitio oficial"
                                   >
                                     <ExternalLink className="h-3.5 w-3.5" />
@@ -451,19 +451,19 @@ export function ProjectResearchTab() {
         </div>
 
         {/* ── Right Panel: AI Chat ─────────────────────────────────────────── */}
-        <div className="flex h-[700px] flex-col overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+        <div className="flex h-[700px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           {/* Messages list */}
           <div className="flex-1 overflow-y-auto p-4">
             <AiUnavailableNotice />
             {messages.length === 0 && (
               <div className="flex h-full flex-col items-center justify-center text-center">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 shadow-sm dark:bg-orange-900/30">
-                  <Bot className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-100 shadow-sm dark:bg-cyan-900/30">
+                  <Bot className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />
                 </div>
-                <h3 className="mb-1 text-sm font-semibold text-stone-700 dark:text-stone-300">
+                <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
                   Agente Legislativo
                 </h3>
-                <p className="mb-6 max-w-sm text-xs text-stone-500">
+                <p className="mb-6 max-w-sm text-xs text-slate-500">
                   Pregúntame sobre proyectos de ley, su estado, historial de cambios, o pídeme que envíe una alerta a Slack.
                 </p>
                 <div className="flex max-w-lg flex-wrap justify-center gap-2">
@@ -473,7 +473,7 @@ export function ProjectResearchTab() {
                       type="button"
                       onClick={() => sendMessage(q)}
                       disabled={isChatLoading}
-                      className="flex items-center gap-1.5 rounded-full border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs text-stone-600 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-300 dark:hover:border-orange-600 dark:hover:bg-orange-900/30"
+                      className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:border-cyan-600 dark:hover:bg-cyan-900/30"
                     >
                       <Sparkles className="h-3 w-3 shrink-0" />
                       {q}
@@ -491,34 +491,34 @@ export function ProjectResearchTab() {
                 >
                   {/* Bot avatar */}
                   {msg.role === 'assistant' && (
-                    <div className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/40">
-                      <Bot className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
+                    <div className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-900/40">
+                      <Bot className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
                     </div>
                   )}
 
                   {/* Bubble */}
                   {msg.role === 'user'
                     ? (
-                        <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-orange-600 px-4 py-2.5 text-sm text-white shadow-sm">
+                        <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-cyan-600 px-4 py-2.5 text-sm text-white shadow-sm">
                           {msg.content}
                         </div>
                       )
                     : (
-                        <div className="max-w-[80%] rounded-2xl rounded-bl-sm border border-stone-100 bg-stone-50 px-4 py-3 shadow-sm dark:border-stone-700 dark:bg-stone-800">
+                        <div className="max-w-[80%] rounded-2xl rounded-bl-sm border border-slate-100 bg-slate-50 px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
                           {msg.streaming && !msg.content
                             ? (
                               // Tool-call phase: bouncing dots
                                 <div className="flex items-center gap-1.5 py-0.5">
                                   <span
-                                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-stone-400"
+                                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
                                     style={{ animationDelay: '0ms' }}
                                   />
                                   <span
-                                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-stone-400"
+                                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
                                     style={{ animationDelay: '150ms' }}
                                   />
                                   <span
-                                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-stone-400"
+                                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
                                     style={{ animationDelay: '300ms' }}
                                   />
                                 </div>
@@ -528,7 +528,7 @@ export function ProjectResearchTab() {
                                   <SimpleMarkdown text={msg.content} />
                                   {msg.streaming && (
                                     // Blinking cursor while text streams in
-                                    <span className="ml-0.5 inline-block h-3.5 w-0.5 transtone-y-px animate-pulse bg-stone-500 dark:bg-stone-400" />
+                                    <span className="ml-0.5 inline-block h-3.5 w-0.5 translate-y-px animate-pulse bg-slate-500 dark:bg-slate-400" />
                                   )}
                                 </>
                               )}
@@ -537,8 +537,8 @@ export function ProjectResearchTab() {
 
                   {/* User avatar */}
                   {msg.role === 'user' && (
-                    <div className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-stone-200 dark:bg-stone-600">
-                      <User className="h-3.5 w-3.5 text-stone-600 dark:text-stone-300" />
+                    <div className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-600">
+                      <User className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
                     </div>
                   )}
                 </div>
@@ -549,7 +549,7 @@ export function ProjectResearchTab() {
           </div>
 
           {/* Input bar */}
-          <div className="border-t border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900">
+          <div className="border-t border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
             <div className="flex gap-2">
               <Input
                 value={chatInput}

@@ -63,6 +63,8 @@ El proyecto se distribuye configurado para **regulación financiera/fintech como
 
 Edita las listas, reinicia la app, y el radar es tuyo. Los proyectos de ley que sigues los eliges tú siempre (por boletín); esta config solo define defaults y alertas.
 
+Además, **puedes subir tu propio logo desde la interfaz**: pasa el mouse sobre el ícono del encabezado del dashboard y pulsa el lápiz (PNG, JPG, WebP o SVG, máx 2 MB). Queda guardado en la base de datos y lo ven todos los usuarios del portal.
+
 ## Stack
 
 Next.js 16 (Pages Router) · TypeScript · Bun · PostgreSQL + Drizzle ORM · Tailwind CSS v4 + shadcn/ui · BetterAuth

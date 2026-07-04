@@ -93,6 +93,7 @@ Abre <http://localhost:3000> en tu navegador e inicia sesión con el usuario que
 ## Recorrido por la interfaz
 
 - **Inicio**: resumen ejecutivo (cuántos proyectos sigues, cuántas audiencias hay, cambios y alertas) y atajos.
+- **Tu logo**: pasa el mouse sobre el ícono del encabezado y pulsa el lápiz para subir el logotipo de tu organización (PNG, JPG, WebP o SVG, hasta 2 MB) — el portal queda personalizado para todo tu equipo. La X lo quita.
 - **Proyectos**: tu radar. Agrega proyectos con el botón **"Agregar Proyecto"** (necesitas el [boletín](./GLOSARIO.md#boletín)); cada proyecto tiene página de detalle con su historial de cambios (snapshots) y un botón **"Actualizar del Senado"** para consultarlo al instante.
 - **Lobby**: tres sub-pestañas — **Explorador** (busca audiencias por institución, cargo, fecha o texto), **Cruces** (quién se reúne con quién: institución ↔ organización/persona) y **Agente IA** (pregúntale en lenguaje natural; requiere `OPENAI_API_KEY`). El botón **"Sincronizar Lobby"** trae audiencias nuevas.
 - **Investigación**: buscador sobre el cache de proyectos del Senado (se llena con `bulk-sync`, ver abajo) + un agente de IA que analiza tus proyectos y, si se lo pides, **envía alertas a Slack**.

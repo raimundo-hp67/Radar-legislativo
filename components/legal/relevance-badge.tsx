@@ -6,7 +6,7 @@ type Relevance = 'LOW' | 'MEDIUM' | 'HIGH';
 const relevanceConfig: Record<Relevance, { label: string, className: string }> = {
   LOW: {
     label: 'Baja',
-    className: 'bg-stone-100 text-stone-600 border-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700',
+    className: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
   },
   MEDIUM: {
     label: 'Media',
