@@ -3,7 +3,8 @@
 # Instalador de Radar Legislativo. Deja todo listo para usar:
 #   base de datos + configuración + dependencias + migraciones + tu usuario.
 #
-# Uso:  ./scripts/setup.sh
+# Uso:  ./scripts/setup.sh        (o: bash scripts/setup.sh)
+# Es idempotente: puedes correrlo de nuevo si algo falló a medias.
 #
 set -euo pipefail
 
@@ -26,19 +27,41 @@ if command -v docker > /dev/null && docker info > /dev/null 2>&1; then
   echo "✓ Docker disponible"
 else
   echo "⚠ Docker no está disponible. Si tienes tu propio Postgres, define DATABASE_URL en .env."
-  echo "  Si no, instala Docker Desktop: https://docs.docker.com/get-docker/"
+  echo "  Si no, instala Docker Desktop (y ábrelo): https://docs.docker.com/get-docker/"
 fi
 
 # ── 1. Configuración (.env) ───────────────────────────────────────────────
 say "Configuración"
 
-if [ -f .env ]; then
-  echo "✓ .env ya existe (no se toca)"
-else
+if [ ! -f .env.example ]; then
+  echo "❌ No se encontró .env.example. ¿Estás en la carpeta del proyecto?"
+  echo "   Corre este script desde la raíz: bash scripts/setup.sh"
+  exit 1
+fi
+
+gen_secret() {
+  if command -v openssl > /dev/null; then
+    openssl rand -base64 32
+  else
+    # Fallback sin openssl (base64 de 32 bytes aleatorios)
+    head -c 32 /dev/urandom | base64 | tr -d '\n'
+  fi
+}
+
+if [ ! -f .env ]; then
   cp .env.example .env
-  SECRET=$(openssl rand -base64 32)
-  sed -i.bak "s|^BETTER_AUTH_SECRET=.*|BETTER_AUTH_SECRET=$SECRET|" .env && rm -f .env.bak
-  echo "✓ .env creado con secreto de sesión generado automáticamente"
+  echo "✓ .env creado"
+else
+  echo "✓ .env ya existe (se conserva)"
+fi
+
+# Completa el secreto de sesión si falta (repara un .env que quedó a medias)
+if grep -q '^BETTER_AUTH_SECRET=$' .env; then
+  SECRET=$(gen_secret)
+  sed -i.bak "s|^BETTER_AUTH_SECRET=$|BETTER_AUTH_SECRET=$SECRET|" .env && rm -f .env.bak
+  echo "✓ Secreto de sesión generado automáticamente"
+else
+  echo "✓ Secreto de sesión ya configurado"
 fi
 
 # ── 2. Dependencias ───────────────────────────────────────────────────────
@@ -49,7 +72,15 @@ bun install
 say "Base de datos"
 
 if [ "$HAS_DOCKER" = "1" ]; then
-  docker compose up -d
+  if ! docker compose up -d; then
+    echo "❌ No se pudo iniciar Postgres con Docker."
+    echo "   Causa más común: el puerto 5432 ya está ocupado por otro Postgres."
+    echo "   Soluciones:"
+    echo "     - Detén el otro Postgres, o"
+    echo "     - Define POSTGRES_PORT=5433 en .env y ajusta el puerto en DATABASE_URL."
+    echo "   Diagnóstico: docker compose logs db"
+    exit 1
+  fi
   echo "✓ Postgres iniciado (Docker)"
 fi
 
@@ -64,16 +95,28 @@ bun run db:migrate
 if [ -t 0 ]; then
   say "Tu usuario"
   echo "El portal requiere iniciar sesión. Creemos tu cuenta (deja el email vacío para saltar este paso):"
-  read -r -p "  Email: " ADMIN_EMAIL
-  if [ -n "$ADMIN_EMAIL" ]; then
+  ATTEMPT=0
+  while [ "$ATTEMPT" -lt 3 ]; do
+    read -r -p "  Email: " ADMIN_EMAIL
+    if [ -z "$ADMIN_EMAIL" ]; then
+      echo "  Saltado. Puedes crearlo después con:"
+      echo "  bun run scripts/create-user.ts tu@email.com 'una-clave-segura' 'Tu Nombre'"
+      break
+    fi
     read -r -s -p "  Contraseña (mínimo 8 caracteres): " ADMIN_PASS
     echo
     read -r -p "  Nombre: " ADMIN_NAME
-    bun run scripts/create-user.ts "$ADMIN_EMAIL" "$ADMIN_PASS" "${ADMIN_NAME:-$ADMIN_EMAIL}"
-  else
-    echo "  Saltado. Puedes crearlo después con:"
-    echo "  bun run scripts/create-user.ts tu@email.com 'una-clave-segura' 'Tu Nombre'"
-  fi
+    if bun run scripts/create-user.ts "$ADMIN_EMAIL" "$ADMIN_PASS" "${ADMIN_NAME:-$ADMIN_EMAIL}"; then
+      break
+    fi
+    ATTEMPT=$((ATTEMPT + 1))
+    if [ "$ATTEMPT" -lt 3 ]; then
+      echo "  ⚠ No se pudo crear el usuario. Intentemos de nuevo (email vacío para saltar):"
+    else
+      echo "  ⚠ No se pudo crear el usuario. El resto del setup continúa; créalo después con:"
+      echo "  bun run scripts/create-user.ts tu@email.com 'una-clave-segura' 'Tu Nombre'"
+    fi
+  done
 
   # ── 5. Datos de ejemplo ─────────────────────────────────────────────────
   say "Datos de ejemplo"
@@ -85,7 +128,8 @@ if [ -t 0 ]; then
 else
   echo
   echo "(Modo no interactivo: usuario y datos de ejemplo saltados.)"
-  echo "Crea tu usuario con: bun run scripts/create-user.ts tu@email.com 'una-clave-segura'"
+  echo "Crea tu usuario con:      bun run scripts/create-user.ts tu@email.com 'una-clave-segura'"
+  echo "Datos de ejemplo con:     bun run scripts/seed-legal-projects.ts && bun run scripts/seed-proyectos.ts"
 fi
 
 # ── Listo ─────────────────────────────────────────────────────────────────

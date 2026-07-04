@@ -1,16 +1,19 @@
 /**
- * Script de carga masiva de proyectos de ley desde el Senado
- * Ejecutar con: bun run scripts/bulk-sync.ts
+ * Carga masiva del cache de proyectos de ley desde el Senado (habilita el
+ * buscador de la pestaña Investigación).
+ *
+ * ⏱️ Es LENTO por diseño (respeta la API pública): ~10-30 minutos para el
+ * rango por defecto. Puedes interrumpirlo y retomarlo: es idempotente.
+ *
+ * Uso:
+ *   bun run scripts/bulk-sync.ts                  # rango por defecto (17000-18500, ~2024-2026)
+ *   bun run scripts/bulk-sync.ts 16000 17000      # rango de boletines a elección
  */
 
 import postgres from 'postgres';
 
-const DATABASE_URL = process.env.DATABASE_URL || '';
-
-if (!DATABASE_URL) {
-  console.error('DATABASE_URL environment variable is required');
-  process.exit(1);
-}
+const DATABASE_URL = process.env.DATABASE_URL
+  || 'postgresql://postgres:postgres@localhost:5432/postgres';
 
 const sql = postgres(DATABASE_URL);
 
@@ -246,5 +249,17 @@ async function bulkSync(startBoletin: number, endBoletin: number) {
   await sql.end();
 }
 
-// Run for 2024-2026 (approximately boletins 17000-18500)
-bulkSync(17000, 18500);
+// Rango por CLI o default 2024-2026 (aprox. boletines 17000-18500)
+const start = Number(process.argv[2] ?? 17000);
+const end = Number(process.argv[3] ?? 18500);
+
+if (!Number.isInteger(start) || !Number.isInteger(end) || start >= end) {
+  console.error('Uso: bun run scripts/bulk-sync.ts [inicio] [fin]   (ej: 17000 18500)');
+  process.exit(1);
+}
+
+const estimatedMinutes = Math.max(1, Math.round(((end - start) / 10) * 0.5 / 60 * 3));
+console.log(`Rango de boletines: ${start}-${end} (~${end - start} boletines)`);
+console.log(`⏱️  Duración estimada: ~${estimatedMinutes} minutos. Puedes interrumpir con Ctrl+C y retomar después.\n`);
+
+bulkSync(start, end);
