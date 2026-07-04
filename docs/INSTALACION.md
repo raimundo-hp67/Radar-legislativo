@@ -90,6 +90,14 @@ Abre <http://localhost:3000> en tu navegador e inicia sesión con el usuario que
   bun run scripts/create-user.ts colega@email.com 'una-clave-segura' 'Nombre Colega'
   ```
 
+## Recorrido por la interfaz
+
+- **Inicio**: resumen ejecutivo (cuántos proyectos sigues, cuántas audiencias hay, cambios y alertas) y atajos.
+- **Proyectos**: tu radar. Agrega proyectos con el botón **"Agregar Proyecto"** (necesitas el [boletín](./GLOSARIO.md#boletín)); cada proyecto tiene página de detalle con su historial de cambios (snapshots) y un botón **"Actualizar del Senado"** para consultarlo al instante.
+- **Lobby**: tres sub-pestañas — **Explorador** (busca audiencias por institución, cargo, fecha o texto), **Cruces** (quién se reúne con quién: institución ↔ organización/persona) y **Agente IA** (pregúntale en lenguaje natural; requiere `OPENAI_API_KEY`). El botón **"Sincronizar Lobby"** trae audiencias nuevas.
+- **Investigación**: buscador sobre el cache de proyectos del Senado (se llena con `bulk-sync`, ver abajo) + un agente de IA que analiza tus proyectos y, si se lo pides, **envía alertas a Slack**.
+- **Cambios detectados** (`/legal/changes`, atajo en Inicio): historial completo de cambios en tus proyectos, filtrable por prioridad y período.
+
 ---
 
 ## ¿Los datos se actualizan solos?
@@ -107,8 +115,9 @@ Los botones "Actualizar" de la interfaz solo refrescan lo que ya está guardado 
 
 Con la aplicación corriendo (`bun run dev`):
 
-- **Audiencias de lobby**: en la pestaña **Lobby** de la aplicación hay un botón de **sincronizar** que trae las audiencias nuevas. Es la única sincronización con botón en la interfaz.
-- **Proyectos de ley** (estados, urgencias, cambios): abre una **segunda terminal** y ejecuta:
+- **Audiencias de lobby**: en la pestaña **Lobby** de la aplicación hay un botón de **sincronizar** que trae las audiencias nuevas.
+- **Un proyecto puntual**: botón **"Actualizar del Senado"** en su página de detalle.
+- **Todos los proyectos de ley** (estados, urgencias, cambios): abre una **segunda terminal** y ejecuta:
 
   ```bash
   curl -X POST http://localhost:3000/api/legal/poll -H "x-api-key: change-me-in-production"
@@ -119,6 +128,13 @@ Con la aplicación corriendo (`bun run dev`):
 
   ```bash
   bun run scripts/bulk-sync.ts
+  ```
+
+  ⏱️ Este demora varios minutos (consulta ~1500 proyectos respetando la API pública). Puedes interrumpirlo con `Ctrl + C` y retomarlo después.
+- **Audiencias de lobby por terminal** (equivalente al botón de la app):
+
+  ```bash
+  bun run scripts/sync-lobby.ts --months 6
   ```
 
 ### Actualización 24/7 (aunque tu computador esté apagado)
@@ -140,6 +156,47 @@ No en sentido estricto: es una **revisión periódica** (cada 6 horas local, dia
 | Vercel/servidor + GitHub Actions | ✅ Sí, 24/7 | Cada 6 h (`auto-update.yml`) |
 
 ---
+
+## Operación del día a día
+
+### Respaldar tus datos
+
+Tus proyectos, notas y prioridades viven en la base de datos local. Para respaldarlos (con Docker Desktop abierto):
+
+```bash
+docker compose exec db pg_dump -U postgres postgres > respaldo-radar.sql
+```
+
+Eso crea un archivo `respaldo-radar.sql` con TODO (guárdalo donde respaldas tus documentos). Para restaurarlo en una instalación nueva:
+
+```bash
+docker compose exec -T db psql -U postgres postgres < respaldo-radar.sql
+```
+
+### Actualizar la aplicación a una versión nueva
+
+Cuando la repo tenga mejoras y quieras traerlas:
+
+```bash
+cd Radar-legislativo
+git pull
+bun install
+bun run db:migrate
+```
+
+y vuelve a arrancarla con `bun run dev`. Tus datos no se tocan (las migraciones solo agregan estructura).
+
+### Desinstalar
+
+1. Apaga la app (`Ctrl + C`) y la base de datos: `docker compose down`
+   - Si además quieres **borrar los datos**: `docker compose down -v` (destruye el respaldo automático — haz un `pg_dump` antes si te importa)
+2. Borra la carpeta `Radar-legislativo`.
+3. (Opcional) Desinstala Docker Desktop y Bun como cualquier programa.
+4. Si la publicaste: borra el proyecto en Vercel y la base en Neon desde sus dashboards.
+
+### Glosario
+
+¿Qué es un boletín, la relevancia HIGH o un snapshot? → **[docs/GLOSARIO.md](./GLOSARIO.md)** explica cada término y su efecto en la herramienta.
 
 ## Problemas frecuentes
 
