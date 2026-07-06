@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { TriangleAlert } from 'lucide-react';
 import { signIn } from '~/lib/auth-client';
 import { Alert, AlertDescription } from '~/components/ui/alert';
@@ -127,6 +128,14 @@ export function LoginForm({ ssoEnabled = false }: { ssoEnabled?: boolean }) {
             {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
           </Button>
         </form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          ¿No tienes cuenta o no puedes entrar?
+          {' '}
+          <Link href="/signup" className="font-medium text-primary underline underline-offset-4">
+            Ver cómo obtener acceso
+          </Link>
+        </p>
       </CardContent>
     </Card>
   );

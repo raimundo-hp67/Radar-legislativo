@@ -92,6 +92,12 @@ say "Aplicando migraciones"
 bun run db:migrate
 
 # ── 4. Primer usuario ─────────────────────────────────────────────────────
+# USER_CREATED controla el recordatorio final: sin cuenta, la app SOLO
+# muestra una pantalla de login sin ninguna pista de qué hacer, así que este
+# aviso tiene que ser lo ÚLTIMO que se imprime — imposible de perder en el
+# scroll de bun install / migraciones / seeds.
+USER_CREATED=0
+
 if [ -t 0 ]; then
   say "Tu usuario"
   echo "El portal requiere iniciar sesión. Creemos tu cuenta (deja el email vacío para saltar este paso):"
@@ -99,22 +105,21 @@ if [ -t 0 ]; then
   while [ "$ATTEMPT" -lt 3 ]; do
     read -r -p "  Email: " ADMIN_EMAIL
     if [ -z "$ADMIN_EMAIL" ]; then
-      echo "  Saltado. Puedes crearlo después con:"
-      echo "  bun run scripts/create-user.ts tu@email.com 'una-clave-segura' 'Tu Nombre'"
+      echo "  Saltado (puedes crearlo después; te lo recuerdo al final)."
       break
     fi
     read -r -s -p "  Contraseña (mínimo 8 caracteres): " ADMIN_PASS
     echo
     read -r -p "  Nombre: " ADMIN_NAME
     if bun run scripts/create-user.ts "$ADMIN_EMAIL" "$ADMIN_PASS" "${ADMIN_NAME:-$ADMIN_EMAIL}"; then
+      USER_CREATED=1
       break
     fi
     ATTEMPT=$((ATTEMPT + 1))
     if [ "$ATTEMPT" -lt 3 ]; then
       echo "  ⚠ No se pudo crear el usuario. Intentemos de nuevo (email vacío para saltar):"
     else
-      echo "  ⚠ No se pudo crear el usuario. El resto del setup continúa; créalo después con:"
-      echo "  bun run scripts/create-user.ts tu@email.com 'una-clave-segura' 'Tu Nombre'"
+      echo "  ⚠ No se pudo crear el usuario tras 3 intentos (te lo recuerdo al final)."
     fi
   done
 
@@ -127,12 +132,17 @@ if [ -t 0 ]; then
   fi
 else
   echo
-  echo "(Modo no interactivo: usuario y datos de ejemplo saltados.)"
-  echo "Crea tu usuario con:      bun run scripts/create-user.ts tu@email.com 'una-clave-segura'"
-  echo "Datos de ejemplo con:     bun run scripts/seed-legal-projects.ts && bun run scripts/seed-proyectos.ts"
+  echo "⚠ Terminal no interactiva: usuario y datos de ejemplo saltados (te lo recuerdo al final)."
 fi
 
 # ── Listo ─────────────────────────────────────────────────────────────────
 say "Listo 🎉"
+if [ "$USER_CREATED" = "0" ]; then
+  echo "⚠️  IMPORTANTE — todavía NO tienes una cuenta. Sin esto, la app solo te"
+  echo "    mostrará una pantalla de login vacía y no podrás entrar. Créala con:"
+  echo
+  echo "    bun run scripts/create-user.ts tu@email.com 'una-clave-segura' 'Tu Nombre'"
+  echo
+fi
 echo "Inicia el portal con:   bun run dev"
 echo "Y ábrelo en:            http://localhost:3000"
