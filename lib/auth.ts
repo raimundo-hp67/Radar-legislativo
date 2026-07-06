@@ -13,9 +13,33 @@ export const isGoogleSsoEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLI
  */
 const allowCliProvisioning = process.env.AUTH_PROVISION === '1';
 
+/**
+ * BetterAuth rejects any login/signup whose browser Origin isn't in this
+ * list ("Invalid origin"). `localhost` and `127.0.0.1` are the same machine
+ * but different origins for a browser — a very common trip-up when running
+ * locally (`bun run dev` prints one, someone opens the other). We trust both
+ * automatically so that mismatch never locks anyone out.
+ */
+function withLocalAlias(url: string): string[] {
+  try {
+    const { origin, hostname } = new URL(url);
+    if (hostname === 'localhost') return [origin, origin.replace('localhost', '127.0.0.1')];
+    if (hostname === '127.0.0.1') return [origin, origin.replace('127.0.0.1', 'localhost')];
+    return [origin];
+  } catch {
+    return [url];
+  }
+}
+
+const trustedOrigins = [
+  ...withLocalAlias(env.BETTER_AUTH_URL),
+  ...(env.ADDITIONAL_TRUSTED_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) ?? []),
+];
+
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
+  trustedOrigins,
   database: drizzleAdapter(db, { provider: 'pg' }),
   emailAndPassword: {
     enabled: true,
