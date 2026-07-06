@@ -30,7 +30,7 @@ export default function SignupPage(
           <CardDescription>
             {ssoAvailable
               ? `Si tienes una cuenta @${allowedDomain}, inicia sesión con Google y tu cuenta se creará automáticamente.`
-              : 'El registro de nuevas cuentas no está disponible en este momento. Esta aplicación es de uso interno.'}
+              : 'Esta aplicación es de uso interno: no hay registro abierto. Pídele a quien la instaló que te cree una cuenta (corriendo "bun run scripts/create-user.ts" en su terminal) y que te pase el email y la contraseña.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
