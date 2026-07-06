@@ -4,6 +4,10 @@ const envSchema = z.object({
   DATABASE_URL: z.string().optional().default('postgresql://postgres:postgres@localhost:5432/postgres'),
   BETTER_AUTH_URL: z.string().optional().default('http://localhost:3000'),
   BETTER_AUTH_SECRET: z.string().min(32),
+  // Extra dominios permitidos para login además de BETTER_AUTH_URL (coma-
+  // separados). Útil si la app responde en más de un dominio (ej: dominio
+  // propio + el *.vercel.app que Vercel asigna automáticamente).
+  ADDITIONAL_TRUSTED_ORIGINS: z.string().optional(),
   // Legal Tracker
   SLACK_WEBHOOK_URL: z.string().optional(),
   LEGAL_POLL_API_KEY: z.string().optional().default('change-me-in-production'),

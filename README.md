@@ -95,6 +95,7 @@ Lo único indispensable es **Postgres** y un **secreto de sesión**. Con eso ya 
 | `AUTO_UPDATE_INTERVAL_HOURS` | Frecuencia (en horas) del actualizador automático integrado cuando corre local/self-hosted; default `6`, `0` desactiva | Es solo un número, no requiere key |
 | `LEGAL_POLL_API_KEY` | Protege `/api/legal/poll` (polling manual vía curl o cron externo) | Inventa un string aleatorio |
 | `CRON_SECRET` | Protege `/api/cron/*` en Vercel | Solo deploy en Vercel: defínelo en el dashboard del proyecto y Vercel lo envía automáticamente |
+| `ADDITIONAL_TRUSTED_ORIGINS` | Dominios extra permitidos para login (además de `BETTER_AUTH_URL`) | Solo si publicaste en más de un dominio; sin esto, entrar por una URL distinta a `BETTER_AUTH_URL` da error "Invalid origin" |
 | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` + `AUTH_ALLOWED_EMAIL_DOMAIN` | Login con Google (SSO) — mejora de seguridad **totalmente opcional** | Ver [Google SSO (opcional)](#google-sso-opcional) |
 
 Si una variable opcional no está configurada, la funcionalidad asociada simplemente se desactiva (la app avisa, no falla).
