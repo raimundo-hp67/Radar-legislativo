@@ -38,6 +38,28 @@ interface AnalyticsData {
 
 const PAGE_SIZE = 15;
 
+/**
+ * El CSV de InfoLobby no trae el ID de la audiencia, así que no hay enlace
+ * directo al registro puntual. Lo construimos aquí (en vez de depender del
+ * sourceUrl guardado) para que funcione también en filas sincronizadas antes
+ * de este cambio: una búsqueda del sujeto pasivo acotada al sitio oficial.
+ */
+function audienciaLink(a: {
+  sujetoPasivo: string | null
+  sujetoPasivoInstitucion: string | null
+  sourceUrl: string | null
+}): string {
+  const target = a.sujetoPasivo || a.sujetoPasivoInstitucion;
+  if (target) {
+    const org = a.sujetoPasivoInstitucion && a.sujetoPasivoInstitucion !== target
+      ? a.sujetoPasivoInstitucion
+      : '';
+    const query = [`"${target}"`, org, 'site:leylobby.gob.cl'].filter(Boolean).join(' ');
+    return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+  }
+  return a.sourceUrl || 'https://www.infolobby.cl/DatosAbiertos';
+}
+
 export function LobbyExplorer() {
   const [searchText, setSearchText] = useState('');
   const [institution, setInstitution] = useState('all');
@@ -293,16 +315,15 @@ export function LobbyExplorer() {
                             <span className="line-clamp-1">{a.materia || '—'}</span>
                           </td>
                           <td className="px-3 py-2.5">
-                            {a.sourceUrl && (
-                              <a
-                                href={a.sourceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-cyan-500 hover:text-cyan-700"
-                              >
-                                <ExternalLink className="h-3.5 w-3.5" />
-                              </a>
-                            )}
+                            <a
+                              href={audienciaLink(a)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Ver las audiencias de esta autoridad en el sitio oficial (leylobby.gob.cl)"
+                              className="text-cyan-500 hover:text-cyan-700"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
                           </td>
                         </tr>
                       ))}
