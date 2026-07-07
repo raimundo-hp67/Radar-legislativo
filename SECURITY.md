@@ -14,7 +14,9 @@ Aplica al código de esta repo: la app Next.js, sus endpoints (`pages/api/`), lo
 
 ## Diseño de seguridad actual
 
-El detalle vive en [README → Seguridad](./README.md#seguridad). En resumen: todos los endpoints de datos exigen sesión, registro abierto deshabilitado, rate limiting por usuario/IP, crons y polling fail-closed en producción, y comparaciones de secretos en tiempo constante.
+El detalle vive en [README → Seguridad](./README.md#seguridad). En resumen: todos los endpoints de datos exigen sesión, rate limiting por usuario/IP, crons y polling fail-closed en producción, y comparaciones de secretos en tiempo constante.
+
+El registro está cerrado salvo una ventana de una sola vez: `/signup` permite crear **la primera cuenta** de una instalación nueva sin usuarios todavía, y se cierra sola apenas esa cuenta existe. Esa ventana **nunca se abre** si `AUTH_ALLOWED_EMAIL_DOMAIN` está configurado (en ese caso el único camino es SSO de dominio verificado o `scripts/create-user.ts`). Fuera de esa ventana de arranque, no hay registro abierto.
 
 ## Buenas prácticas al operarlo
 
@@ -22,3 +24,4 @@ El detalle vive en [README → Seguridad](./README.md#seguridad). En resumen: to
 - Cambia `LEGAL_POLL_API_KEY` (el valor de fábrica se rechaza en producción).
 - Define `CRON_SECRET` en Vercel; sin él los crons rechazan todo.
 - No compartas tu `.env` ni lo subas a git (ya está en `.gitignore`).
+- Si publicas una instalación nueva en una URL alcanzable por terceros, crea tu cuenta (vía `/signup` o `create-user.ts`) **antes** de compartir el link — la ventana de bootstrap la gana quien llegue primero.

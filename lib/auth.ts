@@ -1,7 +1,9 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { APIError } from 'better-auth/api';
+import { sql } from 'drizzle-orm';
 import { db } from '~/db';
+import { user as userTable } from '~/db/schema';
 import { env } from '~/config/env';
 
 /** Google SSO is enabled when both OAuth credentials are configured. */
@@ -12,6 +14,23 @@ export const isGoogleSsoEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLI
  * Only honored for that process; never set it on a deployed server.
  */
 const allowCliProvisioning = process.env.AUTH_PROVISION === '1';
+
+let bootstrapped = false;
+
+/**
+ * Whether this installation already has at least one account. An install
+ * only ever goes from 0 → 1 users, never back down in normal operation, so
+ * once we've confirmed a user exists we cache that forever and skip the DB
+ * round trip — otherwise every anonymous visit to /signup would run a query
+ * with no rate limit (the BetterAuth rate limiter below only covers
+ * /api/auth/*, not this page).
+ */
+export async function hasAnyUser(): Promise<boolean> {
+  if (bootstrapped) return true;
+  const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(userTable);
+  bootstrapped = Number(count) > 0;
+  return bootstrapped;
+}
 
 /**
  * BetterAuth rejects any login/signup whose browser Origin isn't in this
@@ -43,10 +62,13 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: 'pg' }),
   emailAndPassword: {
     enabled: true,
-    // Password-based self-signup stays off: emails are not verified, so anyone
-    // could claim an allowed-domain address. Accounts are provisioned via
-    // Google SSO (verified emails) or scripts/create-user.ts.
-    disableSignUp: !allowCliProvisioning,
+    // Password-based signup can never prove someone owns an email address —
+    // that's only true for Google-verified logins. So when a domain
+    // restriction is configured, keep this closed exactly like before this
+    // feature existed (CLI script only); domain-based trust stays exclusive
+    // to SSO. Without a domain configured, leave it open so the bootstrap
+    // path in databaseHooks below can run for a brand-new install.
+    disableSignUp: env.AUTH_ALLOWED_EMAIL_DOMAIN ? !allowCliProvisioning : false,
   },
   ...(isGoogleSsoEnabled
     ? {
@@ -68,23 +90,38 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        // Runs for every new account, including first-time Google SSO logins.
-        // When AUTH_ALLOWED_EMAIL_DOMAIN is set, users of that domain are
-        // auto-provisioned on their first SSO login; everyone else is
-        // rejected. When unset, all account creation is blocked (fail closed).
-        before: async (user) => {
+        // Runs for every new account, including first-time Google SSO logins
+        // and the password-based signup form.
+        before: async (newUser) => {
           if (allowCliProvisioning) {
             return;
           }
+
           const domain = env.AUTH_ALLOWED_EMAIL_DOMAIN?.trim().toLowerCase();
-          const email = user.email?.toLowerCase() ?? '';
-          if (domain && email.endsWith(`@${domain}`)) {
+          if (domain) {
+            // Domain-restricted install: ONLY a matching, SSO-verified email
+            // gets in — no bootstrap fallback here. Falling through to the
+            // no-domain bootstrap check below would let anyone (any Google
+            // account, or — since password signup can't verify ownership —
+            // anyone typing an @domain address) claim the first account.
+            const email = newUser.email?.toLowerCase() ?? '';
+            if (email.endsWith(`@${domain}`)) {
+              return;
+            }
+            throw new APIError('FORBIDDEN', {
+              message: `Solo cuentas @${domain} pueden acceder a esta aplicación.`,
+            });
+          }
+
+          // No domain configured: allow the very first account (bootstrap)
+          // from the /signup form, no terminal needed. Closes automatically
+          // the instant that account exists — every account after it needs
+          // CLI or SSO, same as before this feature existed.
+          if (!(await hasAnyUser())) {
             return;
           }
           throw new APIError('FORBIDDEN', {
-            message: domain
-              ? `Solo cuentas @${domain} pueden acceder a esta aplicación.`
-              : 'Los registros están deshabilitados. Esta aplicación es de uso interno.',
+            message: 'Este portal ya tiene una cuenta creada. Pídele a quien lo administra que te agregue una.',
           });
         },
       },
