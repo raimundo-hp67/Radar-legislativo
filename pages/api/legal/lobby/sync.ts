@@ -20,6 +20,7 @@ interface SyncPostResponse {
   inserted: number
   skipped: number
   errors: number
+  fetched?: number
   error?: string
 }
 
@@ -79,6 +80,7 @@ export default protectedHandler(async function handler(
         inserted: result.inserted,
         skipped: result.skipped,
         errors: result.errors,
+        fetched: result.fetched,
       });
     } catch (error) {
       console.error('Error syncing lobby:', error);

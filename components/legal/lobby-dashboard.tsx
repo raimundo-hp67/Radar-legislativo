@@ -22,12 +22,21 @@ export function LobbyDashboard() {
         inserted: number
         skipped: number
         errors: number
+        fetched?: number
       }>;
     },
     onSuccess: (data) => {
-      setSyncLog(
-        `Sync completado — ${data.inserted} insertados, ${data.skipped} existentes${data.errors > 0 ? `, ${data.errors} errores` : ''}`,
-      );
+      const total = data.inserted + data.skipped;
+      let message: string;
+      if (total > 0) {
+        message = `Sync completado — ${data.inserted} nuevas, ${data.skipped} ya existían${data.errors > 0 ? `, ${data.errors} errores` : ''}`;
+      } else if ((data.fetched ?? 0) > 0) {
+        // Llegaron registros pero ninguno se pudo guardar: la fuente cambió su formato.
+        message = `⚠ InfoLobby devolvió ${data.fetched} registros pero ninguno se pudo leer (probablemente cambió el formato de la fuente). Corre "bun run scripts/debug-lobby.ts" en tu terminal y comparte la salida para arreglarlo.`;
+      } else {
+        message = 'InfoLobby no devolvió audiencias para el período consultado. Puede estar temporalmente sin datos; intenta más tarde.';
+      }
+      setSyncLog(message);
       void queryClient.invalidateQueries({ queryKey: ['lobby-audiencias'] });
       void queryClient.invalidateQueries({ queryKey: ['lobby-recent'] });
     },
