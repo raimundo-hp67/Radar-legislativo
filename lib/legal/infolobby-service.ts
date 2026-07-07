@@ -363,6 +363,11 @@ export interface SyncLobbyResult {
   inserted: number
   skipped: number
   errors: number
+  // Registros crudos recibidos de la fuente (antes de mapear/filtrar).
+  // Distingue "la fuente no devolvió nada" (fetched 0) de "recibí datos
+  // pero ninguno se pudo mapear" (fetched > 0, inserted+skipped 0 → la
+  // fuente cambió su formato de campos).
+  fetched?: number
 }
 
 /**
@@ -377,7 +382,7 @@ export async function syncLobbyFromInfoLobby(options: {
 } = {}): Promise<SyncLobbyResult> {
   const { months = 6, verbose = false } = options;
 
-  const result: SyncLobbyResult = { inserted: 0, skipped: 0, errors: 0 };
+  const result: SyncLobbyResult = { inserted: 0, skipped: 0, errors: 0, fetched: 0 };
   let failedFetches = 0;
 
   // Build the list of (year, month) pairs going backwards from today
@@ -399,6 +404,7 @@ export async function syncLobbyFromInfoLobby(options: {
       result.errors += 1;
       continue;
     }
+    result.fetched = (result.fetched ?? 0) + rawItems.length;
     if (rawItems.length === 0) {
       if (verbose) console.log(`[InfoLobby]   → 0 items`);
       continue;
