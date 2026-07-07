@@ -3,6 +3,7 @@ import { lobbyAudiencias } from '~/db/schema';
 import type { NewLobbyAudiencia } from '~/db/schema';
 import { isLeyLobbyEnabled, syncLobbyFromLeyLobby } from './leylobby-service';
 import { parseAudienciasCsv } from './infolobby-csv';
+import { syncLobbyFromCamara } from './camara-service';
 
 /**
  * InfoLobby Service
@@ -409,23 +410,53 @@ export async function syncLobbyFromInfoLobby(options: {
 }
 
 /**
- * Sync lobby audiencias from the best available source.
+ * Sync lobby audiencias from ALL available sources into the same table.
  *
- * Prefers the official Ley de Lobby API when configured
- * (LEYLOBBY_API_KEY + LEYLOBBY_INSTITUCIONES); otherwise falls back to the
- * public InfoLobby/VirtuosoLobby feed. Both write to the same table with
- * idempotent upserts.
+ * Sources (todas escriben en lobby_audiencias con upsert idempotente):
+ *   1. Gobierno / servicios públicos → API oficial Ley de Lobby si está
+ *      configurada (LEYLOBBY_API_KEY + LEYLOBBY_INSTITUCIONES), o el feed
+ *      público de InfoLobby en su defecto.
+ *   2. Cámara de Diputadas y Diputados → tabla HTML de camara.cl.
+ *
+ * (El Senado se sumará cuando confirmemos el formato de su API GetReuniones.)
+ *
+ * Cada fuente falla de forma aislada: si una no responde, las demás igual se
+ * sincronizan y sus totales se suman en el resultado.
  */
 export async function syncLobby(options: {
   months?: number
   verbose?: boolean
 } = {}): Promise<SyncLobbyResult> {
-  if (isLeyLobbyEnabled()) {
-    if (options.verbose) console.log('[Lobby] Using official Ley de Lobby API');
-    return syncLobbyFromLeyLobby(options);
+  const total: SyncLobbyResult = { inserted: 0, skipped: 0, errors: 0, fetched: 0 };
+  const add = (r: SyncLobbyResult) => {
+    total.inserted += r.inserted;
+    total.skipped += r.skipped;
+    total.errors += r.errors;
+    total.fetched = (total.fetched ?? 0) + (r.fetched ?? 0);
+  };
+
+  // 1. Gobierno (InfoLobby o API oficial).
+  try {
+    if (isLeyLobbyEnabled()) {
+      if (options.verbose) console.log('[Lobby] Fuente 1/2: API oficial Ley de Lobby');
+      add(await syncLobbyFromLeyLobby(options));
+    } else {
+      if (options.verbose) console.log('[Lobby] Fuente 1/2: feed público InfoLobby');
+      add(await syncLobbyFromInfoLobby(options));
+    }
+  } catch (error) {
+    console.error('[Lobby] Falló la fuente de gobierno:', error instanceof Error ? error.message : String(error));
+    total.errors += 1;
   }
-  if (options.verbose) console.log('[Lobby] Using public InfoLobby feed');
-  return syncLobbyFromInfoLobby(options);
+
+  // 2. Cámara de Diputados (no lanza; se omite sola si Cloudflare bloquea).
+  if (options.verbose) console.log('[Lobby] Fuente 2/2: Cámara de Diputados');
+  add(await syncLobbyFromCamara(options));
+
+  if (options.verbose) {
+    console.log(`[Lobby] Total combinado — insertadas: ${total.inserted}, existentes: ${total.skipped}, errores: ${total.errors}`);
+  }
+  return total;
 }
 
 // Export for backward compatibility
