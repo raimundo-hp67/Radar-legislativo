@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:open": "bun run scripts/open-when-ready.ts & next dev",
     "build": "next build",
     "start": "next start",
     "setup": "bash scripts/setup.sh",

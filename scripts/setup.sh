@@ -1,7 +1,8 @@
 #!/bin/bash
 #
 # Instalador de Radar Legislativo. Deja todo listo para usar:
-#   base de datos + configuración + dependencias + migraciones + tu usuario.
+#   base de datos + configuración + dependencias + migraciones, y al final
+#   levanta el portal y lo abre solo en el navegador para que crees tu cuenta.
 #
 # Uso:  ./scripts/setup.sh        (o: bash scripts/setup.sh)
 # Es idempotente: puedes correrlo de nuevo si algo falló a medias.
@@ -91,58 +92,37 @@ echo "✓ Postgres respondiendo"
 say "Aplicando migraciones"
 bun run db:migrate
 
-# ── 4. Primer usuario ─────────────────────────────────────────────────────
-# USER_CREATED controla el recordatorio final: sin cuenta, la app SOLO
-# muestra una pantalla de login sin ninguna pista de qué hacer, así que este
-# aviso tiene que ser lo ÚLTIMO que se imprime — imposible de perder en el
-# scroll de bun install / migraciones / seeds.
-USER_CREATED=0
-
+# ── 4. Datos de ejemplo (opcional) ────────────────────────────────────────
+# Ya NO se crea el usuario por la terminal: la primera cuenta se crea sola en
+# el navegador, en la pantalla que se abre al final (/signup). Es más simple
+# para gente no técnica.
 if [ -t 0 ]; then
-  say "Tu usuario"
-  echo "El portal requiere iniciar sesión. Creemos tu cuenta (deja el email vacío para saltar este paso):"
-  ATTEMPT=0
-  while [ "$ATTEMPT" -lt 3 ]; do
-    read -r -p "  Email: " ADMIN_EMAIL
-    if [ -z "$ADMIN_EMAIL" ]; then
-      echo "  Saltado (puedes crearlo después; te lo recuerdo al final)."
-      break
-    fi
-    read -r -s -p "  Contraseña (mínimo 8 caracteres): " ADMIN_PASS
-    echo
-    read -r -p "  Nombre: " ADMIN_NAME
-    if bun run scripts/create-user.ts "$ADMIN_EMAIL" "$ADMIN_PASS" "${ADMIN_NAME:-$ADMIN_EMAIL}"; then
-      USER_CREATED=1
-      break
-    fi
-    ATTEMPT=$((ATTEMPT + 1))
-    if [ "$ATTEMPT" -lt 3 ]; then
-      echo "  ⚠ No se pudo crear el usuario. Intentemos de nuevo (email vacío para saltar):"
-    else
-      echo "  ⚠ No se pudo crear el usuario tras 3 intentos (te lo recuerdo al final)."
-    fi
-  done
-
-  # ── 5. Datos de ejemplo ─────────────────────────────────────────────────
   say "Datos de ejemplo"
   read -r -p "¿Cargar proyectos de ley de ejemplo? (temática financiera de muestra; puedes borrarlos) [S/n] " SEED
   if [ "${SEED:-S}" != "n" ] && [ "${SEED:-S}" != "N" ]; then
     bun run scripts/seed-legal-projects.ts
     bun run scripts/seed-proyectos.ts
   fi
-else
-  echo
-  echo "⚠ Terminal no interactiva: usuario y datos de ejemplo saltados (te lo recuerdo al final)."
 fi
 
 # ── Listo ─────────────────────────────────────────────────────────────────
 say "Listo 🎉"
-if [ "$USER_CREATED" = "0" ]; then
-  echo "⚠️  IMPORTANTE — todavía NO tienes una cuenta. Sin esto, la app solo te"
-  echo "    mostrará una pantalla de login vacía y no podrás entrar. Créala con:"
-  echo
-  echo "    bun run scripts/create-user.ts tu@email.com 'una-clave-segura' 'Tu Nombre'"
-  echo
+echo "El portal se abrirá solo en tu navegador. La primera vez verás una"
+echo "pantalla para CREAR TU CUENTA (nombre, email y contraseña) — llénala y"
+echo "entras directo. No necesitas hacer nada más en la terminal."
+echo
+
+if [ -t 1 ]; then
+  # Terminal interactiva: levanta la app y abre el navegador en el landing.
+  # open-when-ready espera a que el servidor responda y abre localhost:3000;
+  # exec deja `next dev` en primer plano para que Ctrl+C lo detenga.
+  echo "(Para apagar la app: presiona Ctrl+C en esta ventana.)"
+  # Abrimos directo en /signup: en una instalación nueva muestra el formulario
+  # para crear tu cuenta; si ya existe una, ofrece ir a iniciar sesión.
+  APP_URL="http://localhost:3000/signup" bun run scripts/open-when-ready.ts &
+  exec bun run dev
+else
+  # Sin terminal interactiva (CI, scripts): no lanzar un servidor que colgaría.
+  echo "Levanta el portal con:  bun run dev"
+  echo "Y ábrelo en:            http://localhost:3000"
 fi
-echo "Inicia el portal con:   bun run dev"
-echo "Y ábrelo en:            http://localhost:3000"
