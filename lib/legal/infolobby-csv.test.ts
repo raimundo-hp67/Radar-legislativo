@@ -33,6 +33,15 @@ describe('parseAudienciasCsv', () => {
     expect(first.searchText).toContain('fuerza aérea de chile');
   });
 
+  test('sourceUrl es una búsqueda del sujeto pasivo en el sitio oficial', () => {
+    const first = parseAudienciasCsv(SAMPLE_CSV)[0];
+    // No la página genérica de datos abiertos, sino una búsqueda del nombre
+    expect(first.sourceUrl).not.toContain('/DatosAbiertos');
+    expect(first.sourceUrl).toContain('leylobby.gob.cl');
+    // El nombre del sujeto pasivo va codificado en la query
+    expect(first.sourceUrl).toContain(encodeURIComponent('"Miguel Stange"'));
+  });
+
   test('genera un ID estable (mismo input → mismo ID) para deduplicar', () => {
     const a = parseAudienciasCsv(SAMPLE_CSV);
     const b = parseAudienciasCsv(SAMPLE_CSV);
