@@ -66,7 +66,7 @@ cd Radar-legislativo
 ./scripts/setup.sh
 ```
 
-El instalador hace todo solo: levanta la base de datos, crea la configuración, aplica las migraciones, **enciende el portal y abre tu navegador automáticamente**. No tienes que escribir nada más en la terminal.
+El instalador hace todo solo: levanta la base de datos, crea la configuración, aplica las migraciones, **carga las audiencias de lobby de los últimos 2 años** (para que la pestaña Lobby ya tenga datos; tarda 1-2 minutos, una sola vez), y **enciende el portal abriendo tu navegador automáticamente**. No tienes que escribir nada más en la terminal.
 
 Lo primero que verás en el navegador es una pantalla para **crear tu cuenta**: escribe tu nombre, un email y una contraseña (mínimo 8 caracteres), presiona "Crear cuenta" y entras directo al portal. 🎉
 
