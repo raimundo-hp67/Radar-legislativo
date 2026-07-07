@@ -66,15 +66,11 @@ cd Radar-legislativo
 ./scripts/setup.sh
 ```
 
-El instalador hace todo solo: levanta la base de datos, crea la configuración, aplica las migraciones, **te pide inventar tu email y contraseña de acceso** y ofrece cargar proyectos de ley de ejemplo. Cuando termine:
+El instalador hace todo solo: levanta la base de datos, crea la configuración, aplica las migraciones, **enciende el portal y abre tu navegador automáticamente**. No tienes que escribir nada más en la terminal.
 
-```bash
-bun run dev
-```
+Lo primero que verás en el navegador es una pantalla para **crear tu cuenta**: escribe tu nombre, un email y una contraseña (mínimo 8 caracteres), presiona "Crear cuenta" y entras directo al portal. 🎉
 
-Abre <http://localhost:3000> en tu navegador e inicia sesión con el usuario que creaste. 🎉
-
-> 💡 **¿La terminal no te pidió crear un usuario, o llegaste a un login vacío?** No pasa nada: entra a <http://localhost:3000/signup> y vas a ver un formulario para crear tu cuenta ahí mismo, sin volver a la terminal. Ese formulario solo funciona la primera vez (mientras la instalación no tenga ninguna cuenta); apenas creas la tuya, se cierra solo.
+> 💡 Si el navegador no se abre solo (algunos computadores lo bloquean), abre tú mismo <http://localhost:3000/signup> y verás la misma pantalla de crear cuenta. Esa pantalla de registro solo aparece la primera vez, mientras la instalación no tenga ninguna cuenta; apenas creas la tuya, se cierra sola por seguridad.
 
 ## Uso diario
 
@@ -83,8 +79,10 @@ Abre <http://localhost:3000> en tu navegador e inicia sesión con el usuario que
 
   ```bash
   cd Radar-legislativo
-  bun run dev
+  bun run dev:open
   ```
+
+  (`dev:open` abre el navegador solo; si prefieres abrirlo tú, usa `bun run dev`.)
 
 - **Crear cuentas para colegas**: con la terminal en la carpeta del proyecto:
 
