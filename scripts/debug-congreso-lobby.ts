@@ -1,97 +1,31 @@
 /**
- * Diagnóstico del lobby del Congreso — RONDA 2 (drill-down).
+ * Diagnóstico del lobby del Congreso — RONDA 3 (formato exacto).
  *
- * La ronda 1 nos dijo:
- *   • Senado (https://www.senado.cl/transparencia/lobby) responde 200 y enlaza a
- *       /transparencia/lobby/registros-de-audiencias  y  /transparencia/lobby/audiencia
- *     …pero todavía no sabemos el FORMATO del dato real detrás de esas páginas.
- *   • Cámara (https://www.camara.cl/transparencia/ley_de_lobby.aspx) responde 403
- *     con Cloudflare → un `fetch` simple no sirve; hay que ir por el servicio de
- *     datos abiertos (opendata.camara.cl) o inspeccionar el navegador.
+ * Lo que ya sabemos:
+ *   • CÁMARA: https://www.camara.cl/transparencia/listadodeaudiencias.aspx
+ *       trae la TABLA COMPLETA en el HTML (~17.878 filas). Columnas:
+ *       Sujeto Pasivo | Fecha | Lobbista representado | Lugar | Materia | Detalles
+ *       → parseable directo. Solo falta ver la estructura real de una fila
+ *         (formato de fecha y el enlace de "Detalles").
+ *   • SENADO: la página se arma por JavaScript, pero filtró su API real:
+ *       https://tramitacion.senado.cl/appsenado/index.php?mo=lobby&ac=GetReuniones
+ *       → falta ver QUÉ devuelve (JSON, XML…) y con qué campos.
  *
  * Esta ronda:
- *   1. Entra a los sub-endpoints concretos del Senado e imprime un TROZO del
- *      cuerpo + detecta si es HTML-tabla, JSON o XML, y saca enlaces/recursos
- *      más profundos (paginación, /api/, .asmx, .json, descargas).
- *   2. Prueba el listado de servicios de datos abiertos de la Cámara.
+ *   1. Llama la API del Senado (GetReuniones) e imprime formato + un trozo
+ *      del cuerpo; si es JSON, cuenta registros y muestra el 1er objeto.
+ *   2. Descarga la tabla de la Cámara e imprime las primeras filas: las
+ *      celdas ya limpias Y el HTML crudo de 2 filas (para ver el <a> de
+ *      "Detalles" con su enlace al registro puntual).
  *
  * Uso:  bun run scripts/debug-congreso-lobby.ts
- *
  * Copia y pega TODA la salida.
- *
- * Si una página del Senado NO muestra el dato en el HTML (se arma por
- * JavaScript), ábrela en tu navegador, pulsa F12 → pestaña Network/Red,
- * recarga, filtra por "Fetch/XHR" y cuéntame qué llamadas aparecen (busca
- * .json / .xml / .aspx / /api/). Para la Cámara haz lo mismo en
- * https://www.camara.cl/transparencia/ley_de_lobby.aspx
  */
 export {};
 
-const TARGETS = [
-  // — Senado: los sub-endpoints que descubrimos en la ronda 1 —
-  { name: 'Senado · registros-de-audiencias', url: 'https://www.senado.cl/transparencia/lobby/registros-de-audiencias' },
-  { name: 'Senado · audiencia', url: 'https://www.senado.cl/transparencia/lobby/audiencia' },
-  // — Cámara: las páginas REALES de audiencias que salieron en la ronda 1
-  //   (el fetch a camara.cl a veces pasa Cloudflare y a veces no; reintenta) —
-  { name: 'Cámara · listadodeaudiencias', url: 'https://www.camara.cl/transparencia/listadodeaudiencias.aspx' },
-  { name: 'Cámara · audiencias', url: 'https://www.camara.cl/transparencia/audiencias.aspx' },
-];
-
-function extractTitle(html: string): string {
-  const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  return m ? m[1].trim().replace(/\s+/g, ' ') : '(sin título)';
-}
-
-/** ¿El cuerpo parece JSON, XML o HTML? */
-function sniffFormat(contentType: string, body: string): string {
-  const ct = contentType.toLowerCase();
-  const head = body.trimStart().slice(0, 200);
-  if (ct.includes('json') || head.startsWith('{') || head.startsWith('[')) return 'JSON';
-  if (ct.includes('xml') || head.startsWith('<?xml') || /^<(rss|feed|soap|wsdl|dataset)/i.test(head)) return 'XML';
-  if (ct.includes('csv')) return 'CSV';
-  if (/<table[\s>]/i.test(body)) return 'HTML con <table> (tabla en el HTML — se puede parsear)';
-  if (/<html[\s>]/i.test(head) || ct.includes('html')) return 'HTML (sin <table> visible → probablemente se arma por JavaScript)';
-  return 'desconocido';
-}
-
-/** Cuenta filas de tabla y celdas de encabezado, para saber si el dato está en el HTML. */
-function tableStats(html: string): string {
-  const rows = (html.match(/<tr[\s>]/gi) || []).length;
-  const headers = [...html.matchAll(/<th[^>]*>([\s\S]*?)<\/th>/gi)]
-    .map((m) => m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim())
-    .filter(Boolean)
-    .slice(0, 12);
-  if (rows === 0) return 'sin <tr> (no hay tabla en el HTML)';
-  return `${rows} <tr> · encabezados: ${headers.length ? headers.join(' | ') : '(sin <th>)'}`;
-}
-
-function extractDataLinks(html: string, base: string): string[] {
-  const links = new Set<string>();
-  const patterns = [
-    /href\s*=\s*["']([^"']+)["']/gi,
-    /src\s*=\s*["']([^"']+)["']/gi,
-    /url\s*[:=]\s*["']([^"']+)["']/gi,
-    /action\s*=\s*["']([^"']+)["']/gi,
-    /fetch\s*\(\s*["'`]([^"'`]+)["'`]/gi,
-    /["'`](\/[^"'`\s]*(?:api|audiencia|lobby|registro)[^"'`\s]*)["'`]/gi,
-  ];
-  for (const re of patterns) {
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(html)) !== null) {
-      const raw = m[1];
-      if (/\.(csv|xls|xlsx|json|xml|asmx|svc|wsdl)(\?|$)|descargar|download|opendata|audiencia|lobby|registro|\/api\//i.test(raw)) {
-        try {
-          links.add(new URL(raw, base).href);
-        } catch {
-          links.add(raw);
-        }
-      }
-    }
-  }
-  return [...links];
-}
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
 
 /** Descarga con reintentos: camara.cl a veces devuelve 403 (Cloudflare) y pasa al reintentar. */
 async function fetchWithRetry(url: string, attempts = 4): Promise<Response> {
@@ -99,10 +33,11 @@ async function fetchWithRetry(url: string, attempts = 4): Promise<Response> {
   for (let i = 0; i < attempts; i++) {
     const res = await fetch(url, {
       headers: {
-        Accept: 'text/html,application/json,application/xml,*/*',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
+        Accept: 'application/json,text/html,application/xml,*/*',
+        'User-Agent': UA,
+        'X-Requested-With': 'XMLHttpRequest',
       },
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(60000),
     });
     if (res.status !== 403) return res;
     last = res;
@@ -114,8 +49,22 @@ async function fetchWithRetry(url: string, attempts = 4): Promise<Response> {
   return last as Response;
 }
 
-async function probe(name: string, url: string): Promise<void> {
-  console.log(`\n══ ${name} ══════════════════════════════════`);
+function stripTags(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&aacute;/gi, 'á')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 1. SENADO — API GetReuniones
+// ─────────────────────────────────────────────────────────────────────────
+async function probeSenadoApi(): Promise<void> {
+  const url = 'https://tramitacion.senado.cl/appsenado/index.php?mo=lobby&ac=GetReuniones';
+  console.log('\n══ SENADO · API GetReuniones ══════════════════════════════');
   console.log(`URL: ${url}`);
   try {
     const res = await fetchWithRetry(url);
@@ -124,31 +73,79 @@ async function probe(name: string, url: string): Promise<void> {
     console.log(`Content-Type: ${ct}`);
     const text = await res.text();
     console.log(`Tamaño: ${text.length} caracteres`);
-    console.log(`Título: ${extractTitle(text)}`);
-    console.log(`Formato detectado: ${sniffFormat(ct, text)}`);
-    console.log(`Tabla: ${tableStats(text)}`);
 
-    console.log('\n── Primeros 600 caracteres del cuerpo ──');
-    console.log(text.slice(0, 600).replace(/\s+/g, ' ').trim());
-
-    const links = extractDataLinks(text, url);
-    if (links.length > 0) {
-      console.log(`\nEnlaces/recursos que parecen de datos (${links.length}):`);
-      links.slice(0, 40).forEach((l) => console.log(`  • ${l}`));
-      if (links.length > 40) console.log(`  … y ${links.length - 40} más`);
+    const head = text.trimStart().slice(0, 1);
+    if (head === '{' || head === '[') {
+      try {
+        const data = JSON.parse(text);
+        const arr = Array.isArray(data) ? data : (data.data ?? data.reuniones ?? data.result ?? null);
+        if (Array.isArray(arr)) {
+          console.log(`✓ JSON con ${arr.length} registros.`);
+          console.log('\nPRIMER registro (campos disponibles):');
+          console.log(JSON.stringify(arr[0], null, 2).slice(0, 1200));
+          if (arr[1]) {
+            console.log('\nSEGUNDO registro (para confirmar campos):');
+            console.log(JSON.stringify(arr[1], null, 2).slice(0, 1200));
+          }
+        } else {
+          console.log('✓ JSON (no es un array directo). Estructura de nivel superior:');
+          console.log(JSON.stringify(data, null, 2).slice(0, 1500));
+        }
+      } catch (e) {
+        console.log('⚠ Parece JSON pero no parseó:', e instanceof Error ? e.message : String(e));
+        console.log('\nPrimeros 1500 caracteres:');
+        console.log(text.slice(0, 1500));
+      }
     } else {
-      console.log('\n⚠ No se encontraron enlaces de datos en el HTML.');
+      console.log('Formato: NO-JSON. Primeros 1500 caracteres:');
+      console.log(text.slice(0, 1500));
     }
   } catch (error) {
     console.log(`✗ Falló: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
-console.log('Diagnóstico del lobby del Congreso (ronda 2) — copia y pega TODA esta salida.');
-for (const t of TARGETS) {
-  await probe(t.name, t.url);
+// ─────────────────────────────────────────────────────────────────────────
+// 2. CÁMARA — tabla HTML de listadodeaudiencias.aspx
+// ─────────────────────────────────────────────────────────────────────────
+async function probeCamaraTable(): Promise<void> {
+  const url = 'https://www.camara.cl/transparencia/listadodeaudiencias.aspx';
+  console.log('\n══ CÁMARA · listadodeaudiencias (muestra de filas) ═════════');
+  console.log(`URL: ${url}`);
+  try {
+    const res = await fetchWithRetry(url);
+    console.log(`HTTP: ${res.status} ${res.statusText}`);
+    const html = await res.text();
+    console.log(`Tamaño: ${html.length} caracteres`);
+
+    const rows = [...html.matchAll(/<tr[\s\S]*?<\/tr>/gi)].map((m) => m[0]);
+    console.log(`Total de <tr>: ${rows.length}`);
+
+    // Buscamos la primera fila con celdas de datos (varias <td>).
+    const dataRows = rows.filter((r) => (r.match(/<td[\s>]/gi) || []).length >= 3);
+    console.log(`Filas con datos (≥3 <td>): ${dataRows.length}`);
+
+    console.log('\n── Primeras 5 filas, celdas ya limpias ──');
+    dataRows.slice(0, 5).forEach((r, i) => {
+      const cells = [...r.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((m) => stripTags(m[1]));
+      console.log(`  [${i + 1}] ${cells.map((c) => c || '∅').join('  |  ')}`);
+    });
+
+    console.log('\n── HTML CRUDO de las primeras 2 filas (para ver el enlace de "Detalles") ──');
+    dataRows.slice(0, 2).forEach((r, i) => {
+      console.log(`\n  ▼ fila ${i + 1}:`);
+      console.log(r.replace(/\s+/g, ' ').trim().slice(0, 1500));
+    });
+  } catch (error) {
+    console.log(`✗ Falló: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
+
+console.log('Diagnóstico del lobby del Congreso (ronda 3) — copia y pega TODA esta salida.');
+await probeSenadoApi();
+await probeCamaraTable();
 console.log('\n══ Fin del diagnóstico ══');
-console.log('\nSi el Senado NO trae la tabla en el HTML (dice "se arma por JavaScript"),');
-console.log('abre la página en el navegador → F12 → Network/Red → filtra "Fetch/XHR" →');
-console.log('recarga, y cuéntame qué URL .json/.xml/.aspx aparece. Igual para la Cámara.');
+console.log('\nSi la API del Senado pide parámetros (devuelve vacío o error), abre');
+console.log('https://www.senado.cl/transparencia/lobby/registros-de-audiencias en el');
+console.log('navegador → F12 → Network/Red → filtra "Fetch/XHR" → recarga, y pégame');
+console.log('la URL COMPLETA de la llamada a GetReuniones (con todos sus parámetros).');
