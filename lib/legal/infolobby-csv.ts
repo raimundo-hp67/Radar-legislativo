@@ -49,21 +49,12 @@ function clean(value: string): string {
   return value.replace(/^"|"$/g, '').trim();
 }
 
-/**
- * El CSV de datos abiertos no trae el ID ni el código de institución de cada
- * audiencia, así que no se puede armar el enlace directo al registro puntual.
- * Lo mejor posible es una búsqueda pre-filtrada por el sujeto pasivo (y su
- * institución) acotada al sitio oficial: un clic lleva al abogado a los
- * registros oficiales de esa persona en leylobby.gob.cl.
- */
-export function buildAudienciaSearchUrl(pasivo: string, organismo: string): string {
-  const target = pasivo || organismo;
-  if (!target) return `${INFOLOBBY_BASE}/DatosAbiertos`;
-  const query = [`"${target}"`, organismo && target !== organismo ? organismo : '', 'site:leylobby.gob.cl']
-    .filter(Boolean)
-    .join(' ');
-  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-}
+// El CSV de datos abiertos no trae el ID ni el código de institución de cada
+// audiencia, así que no se puede armar el enlace directo al registro puntual.
+// Apuntamos al directorio oficial de instituciones de leylobby.gob.cl para que
+// el usuario navegue desde ahí. (Ojo: la UI construye este mismo enlace, así
+// que también aplica a filas sincronizadas antes de este cambio.)
+export const LEYLOBBY_INSTITUCIONES_URL = 'https://www.leylobby.gob.cl/instituciones';
 
 /**
  * Convierte el CSV de InfoLobby en filas listas para la tabla lobby_audiencias.
@@ -152,7 +143,7 @@ export function parseAudienciasCsv(
       materia: null,
       observaciones: null,
       searchText,
-      sourceUrl: buildAudienciaSearchUrl(pasivo, organismo),
+      sourceUrl: LEYLOBBY_INSTITUCIONES_URL,
       fetchedAt: new Date(),
     });
   }
