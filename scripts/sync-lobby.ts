@@ -1,7 +1,11 @@
 /**
- * Sincroniza audiencias de lobby desde la fuente configurada:
- *   - API oficial de Ley de Lobby si hay LEYLOBBY_API_KEY + LEYLOBBY_INSTITUCIONES
- *   - feed público de InfoLobby en caso contrario
+ * Sincroniza audiencias de lobby desde TODAS las fuentes disponibles hacia la
+ * misma base de datos:
+ *   - Gobierno / servicios públicos: API oficial de Ley de Lobby si hay
+ *     LEYLOBBY_API_KEY + LEYLOBBY_INSTITUCIONES; si no, el feed público de
+ *     InfoLobby (~54k audiencias).
+ *   - Cámara de Diputadas y Diputados: tabla pública de camara.cl.
+ *   (El Senado se sumará al confirmar el formato de su API.)
  *
  * Es idempotente (upserts): puedes correrlo cuantas veces quieras.
  * Es lo mismo que hace el botón "Sincronizar Lobby" de la app.
