@@ -2,6 +2,7 @@ import { db } from '~/db';
 import { lobbyAudiencias } from '~/db/schema';
 import type { NewLobbyAudiencia } from '~/db/schema';
 import { isLeyLobbyEnabled, syncLobbyFromLeyLobby } from './leylobby-service';
+import { parseAudienciasCsv } from './infolobby-csv';
 
 /**
  * InfoLobby Service
@@ -314,67 +315,53 @@ export async function fetchAndPrepareAudiencias(
   return limitedAudiencias.map((a) => toDbLobbyAudiencia(a, boletin, projectId));
 }
 
-// ─── VirtuosoLobby raw response type ─────────────────────────────────────────
-
-interface VirtuosoAudiencia {
-  IdLobby?: string
-  Fecha?: string
-  Label?: string
-  Institucion?: string
-  Materia?: string
-  Tipo?: string
-  Lugar?: string
-  Forma?: string
-  SujetoActivo?: string
-  SujetoActivoTipo?: string
-  SujetoActivoOrganizacion?: string
-  SujetoPasivoCargo?: string
-  Observaciones?: string
-}
-
-/**
- * Fetch all audiencias for a given year/month from the VirtuosoLobby API.
- * Returns the raw array, or `null` when the fetch itself failed — callers
- * must distinguish "no data for this month" ([]) from "source unreachable".
- */
-async function fetchMonthAudiencias(year: number, month: number): Promise<VirtuosoAudiencia[] | null> {
-  const url = `${INFOLOBBY_BASE}/VirtuosoLobby/Listado/Audiencia/1/${year}/${month}/0`;
-  try {
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      },
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!response.ok) {
-      console.warn(`[InfoLobby] HTTP ${response.status} for ${url}`);
-      return null;
-    }
-    const data = await response.json() as VirtuosoAudiencia[];
-    return Array.isArray(data) ? data : [];
-  } catch (error) {
-    console.warn(`[InfoLobby] Failed to fetch ${url}:`, error instanceof Error ? error.message : String(error));
-    return null;
-  }
-}
-
 export interface SyncLobbyResult {
   inserted: number
   skipped: number
   errors: number
-  // Registros crudos recibidos de la fuente (antes de mapear/filtrar).
+  // Registros crudos recibidos de la fuente (antes de deduplicar/insertar).
   // Distingue "la fuente no devolvió nada" (fetched 0) de "recibí datos
-  // pero ninguno se pudo mapear" (fetched > 0, inserted+skipped 0 → la
-  // fuente cambió su formato de campos).
+  // pero ninguno se pudo guardar" (fetched > 0, inserted+skipped 0).
   fetched?: number
 }
 
 /**
- * Sync audiencias from InfoLobby for the last N months and persist them to the
- * database using INSERT … ON CONFLICT DO NOTHING (idempotent).
- *
- * Returns counts of inserted, skipped, and error rows.
+ * Descarga el CSV acumulativo de audiencias de InfoLobby. La URL lleva un
+ * año/mes pero el archivo es el mismo dataset completo; probamos el mes
+ * actual y retrocedemos si aún no está publicado. Devuelve el texto del CSV
+ * o null si ningún intento respondió con datos.
+ */
+async function fetchLobbyCsv(now: Date = new Date()): Promise<string | null> {
+  for (let i = 0; i < 4; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const url = `${INFOLOBBY_BASE}/VirtuosoLobby/Visualizacion/${year}/${month}/dataset-audiencias.csv?PeriodoVis=1`;
+    try {
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
+        signal: AbortSignal.timeout(60000),
+      });
+      if (!response.ok) {
+        console.warn(`[InfoLobby] HTTP ${response.status} for ${url}`);
+        continue;
+      }
+      const text = await response.text();
+      // Debe traer encabezado + al menos una fila de datos.
+      if (text.split(/\r?\n/).filter((l) => l.trim()).length > 1) {
+        return text;
+      }
+    } catch (error) {
+      console.warn(`[InfoLobby] Failed to fetch ${url}:`, error instanceof Error ? error.message : String(error));
+    }
+  }
+  return null;
+}
+
+/**
+ * Sync audiencias from InfoLobby's open-data CSV and persist them using
+ * INSERT … ON CONFLICT DO NOTHING (idempotent). Fetches the single cumulative
+ * CSV once and keeps only audiencias from the last `months` months.
  */
 export async function syncLobbyFromInfoLobby(options: {
   months?: number
@@ -383,99 +370,35 @@ export async function syncLobbyFromInfoLobby(options: {
   const { months = 6, verbose = false } = options;
 
   const result: SyncLobbyResult = { inserted: 0, skipped: 0, errors: 0, fetched: 0 };
-  let failedFetches = 0;
 
-  // Build the list of (year, month) pairs going backwards from today
-  const now = new Date();
-  const monthsToFetch: Array<{ year: number, month: number }> = [];
-  for (let i = 0; i < months; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    monthsToFetch.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
-  }
-
-  for (const { year, month } of monthsToFetch) {
-    if (verbose) {
-      console.log(`[InfoLobby] Syncing ${year}/${month} …`);
-    }
-
-    const rawItems = await fetchMonthAudiencias(year, month);
-    if (rawItems === null) {
-      failedFetches += 1;
-      result.errors += 1;
-      continue;
-    }
-    result.fetched = (result.fetched ?? 0) + rawItems.length;
-    if (rawItems.length === 0) {
-      if (verbose) console.log(`[InfoLobby]   → 0 items`);
-      continue;
-    }
-
-    if (verbose) {
-      console.log(`[InfoLobby]   → ${rawItems.length} items fetched`);
-    }
-
-    // Map to DB rows
-    const rows: NewLobbyAudiencia[] = rawItems
-      .filter((item) => Boolean(item.IdLobby))
-      .map((item) => {
-        const idStr = String(item.IdLobby);
-        const searchParts = [
-          item.Label,
-          item.Institucion,
-          item.Materia,
-          item.SujetoActivo,
-          item.SujetoActivoOrganizacion,
-        ].filter(Boolean).join(' ').toLowerCase();
-
-        return {
-          infolobbyId: idStr,
-          fecha: item.Fecha || null,
-          lugar: item.Lugar || null,
-          forma: item.Forma || null,
-          tipoAudiencia: item.Tipo || null,
-          sujetoPasivo: item.Label || null,
-          sujetoPasivoCargo: item.SujetoPasivoCargo || null,
-          sujetoPasivoInstitucion: item.Institucion || null,
-          sujetoActivo: item.SujetoActivo || null,
-          sujetoActivoTipo: item.SujetoActivoTipo || null,
-          sujetoActivoOrganizacion: item.SujetoActivoOrganizacion || null,
-          materia: item.Materia || null,
-          observaciones: item.Observaciones || null,
-          searchText: searchParts || null,
-          sourceUrl: `${INFOLOBBY_BASE}/VirtuosoLobby/Listado/Audiencia/1/${year}/${month}/0`,
-          fetchedAt: new Date(),
-        };
-      });
-
-    if (rows.length === 0) continue;
-
-    try {
-      // Insert in batches of 100 to avoid large query payloads
-      const BATCH_SIZE = 100;
-      for (let offset = 0; offset < rows.length; offset += BATCH_SIZE) {
-        const batch = rows.slice(offset, offset + BATCH_SIZE);
-        const insertedRows = await db
-          .insert(lobbyAudiencias)
-          .values(batch)
-          .onConflictDoNothing()
-          .returning({ id: lobbyAudiencias.id });
-
-        result.inserted += insertedRows.length;
-        result.skipped += batch.length - insertedRows.length;
-      }
-    } catch (error) {
-      console.error(`[InfoLobby] DB insert error for ${year}/${month}:`, error instanceof Error ? error.message : String(error));
-      result.errors += rows.length;
-    }
-  }
-
-  // Every single month failed to download: the source is unreachable.
-  // Reporting "0 inserted" as success here would be indistinguishable from
-  // "no new audiencias" — fail loudly instead.
-  if (failedFetches === monthsToFetch.length) {
+  if (verbose) console.log('[InfoLobby] Descargando CSV de datos abiertos…');
+  const csv = await fetchLobbyCsv();
+  if (csv === null) {
     throw new Error(
-      'No se pudo conectar a InfoLobby: ninguna de las consultas respondió. Revisa tu conexión o intenta más tarde.',
+      'No se pudo descargar el CSV de audiencias de InfoLobby. Revisa tu conexión o intenta más tarde.',
     );
+  }
+
+  const rows = parseAudienciasCsv(csv, months);
+  result.fetched = rows.length;
+  if (verbose) console.log(`[InfoLobby] ${rows.length} audiencias en los últimos ${months} meses`);
+  if (rows.length === 0) return result;
+
+  const BATCH_SIZE = 100;
+  for (let offset = 0; offset < rows.length; offset += BATCH_SIZE) {
+    const batch = rows.slice(offset, offset + BATCH_SIZE);
+    try {
+      const insertedRows = await db
+        .insert(lobbyAudiencias)
+        .values(batch)
+        .onConflictDoNothing()
+        .returning({ id: lobbyAudiencias.id });
+      result.inserted += insertedRows.length;
+      result.skipped += batch.length - insertedRows.length;
+    } catch (error) {
+      console.error('[InfoLobby] DB insert error:', error instanceof Error ? error.message : String(error));
+      result.errors += batch.length;
+    }
   }
 
   if (verbose) {
