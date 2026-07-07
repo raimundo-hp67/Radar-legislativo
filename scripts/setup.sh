@@ -105,6 +105,26 @@ if [ -t 0 ]; then
   fi
 fi
 
+# ── 5. Audiencias de lobby (histórico) ────────────────────────────────────
+# Carga automática del histórico de audiencias para que la app quede usable
+# desde el primer momento. Quedan guardadas en la base de datos (que actúa
+# como caché: se ven al instante sin volver a descargar) y el actualizador
+# integrado las refresca cada pocas horas. Es NO FATAL: si la descarga falla
+# (sin conexión, fuente caída), el setup continúa y el usuario reintenta luego.
+# SKIP_LOBBY_SEED=1 lo omite (útil en CI para no bajar ~10 MB en cada build).
+if [ "${SKIP_LOBBY_SEED:-0}" != "1" ]; then
+  say "Audiencias de lobby (histórico)"
+  echo "Descargando audiencias de los últimos 2 años desde InfoLobby…"
+  echo "(es una sola vez y puede tardar 1-2 minutos)"
+  if bun run scripts/sync-lobby.ts --months 24; then
+    echo "✓ Audiencias de lobby cargadas en tu base de datos."
+  else
+    echo "⚠ No se pudieron cargar las audiencias ahora (¿sin conexión?). No pasa nada:"
+    echo "  hazlo después con el botón 'Sincronizar Lobby' de la app, o con:"
+    echo "  bun run scripts/sync-lobby.ts --months 24"
+  fi
+fi
+
 # ── Listo ─────────────────────────────────────────────────────────────────
 say "Listo 🎉"
 echo "El portal se abrirá solo en tu navegador. La primera vez verás una"

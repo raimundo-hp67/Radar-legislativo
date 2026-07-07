@@ -146,22 +146,25 @@ Si además quieres que la gente de tu organización entre con su cuenta de Googl
 
 ### Cargar datos
 
-Cada script puebla una cosa distinta; puedes correrlos en cualquier orden:
+El instalador (`setup.sh`) ya **carga solo** las audiencias de lobby de los últimos 2 años en tu base de datos, así que la pestaña Lobby queda usable desde el primer arranque. Los demás datos son opcionales y cada script puebla una cosa distinta:
 
 ```bash
-# 1. Proyectos de ley de ejemplo → pestaña Proyectos
+# Proyectos de ley de ejemplo → pestaña Proyectos
 #    (temática financiera de muestra; bórralos cuando cargues los tuyos)
 bun run scripts/seed-legal-projects.ts
 bun run scripts/seed-proyectos.ts
 
-# 2. Cache de proyectos del Senado → habilita el buscador de Investigación
+# Cache de proyectos del Senado → habilita el buscador de Investigación
 #    ⏱️ demora varios minutos (respeta la API pública); acepta rango: bulk-sync.ts 16000 17000
 bun run scripts/bulk-sync.ts
 
-# 3. Audiencias de lobby → pestaña Lobby
-#    (lo mismo que el botón "Sincronizar Lobby" de la app; acepta --months N)
-bun run scripts/sync-lobby.ts
+# Audiencias de lobby → pestaña Lobby (el setup ya las cargó; esto es para
+#    recargar o ampliar la ventana). Es lo mismo que el botón "Sincronizar
+#    Lobby" de la app. --months N define cuánta historia bajar (máx. 24).
+bun run scripts/sync-lobby.ts --months 24
 ```
+
+> Las audiencias quedan guardadas en tu base de datos (que funciona como caché: se ven al instante, sin volver a descargarlas) y el actualizador integrado las refresca cada pocas horas.
 
 Tus proyectos reales los agregas por la interfaz: pestaña **Proyectos → Agregar Proyecto** (necesitas el [boletín](./docs/GLOSARIO.md#boletín)).
 
