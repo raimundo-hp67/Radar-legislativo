@@ -31,9 +31,10 @@ const TARGETS = [
   // — Senado: los sub-endpoints que descubrimos en la ronda 1 —
   { name: 'Senado · registros-de-audiencias', url: 'https://www.senado.cl/transparencia/lobby/registros-de-audiencias' },
   { name: 'Senado · audiencia', url: 'https://www.senado.cl/transparencia/lobby/audiencia' },
-  // — Cámara: por Cloudflare vamos al portal de datos abiertos —
-  { name: 'Cámara · listado de servicios opendata', url: 'https://opendata.camara.cl/pages/lista_servicios.aspx' },
-  { name: 'Cámara · opendata raíz (por si redirige a WS)', url: 'https://opendata.camara.cl/' },
+  // — Cámara: las páginas REALES de audiencias que salieron en la ronda 1
+  //   (el fetch a camara.cl a veces pasa Cloudflare y a veces no; reintenta) —
+  { name: 'Cámara · listadodeaudiencias', url: 'https://www.camara.cl/transparencia/listadodeaudiencias.aspx' },
+  { name: 'Cámara · audiencias', url: 'https://www.camara.cl/transparencia/audiencias.aspx' },
 ];
 
 function extractTitle(html: string): string {
@@ -90,10 +91,12 @@ function extractDataLinks(html: string, base: string): string[] {
   return [...links];
 }
 
-async function probe(name: string, url: string): Promise<void> {
-  console.log(`\n══ ${name} ══════════════════════════════════`);
-  console.log(`URL: ${url}`);
-  try {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Descarga con reintentos: camara.cl a veces devuelve 403 (Cloudflare) y pasa al reintentar. */
+async function fetchWithRetry(url: string, attempts = 4): Promise<Response> {
+  let last: Response | null = null;
+  for (let i = 0; i < attempts; i++) {
     const res = await fetch(url, {
       headers: {
         Accept: 'text/html,application/json,application/xml,*/*',
@@ -101,6 +104,21 @@ async function probe(name: string, url: string): Promise<void> {
       },
       signal: AbortSignal.timeout(30000),
     });
+    if (res.status !== 403) return res;
+    last = res;
+    if (i < attempts - 1) {
+      console.log(`  (intento ${i + 1}: 403 Cloudflare, reintentando…)`);
+      await sleep(1500 * (i + 1));
+    }
+  }
+  return last as Response;
+}
+
+async function probe(name: string, url: string): Promise<void> {
+  console.log(`\n══ ${name} ══════════════════════════════════`);
+  console.log(`URL: ${url}`);
+  try {
+    const res = await fetchWithRetry(url);
     const ct = res.headers.get('content-type') ?? '(sin header)';
     console.log(`HTTP: ${res.status} ${res.statusText}`);
     console.log(`Content-Type: ${ct}`);
