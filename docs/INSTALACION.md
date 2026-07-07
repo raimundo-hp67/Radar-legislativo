@@ -74,6 +74,8 @@ bun run dev
 
 Abre <http://localhost:3000> en tu navegador e inicia sesión con el usuario que creaste. 🎉
 
+> 💡 **¿La terminal no te pidió crear un usuario, o llegaste a un login vacío?** No pasa nada: entra a <http://localhost:3000/signup> y vas a ver un formulario para crear tu cuenta ahí mismo, sin volver a la terminal. Ese formulario solo funciona la primera vez (mientras la instalación no tenga ninguna cuenta); apenas creas la tuya, se cierra solo.
+
 ## Uso diario
 
 - **Apagar**: vuelve a la terminal y presiona `Ctrl + C`.
@@ -160,7 +162,7 @@ No en sentido estricto: es una **revisión periódica** (cada 6 horas local, dia
 
 ## Recomendaciones de seguridad (en simple)
 
-La aplicación viene protegida por diseño: nadie puede ver nada sin usuario y contraseña, no existe el "regístrate gratis" (las cuentas las creas solo tú), y ha sido auditada. Pero la seguridad también depende de cómo la uses. Estas son las reglas de oro, sin tecnicismos:
+La aplicación viene protegida por diseño: nadie puede ver nada sin usuario y contraseña, no existe el "regístrate gratis" para siempre (el formulario de creación de cuenta en `/signup` solo funciona **una vez**, para la primera cuenta de una instalación nueva, y se cierra solo apenas esa cuenta existe), y ha sido auditada. Pero la seguridad también depende de cómo la uses. Estas son las reglas de oro, sin tecnicismos:
 
 ### Cuentas y contraseñas
 

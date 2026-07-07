@@ -1,7 +1,9 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { APIError } from 'better-auth/api';
+import { sql } from 'drizzle-orm';
 import { db } from '~/db';
+import { user as userTable } from '~/db/schema';
 import { env } from '~/config/env';
 
 /** Google SSO is enabled when both OAuth credentials are configured. */
@@ -43,10 +45,9 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: 'pg' }),
   emailAndPassword: {
     enabled: true,
-    // Password-based self-signup stays off: emails are not verified, so anyone
-    // could claim an allowed-domain address. Accounts are provisioned via
-    // Google SSO (verified emails) or scripts/create-user.ts.
-    disableSignUp: !allowCliProvisioning,
+    // The actual signup gate lives in databaseHooks.user.create.before below
+    // (bootstrap / domain / CLI) — this stays open so that gate can run.
+    disableSignUp: false,
   },
   ...(isGoogleSsoEnabled
     ? {
@@ -68,23 +69,37 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        // Runs for every new account, including first-time Google SSO logins.
-        // When AUTH_ALLOWED_EMAIL_DOMAIN is set, users of that domain are
-        // auto-provisioned on their first SSO login; everyone else is
-        // rejected. When unset, all account creation is blocked (fail closed).
-        before: async (user) => {
+        // Runs for every new account, including first-time Google SSO logins
+        // and the password-based signup form.
+        //
+        // Allowed to go through when ANY of:
+        //  - CLI provisioning (scripts/create-user.ts)
+        //  - email domain matches AUTH_ALLOWED_EMAIL_DOMAIN (SSO auto-provision)
+        //  - BOOTSTRAP: this is a brand-new install with zero users yet, so
+        //    whoever fills the signup form on /signup becomes the first
+        //    account. This is what lets a fresh `bun run dev` (or a freshly
+        //    deployed instance) be usable straight from the browser, with no
+        //    terminal step. The instant that first account exists, this
+        //    path closes again — every account after it needs CLI or SSO,
+        //    same as before.
+        // Otherwise: rejected (fail closed).
+        before: async (newUser) => {
           if (allowCliProvisioning) {
             return;
           }
           const domain = env.AUTH_ALLOWED_EMAIL_DOMAIN?.trim().toLowerCase();
-          const email = user.email?.toLowerCase() ?? '';
+          const email = newUser.email?.toLowerCase() ?? '';
           if (domain && email.endsWith(`@${domain}`)) {
+            return;
+          }
+          const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(userTable);
+          if (Number(count) === 0) {
             return;
           }
           throw new APIError('FORBIDDEN', {
             message: domain
               ? `Solo cuentas @${domain} pueden acceder a esta aplicación.`
-              : 'Los registros están deshabilitados. Esta aplicación es de uso interno.',
+              : 'Este portal ya tiene una cuenta creada. Pídele a quien lo administra que te agregue una.',
           });
         },
       },

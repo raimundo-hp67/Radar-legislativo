@@ -117,7 +117,9 @@ Sin key, el módulo de lobby ya funciona con el feed público de InfoLobby. Si q
 
 ## Gestión de usuarios
 
-El registro abierto está deshabilitado por diseño: las cuentas se crean por ti, con el script de usuarios. Es lo único que necesitas para ti y tu equipo:
+**Tu primera cuenta se crea sola, en el navegador.** La primera vez que abres una instalación nueva (sin usuarios todavía), `/signup` te muestra un formulario para crear tu cuenta ahí mismo — sin terminal. En cuanto existe una cuenta, ese formulario se cierra automáticamente y no se puede volver a usar (es solo para el arranque, no un registro abierto).
+
+Para agregar colegas después, usa el script de usuarios desde tu terminal:
 
 ```bash
 bun run scripts/create-user.ts colega@email.com 'una-clave-segura' 'Nombre Colega'
@@ -244,7 +246,7 @@ Si no configuras esas keys, nada sale de tu infraestructura.
 
 - **Autenticación**: todos los endpoints de datos (`/api/legal/*`) exigen sesión (devuelven `401` sin ella). El único endpoint público es `/api/legal/health`, que solo expone conteos.
 - **Rate limiting**: todos los endpoints autenticados tienen límite por usuario y ruta (100 req/min por defecto). Los endpoints caros son más estrictos: chats con IA 20 req/5 min, syncs y scrapers 5 req/10 min. Los públicos se limitan por IP (`/health` 30 req/min, `/poll` 6 req/hora). Al exceder el límite se responde `429` con header `Retry-After`. El limitador es en memoria: en serverless aplica por instancia (suficiente contra ráfagas; para límites globales estrictos usa un store compartido tipo Redis).
-- **Login**: los endpoints de BetterAuth tienen su propio rate limit (20 req/min) contra fuerza bruta. El registro abierto está deshabilitado; las cuentas se crean con `scripts/create-user.ts` o, si activas el SSO opcional, vía Google (emails verificados) solo para el dominio de `AUTH_ALLOWED_EMAIL_DOMAIN`.
+- **Login**: los endpoints de BetterAuth tienen su propio rate limit (20 req/min) contra fuerza bruta. El registro solo está abierto para crear la **primera** cuenta de una instalación nueva (sin usuarios) y se cierra solo en cuanto esa cuenta existe; de ahí en más, las cuentas se crean con `scripts/create-user.ts` o, si activas el SSO opcional, vía Google (emails verificados) solo para el dominio de `AUTH_ALLOWED_EMAIL_DOMAIN`. El cierre se aplica en el servidor (no solo en la interfaz), así que un intento directo a la API también es rechazado.
 - **`AUTH_PROVISION`**: variable interna que usa `scripts/create-user.ts` para levantar momentáneamente la restricción de registro **en el proceso del script**. Nunca la definas en un servidor desplegado: dejaría el registro abierto.
 - **Headers de seguridad**: CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` y HSTS en todas las respuestas (`next.config.ts`). El rate limiting por IP solo confía en `X-Forwarded-For` en Vercel o con `TRUST_PROXY=1` (anti-spoofing en self-hosted).
 - **Crons y polling fail-closed**: en producción, `/api/cron/*` rechaza todo si `CRON_SECRET` no está configurado, y `/api/legal/poll` rechaza la API key por defecto (`change-me-in-production`). Las comparaciones de secretos son en tiempo constante.
