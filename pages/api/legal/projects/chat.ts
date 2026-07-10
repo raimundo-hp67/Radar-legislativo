@@ -4,7 +4,7 @@ import * as z from 'zod';
 import { protectedHandler } from '~/lib/api/protected-handler';
 import { db } from '~/db';
 import { legalProjects, projectSnapshots } from '~/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { and, eq, desc } from 'drizzle-orm';
 import {
   searchProjectsInCache,
   searchByBoletin,
@@ -41,7 +41,7 @@ const projectsChatRequestSchema = z.object({
   moduleKey: z.enum(['proyectos', 'investigacion']).optional().default('proyectos'),
 });
 
-async function getTrackedProjects() {
+async function getTrackedProjects(userId: string) {
   const rows = await db
     .select({
       boletin: legalProjects.boletin,
@@ -54,6 +54,7 @@ async function getTrackedProjects() {
       objetivo: legalProjects.objetivo,
     })
     .from(legalProjects)
+    .where(eq(legalProjects.userId, userId))
     .orderBy(desc(legalProjects.updatedAt))
     .limit(50);
 
@@ -80,11 +81,11 @@ async function getProjectSnapshots(boletin: string) {
   return rows;
 }
 
-async function getProjectDetail(boletin: string) {
+async function getProjectDetail(boletin: string, userId: string) {
   const [project] = await db
     .select()
     .from(legalProjects)
-    .where(eq(legalProjects.boletin, boletin.trim()))
+    .where(and(eq(legalProjects.boletin, boletin.trim()), eq(legalProjects.userId, userId)))
     .limit(1);
 
   return project ?? null;
@@ -257,7 +258,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   },
 ];
 
-async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
+async function executeTool(name: string, args: Record<string, unknown>, userId: string): Promise<string> {
   switch (name) {
     case 'search_projects': {
       const results = await searchProjectsInCache(
@@ -271,7 +272,7 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       return JSON.stringify(result);
     }
     case 'get_tracked_projects': {
-      const projects = await getTrackedProjects();
+      const projects = await getTrackedProjects(userId);
       return JSON.stringify(projects);
     }
     case 'get_project_snapshots': {
@@ -279,7 +280,7 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       return JSON.stringify(snapshots);
     }
     case 'get_project_detail': {
-      const detail = await getProjectDetail(args.boletin as string);
+      const detail = await getProjectDetail(args.boletin as string, userId);
       return JSON.stringify(detail);
     }
     case 'send_slack_alert': {
@@ -293,10 +294,12 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
 export default protectedHandler(async (
   req: NextApiRequest,
   res: NextApiResponse,
+  session,
 ) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+  const userId = session.user.id;
 
   const parsedBody = projectsChatRequestSchema.safeParse(req.body);
   if (!parsedBody.success) {
@@ -349,7 +352,7 @@ export default protectedHandler(async (
       for (const toolCall of assistantMsg.tool_calls) {
         if (toolCall.type !== 'function') continue;
         const args = JSON.parse(toolCall.function.arguments) as Record<string, unknown>;
-        const result = await executeTool(toolCall.function.name, args);
+        const result = await executeTool(toolCall.function.name, args, userId);
         messages.push({
           role: 'tool',
           tool_call_id: toolCall.id,

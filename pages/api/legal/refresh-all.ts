@@ -14,13 +14,16 @@ export const maxDuration = 300;
  * Fetches fresh data from the Senado API for all projects
  * Updates project fields and creates snapshots for history
  */
-export default protectedHandler(async (req, res: NextApiResponse) => {
+export default protectedHandler(async (req, res: NextApiResponse, session) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Get all projects
-  const projects = await db.select().from(legalProjects);
+  // Solo los proyectos de este usuario.
+  const projects = await db
+    .select()
+    .from(legalProjects)
+    .where(eq(legalProjects.userId, session.user.id));
 
   const results = {
     total: projects.length,

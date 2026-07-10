@@ -46,8 +46,20 @@ function formatDateForSenado(date: Date): string {
 export async function runPoll(options: RunPollOptions = {}): Promise<PollSummary> {
   const digestMode = options.digestMode ?? 'always';
 
-  // Get all projects to poll
-  const projects = await db.select().from(legalProjects);
+  // Los snapshots son datos públicos compartidos por boletín, así que aunque
+  // varios usuarios sigan el mismo proyecto lo scrapeamos UNA sola vez.
+  // Deduplicamos por boletín quedándonos con la relevancia más alta entre
+  // quienes lo siguen (para no perder alertas de proyectos marcados HIGH).
+  const allProjects = await db.select().from(legalProjects);
+  const rank: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+  const byBoletin = new Map<string, (typeof allProjects)[number]>();
+  for (const p of allProjects) {
+    const cur = byBoletin.get(p.boletin);
+    if (!cur || (rank[p.relevance] ?? 0) > (rank[cur.relevance] ?? 0)) {
+      byBoletin.set(p.boletin, p);
+    }
+  }
+  const projects = [...byBoletin.values()];
   const projectMap = new Map(projects.map((p) => [p.boletin.split('-')[0], p]));
 
   const results: PollResult[] = [];

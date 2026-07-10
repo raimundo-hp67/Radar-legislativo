@@ -4,8 +4,8 @@
  */
 
 import { db } from '../db';
-import { legalProjects } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { legalProjects, user } from '../db/schema';
+import { and, asc, eq } from 'drizzle-orm';
 
 const initialProjects = [
   {
@@ -90,15 +90,23 @@ const initialProjects = [
 async function seed() {
   console.log('🌱 Starting seed...\n');
 
+  // Cada proyecto pertenece a un usuario. Los de ejemplo se asignan al primer
+  // usuario (admin). Si aún no existe ninguno, se omite sin fallar.
+  const [firstUser] = await db.select({ id: user.id }).from(user).orderBy(asc(user.createdAt)).limit(1);
+  if (!firstUser) {
+    console.log('⏭️  Aún no hay usuarios. Crea tu cuenta primero (regístrate en el navegador) y vuelve a correr este seed si quieres los proyectos de ejemplo.');
+    process.exit(0);
+  }
+
   let created = 0;
   let skipped = 0;
 
   for (const project of initialProjects) {
-    // Check if project already exists
+    // ¿Este usuario ya sigue este boletín?
     const [existing] = await db
       .select()
       .from(legalProjects)
-      .where(eq(legalProjects.boletin, project.boletin))
+      .where(and(eq(legalProjects.boletin, project.boletin), eq(legalProjects.userId, firstUser.id)))
       .limit(1);
 
     if (existing) {
@@ -108,7 +116,7 @@ async function seed() {
     }
 
     // Insert new project
-    await db.insert(legalProjects).values(project);
+    await db.insert(legalProjects).values({ ...project, userId: firstUser.id });
     console.log(`✅ Created ${project.boletin} - ${project.title}`);
     created++;
   }

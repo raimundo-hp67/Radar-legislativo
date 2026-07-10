@@ -1,5 +1,5 @@
 import type { NextApiResponse } from 'next';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { db } from '~/db';
 import { legalProjects, projectSnapshots } from '~/db/schema';
 import { protectedHandler } from '~/lib/api/protected-handler';
@@ -10,7 +10,7 @@ import { diffSnapshots } from '~/lib/legal/diff-engine';
  * POST /api/legal/projects/[id]/refresh
  * Fetches fresh data from the Senado API for a specific project
  */
-export default protectedHandler(async (req, res: NextApiResponse) => {
+export default protectedHandler(async (req, res: NextApiResponse, session) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -20,11 +20,11 @@ export default protectedHandler(async (req, res: NextApiResponse) => {
     return res.status(400).json({ error: 'ID inválido' });
   }
 
-  // Get the project
+  // Solo un proyecto propio de este usuario.
   const [project] = await db
     .select()
     .from(legalProjects)
-    .where(eq(legalProjects.id, id))
+    .where(and(eq(legalProjects.id, id), eq(legalProjects.userId, session.user.id)))
     .limit(1);
 
   if (!project) {
@@ -74,7 +74,7 @@ export default protectedHandler(async (req, res: NextApiResponse) => {
         await db
           .update(legalProjects)
           .set({ notes: parts.join(' | '), updatedAt: new Date() })
-          .where(eq(legalProjects.id, id));
+          .where(and(eq(legalProjects.id, id), eq(legalProjects.userId, session.user.id)));
       }
     }
 

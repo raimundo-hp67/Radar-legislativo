@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { db } from '~/db';
 import { legalProjects, projectSnapshots } from '~/db/schema';
 import { protectedHandler } from '~/lib/api/protected-handler';
@@ -8,22 +8,26 @@ import { hasRecentChanges } from '~/lib/legal/diff-engine';
 import { fetchProjectStatus } from '~/lib/legal/congress-scraper';
 import type { ProjectWithSnapshot } from '~/lib/legal/types';
 
-export default protectedHandler(async (req, res) => {
+export default protectedHandler(async (req, res, session) => {
   if (req.method === 'GET') {
-    return handleGet(req, res);
+    return handleGet(req, res, session.user.id);
   }
 
   if (req.method === 'POST') {
-    return handlePost(req, res);
+    return handlePost(req, res, session.user.id);
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
 });
 
-async function handleGet(_req: NextApiRequest, res: NextApiResponse) {
+async function handleGet(_req: NextApiRequest, res: NextApiResponse, userId: string) {
   try {
-    // Get all projects
-    const projects = await db.select().from(legalProjects).orderBy(desc(legalProjects.createdAt));
+    // Solo los proyectos de este usuario (cada uno tiene su radar privado).
+    const projects = await db
+      .select()
+      .from(legalProjects)
+      .where(eq(legalProjects.userId, userId))
+      .orderBy(desc(legalProjects.createdAt));
 
     // For each project, get the latest snapshot
     const projectsWithSnapshots: ProjectWithSnapshot[] = await Promise.all(
@@ -53,7 +57,7 @@ async function handleGet(_req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-async function handlePost(req: NextApiRequest, res: NextApiResponse) {
+async function handlePost(req: NextApiRequest, res: NextApiResponse, userId: string) {
   try {
     const validation = createProjectSchema.safeParse(req.body);
 
@@ -66,45 +70,53 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 
     const { boletin, title, relevance, dateIngreso, estado, camara, urgencia, comision, notes } = validation.data;
 
-    // Check if boletin already exists
+    // ¿Este usuario ya sigue este boletín? (otro usuario sí puede tenerlo)
     const [existing] = await db
       .select()
       .from(legalProjects)
-      .where(eq(legalProjects.boletin, boletin))
+      .where(and(eq(legalProjects.boletin, boletin), eq(legalProjects.userId, userId)))
       .limit(1);
 
     if (existing) {
-      return res.status(409).json({ error: 'Ya existe un proyecto con este boletín' });
+      return res.status(409).json({ error: 'Ya sigues un proyecto con este boletín' });
     }
 
-    // Try to fetch data from scraper to auto-populate fields
     let scrapedEstado = estado || null;
     let scrapedCamara = camara || null;
     let scrapedUrgencia = urgencia || null;
     let scrapedComision = comision || null;
     let initialSnapshot = null;
 
-    try {
-      const scrapedData = await fetchProjectStatus(boletin);
+    // Los snapshots (datos públicos scrapeados) se comparten por boletín. Si
+    // otro usuario ya seguía este proyecto, reutilizamos el último snapshot en
+    // vez de volver a scrapear; si no existe ninguno, scrapeamos una vez.
+    const [existingSnapshot] = await db
+      .select()
+      .from(projectSnapshots)
+      .where(eq(projectSnapshots.boletin, boletin))
+      .orderBy(desc(projectSnapshots.fetchedAt))
+      .limit(1);
 
-      // Auto-populate fields from scraper if not provided by user
-      if (!estado && scrapedData.stage) {
-        // Capitalize first letter
-        scrapedEstado = scrapedData.stage.charAt(0).toUpperCase() + scrapedData.stage.slice(1);
-      }
-      if (!camara && scrapedData.chamberCurrent) {
-        // Normalize chamber name
-        scrapedCamara = scrapedData.chamberCurrent.includes('Diputados') ? 'Diputados' : 'Senado';
-      }
-      if (!urgencia && scrapedData.urgency) {
-        scrapedUrgencia = scrapedData.urgency;
-      }
-      if (!comision && scrapedData.commission) {
-        scrapedComision = scrapedData.commission;
-      }
+    const applyAutofill = (data: {
+      stage?: string | null
+      chamberCurrent?: string | null
+      urgency?: string | null
+      commission?: string | null
+    }) => {
+      if (!estado && data.stage) scrapedEstado = data.stage.charAt(0).toUpperCase() + data.stage.slice(1);
+      if (!camara && data.chamberCurrent) scrapedCamara = data.chamberCurrent.includes('Diputados') ? 'Diputados' : 'Senado';
+      if (!urgencia && data.urgency) scrapedUrgencia = data.urgency;
+      if (!comision && data.commission) scrapedComision = data.commission;
+    };
 
-      initialSnapshot = await db.transaction(async (tx) => {
-        const [snapshot] = await tx
+    if (existingSnapshot) {
+      applyAutofill(existingSnapshot);
+      initialSnapshot = existingSnapshot;
+    } else {
+      try {
+        const scrapedData = await fetchProjectStatus(boletin);
+        applyAutofill(scrapedData);
+        const [snapshot] = await db
           .insert(projectSnapshots)
           .values({
             boletin,
@@ -119,29 +131,28 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
             changesDetected: null,
           })
           .returning();
-        return snapshot;
-      });
-    } catch (scraperError) {
-      console.error(`Failed to fetch initial data for ${boletin}:`, scraperError);
-      // Continue without scraped data - user can edit manually
+        initialSnapshot = snapshot;
+      } catch (scraperError) {
+        console.error(`Failed to fetch initial data for ${boletin}:`, scraperError);
+        // Continue without scraped data - user can edit manually
+      }
     }
 
-    const [newProject] = await db.transaction(async (tx) => {
-      return tx
-        .insert(legalProjects)
-        .values({
-          boletin,
-          title,
-          relevance,
-          dateIngreso: dateIngreso || null,
-          estado: scrapedEstado,
-          camara: scrapedCamara,
-          urgencia: scrapedUrgencia,
-          comision: scrapedComision,
-          notes: notes || null,
-        })
-        .returning();
-    });
+    const [newProject] = await db
+      .insert(legalProjects)
+      .values({
+        userId,
+        boletin,
+        title,
+        relevance,
+        dateIngreso: dateIngreso || null,
+        estado: scrapedEstado,
+        camara: scrapedCamara,
+        urgencia: scrapedUrgencia,
+        comision: scrapedComision,
+        notes: notes || null,
+      })
+      .returning();
 
     return res.status(201).json({
       ...newProject,

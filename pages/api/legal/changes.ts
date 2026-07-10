@@ -1,18 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { desc, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, sql } from 'drizzle-orm';
 import { db } from '~/db';
 import { projectSnapshots, legalProjects } from '~/db/schema';
 import { protectedHandler } from '~/lib/api/protected-handler';
 
-export default protectedHandler(async (req, res) => {
+export default protectedHandler(async (req, res, session) => {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  return handleGet(req, res);
+  return handleGet(req, res, session.user.id);
 });
 
-async function handleGet(req: NextApiRequest, res: NextApiResponse) {
+async function handleGet(req: NextApiRequest, res: NextApiResponse, userId: string) {
   try {
     const { limit = '50', relevance, days } = req.query;
 
@@ -39,7 +39,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
       })
       .from(projectSnapshots)
       .innerJoin(legalProjects, sql`${projectSnapshots.boletin} = ${legalProjects.boletin}`)
-      .where(isNotNull(projectSnapshots.changesDetected))
+      .where(and(isNotNull(projectSnapshots.changesDetected), eq(legalProjects.userId, userId)))
       .orderBy(desc(projectSnapshots.fetchedAt))
       .limit(limitNum);
 

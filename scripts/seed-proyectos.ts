@@ -18,8 +18,9 @@
  *   bun run scripts/seed-proyectos.ts
  */
 
+import { asc } from 'drizzle-orm';
 import { db } from '../db';
-import { legalProjects } from '../db/schema';
+import { legalProjects, user } from '../db/schema';
 
 const seedProjects = [
   {
@@ -111,6 +112,14 @@ const seedProjects = [
 async function seed() {
   console.log('Seeding regulatory projects...\n');
 
+  // Cada proyecto pertenece a un usuario. Los de ejemplo se asignan al primer
+  // usuario (admin). Si todavía no existe ninguno, se omite sin fallar.
+  const [firstUser] = await db.select({ id: user.id }).from(user).orderBy(asc(user.createdAt)).limit(1);
+  if (!firstUser) {
+    console.log('⏭️  Aún no hay usuarios. Crea tu cuenta primero (regístrate en el navegador) y vuelve a correr este seed si quieres los proyectos de ejemplo.');
+    process.exit(0);
+  }
+
   let created = 0;
   let skipped = 0;
 
@@ -118,7 +127,7 @@ async function seed() {
     try {
       await db
         .insert(legalProjects)
-        .values(project)
+        .values({ ...project, userId: firstUser.id })
         .onConflictDoNothing();
 
       console.log(`OK  ${project.boletin} — ${project.title.slice(0, 60)}...`);
