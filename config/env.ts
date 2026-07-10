@@ -26,6 +26,15 @@ const envSchema = z.object({
   // first Google SSO login (e.g. "example.com"). When unset, all account
   // creation is blocked.
   AUTH_ALLOWED_EMAIL_DOMAIN: z.string().optional(),
+  // Open community signup: when "1"/"true", ANYONE can self-register with
+  // email + password from the /signup form. Use for a public, free tool.
+  // Ignored when AUTH_ALLOWED_EMAIL_DOMAIN is set (the SSO domain restriction
+  // takes precedence). Default off → only the first account can be created
+  // from the browser (bootstrap), then signup closes.
+  AUTH_OPEN_SIGNUP: z.preprocess(
+    (v) => v === '1' || v === 'true',
+    z.boolean().default(false),
+  ),
   // OpenAI for the lobby / projects analysis chat agents
   OPENAI_API_KEY: z.string().optional(),
   // Official Ley de Lobby API (leylobby.gob.cl). When set, used as the primary

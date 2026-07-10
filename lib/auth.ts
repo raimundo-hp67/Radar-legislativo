@@ -10,6 +10,12 @@ import { env } from '~/config/env';
 export const isGoogleSsoEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 
 /**
+ * Open community signup: anyone may self-register with email + password.
+ * A domain restriction always wins over this (SSO-only, no open signup).
+ */
+export const isOpenSignupEnabled = env.AUTH_OPEN_SIGNUP && !env.AUTH_ALLOWED_EMAIL_DOMAIN;
+
+/**
  * CLI escape hatch used by scripts/create-user.ts to provision accounts.
  * Only honored for that process; never set it on a deployed server.
  */
@@ -113,10 +119,16 @@ export const auth = betterAuth({
             });
           }
 
+          // Open community mode: anyone may register (public, free tool).
+          // Rate limiting on /api/auth/* (below) blunts signup spam.
+          if (env.AUTH_OPEN_SIGNUP) {
+            return;
+          }
+
           // No domain configured: allow the very first account (bootstrap)
           // from the /signup form, no terminal needed. Closes automatically
           // the instant that account exists — every account after it needs
-          // CLI or SSO, same as before this feature existed.
+          // CLI, SSO, or AUTH_OPEN_SIGNUP.
           if (!(await hasAnyUser())) {
             return;
           }

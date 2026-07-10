@@ -93,6 +93,7 @@ Lo único indispensable es **Postgres** y un **secreto de sesión**. Con eso ya 
 | `CRON_SECRET` | Protege `/api/cron/*` en Vercel | Solo deploy en Vercel: defínelo en el dashboard del proyecto y Vercel lo envía automáticamente |
 | `ADDITIONAL_TRUSTED_ORIGINS` | Dominios extra permitidos para login (además de `BETTER_AUTH_URL`) | Solo si publicaste en más de un dominio; sin esto, entrar por una URL distinta a `BETTER_AUTH_URL` da error "Invalid origin" |
 | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` + `AUTH_ALLOWED_EMAIL_DOMAIN` | Login con Google (SSO) — mejora de seguridad **totalmente opcional** | Ver [Google SSO (opcional)](#google-sso-opcional) |
+| `AUTH_OPEN_SIGNUP` | Registro **abierto**: cualquiera crea su cuenta con email + contraseña desde `/signup` (herramienta pública). Sin esto, solo se crea la primera cuenta y luego se cierra | Pon `1`. Se ignora si defines `AUTH_ALLOWED_EMAIL_DOMAIN` |
 
 Si una variable opcional no está configurada, la funcionalidad asociada simplemente se desactiva (la app avisa, no falla).
 
@@ -207,12 +208,13 @@ Con esto la app queda disponible 24/7 en una URL pública, actualizándose sola 
    - `BETTER_AUTH_SECRET` — genera uno con `openssl rand -base64 32`
    - `BETTER_AUTH_URL` — la URL que te asignó Vercel (ej: `https://radar-legislativo.vercel.app`)
    - `CRON_SECRET` — un string aleatorio; protege los crons y sin él no corren
+   - `AUTH_OPEN_SIGNUP=1` — **si quieres que cualquier abogado se cree su propia cuenta** desde la web (herramienta pública). Sin esto, solo tú creas la primera cuenta y el registro se cierra.
    - las opcionales que quieras (`SLACK_WEBHOOK_URL`, `OPENAI_API_KEY`, …). Redespliega después de definirlas.
-4. **Migraciones y primer usuario** (desde tu computador, apuntando a la base productiva):
+4. **Migraciones** (desde tu computador, apuntando a la base productiva; una sola vez):
    ```bash
    DATABASE_URL='postgresql://...' bun run db:migrate
-   DATABASE_URL='postgresql://...' bun run scripts/create-user.ts tu@email.com 'una-clave-segura' 'Tu Nombre'
    ```
+   El **primer usuario** lo creas desde la propia web: entra a `https://tu-app.vercel.app/signup` y regístrate. Con `AUTH_OPEN_SIGNUP=1` los demás abogados también se registran ahí; sin esa variable, quien más necesite cuenta la creas con `DATABASE_URL='postgresql://...' bun run scripts/create-user.ts email 'clave' 'Nombre'`.
 5. **Listo.** Los cron jobs de `vercel.json` actualizan la data a diario:
    - `/api/cron/legal-poll` — 12:00 UTC (poll de proyectos + digest a Slack)
    - `/api/cron/lobby-sync` — 07:00 UTC (sync de audiencias de lobby)
@@ -245,7 +247,10 @@ Si no configuras esas keys, nada sale de tu infraestructura.
 
 - **Autenticación**: todos los endpoints de datos (`/api/legal/*`) exigen sesión (devuelven `401` sin ella). El único endpoint público es `/api/legal/health`, que solo expone conteos.
 - **Rate limiting**: todos los endpoints autenticados tienen límite por usuario y ruta (100 req/min por defecto). Los endpoints caros son más estrictos: chats con IA 20 req/5 min, syncs y scrapers 5 req/10 min. Los públicos se limitan por IP (`/health` 30 req/min, `/poll` 6 req/hora). Al exceder el límite se responde `429` con header `Retry-After`. El limitador es en memoria: en serverless aplica por instancia (suficiente contra ráfagas; para límites globales estrictos usa un store compartido tipo Redis).
-- **Login**: los endpoints de BetterAuth tienen su propio rate limit (20 req/min) contra fuerza bruta. El registro solo está abierto para crear la **primera** cuenta de una instalación nueva (sin usuarios) y se cierra solo en cuanto esa cuenta existe; de ahí en más, las cuentas se crean con `scripts/create-user.ts` o, si activas el SSO opcional, vía Google (emails verificados) solo para el dominio de `AUTH_ALLOWED_EMAIL_DOMAIN`. El cierre se aplica en el servidor (no solo en la interfaz), así que un intento directo a la API también es rechazado.
+- **Login**: los endpoints de BetterAuth tienen su propio rate limit (20 req/min) contra fuerza bruta. El registro tiene tres modos, todos aplicados en el **servidor** (no solo en la interfaz), así que un intento directo a la API también respeta la regla:
+  - **Por defecto** — solo se puede crear la **primera** cuenta (bootstrap) y el registro se cierra en cuanto existe; las siguientes se crean con `scripts/create-user.ts`.
+  - **Abierto** (`AUTH_OPEN_SIGNUP=1`) — cualquiera crea su cuenta con email + contraseña. Pensado para una herramienta **pública**; el registro no verifica el email, así que apóyate en el rate limit y evita mezclarlo con datos sensibles.
+  - **Restringido por dominio** (SSO) — si defines `AUTH_ALLOWED_EMAIL_DOMAIN`, solo entran emails verificados de ese dominio vía Google; este modo **manda** sobre `AUTH_OPEN_SIGNUP`.
 - **`AUTH_PROVISION`**: variable interna que usa `scripts/create-user.ts` para levantar momentáneamente la restricción de registro **en el proceso del script**. Nunca la definas en un servidor desplegado: dejaría el registro abierto.
 - **Headers de seguridad**: CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` y HSTS en todas las respuestas (`next.config.ts`). El rate limiting por IP solo confía en `X-Forwarded-For` en Vercel o con `TRUST_PROXY=1` (anti-spoofing en self-hosted).
 - **Crons y polling fail-closed**: en producción, `/api/cron/*` rechaza todo si `CRON_SECRET` no está configurado, y `/api/legal/poll` rechaza la API key por defecto (`change-me-in-production`). Las comparaciones de secretos son en tiempo constante.
