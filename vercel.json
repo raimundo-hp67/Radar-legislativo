@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/lobby-sync",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/cache-sync",
+      "schedule": "0 8 * * *"
     }
   ]
 }

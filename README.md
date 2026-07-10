@@ -215,10 +215,20 @@ Con esto la app queda disponible 24/7 en una URL pública, actualizándose sola 
    DATABASE_URL='postgresql://...' bun run db:migrate
    ```
    El **primer usuario** lo creas desde la propia web: entra a `https://tu-app.vercel.app/signup` y regístrate. Con `AUTH_OPEN_SIGNUP=1` los demás abogados también se registran ahí; sin esa variable, quien más necesite cuenta la creas con `DATABASE_URL='postgresql://...' bun run scripts/create-user.ts email 'clave' 'Nombre'`.
-5. **Listo.** Los cron jobs de `vercel.json` actualizan la data a diario:
-   - `/api/cron/legal-poll` — 12:00 UTC (poll de proyectos + digest a Slack)
-   - `/api/cron/lobby-sync` — 07:00 UTC (sync de audiencias de lobby)
-6. **(Opcional) Actualización cada 6 horas**: define los secrets `APP_URL` y `CRON_SECRET` en GitHub (Settings → Secrets and variables → Actions) y el workflow [`auto-update.yml`](./.github/workflows/auto-update.yml) hará el resto.
+5. **Cargar las bases una vez** (desde tu computador, apuntando a la base productiva):
+   ```bash
+   # Audiencias de lobby (Gobierno + Diputados): ~54.000, tarda 1-2 min
+   DATABASE_URL='postgresql://...' bun run scripts/sync-lobby.ts --months 24
+   # Catálogo de proyectos de ley para el buscador (histórico): LENTO (10-30 min),
+   # es idempotente y puedes retomarlo. Rango por defecto ~2024-2026.
+   DATABASE_URL='postgresql://...' bun run scripts/bulk-sync.ts
+   ```
+   Después, los datos se mantienen solos con los crons (abajo). El catálogo de boletines es el que alimenta el buscador desde el que cada usuario suma proyectos a su lista.
+6. **Listo.** Los cron jobs de `vercel.json` actualizan la data a diario:
+   - `/api/cron/legal-poll` — 12:00 UTC (poll de proyectos seguidos + digest a Slack)
+   - `/api/cron/lobby-sync` — 07:00 UTC (audiencias de lobby)
+   - `/api/cron/cache-sync` — 08:00 UTC (catálogo de boletines para el buscador)
+7. **(Opcional) Actualización cada 6 horas**: define los secrets `APP_URL` y `CRON_SECRET` en GitHub (Settings → Secrets and variables → Actions) y el workflow [`auto-update.yml`](./.github/workflows/auto-update.yml) hará el resto.
 
 > Los endpoints de scraping declaran `maxDuration = 300` (5 min), el máximo con Fluid Compute (el default en proyectos nuevos de Vercel). Si tu proyecto es Hobby legacy sin Fluid, Vercel lo limitará a 60s en el build — suficiente salvo que sigas muchísimos proyectos.
 

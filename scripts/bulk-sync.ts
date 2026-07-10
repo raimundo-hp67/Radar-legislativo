@@ -11,11 +11,14 @@
  */
 
 import postgres from 'postgres';
+import { isPooledConnectionString } from '../lib/db-utils';
 
 const DATABASE_URL = process.env.DATABASE_URL
   || 'postgresql://postgres:postgres@localhost:5432/postgres';
 
-const sql = postgres(DATABASE_URL);
+// Con connection strings de pooler (Neon/Supabase en modo transacción) hay que
+// desactivar prepared statements o postgres.js falla. La app hace lo mismo.
+const sql = postgres(DATABASE_URL, { prepare: !isPooledConnectionString(DATABASE_URL) });
 
 interface SenadoProject {
   boletin: string

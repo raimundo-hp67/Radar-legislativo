@@ -125,6 +125,29 @@ if [ "${SKIP_LOBBY_SEED:-0}" != "1" ]; then
   fi
 fi
 
+# ── 6. Catálogo de proyectos de ley (buscador) ────────────────────────────
+# project_cache es el catálogo de boletines desde el que los usuarios buscan y
+# suman proyectos a su lista. El actualizador integrado va agregando los más
+# recientes solo; la carga histórica COMPLETA es lenta (10-30 min) y opcional.
+# Es idempotente y se puede retomar. SKIP_CACHE_SEED=1 lo omite sin preguntar.
+if [ "${SKIP_CACHE_SEED:-0}" != "1" ] && [ -t 0 ]; then
+  say "Catálogo de proyectos de ley (buscador)"
+  echo "El buscador se llena solo con los boletines recientes mientras la app corre."
+  printf "¿Cargar además el catálogo histórico completo ahora? Es LENTO (10-30 min). [s/N] "
+  read -r cargar_cache
+  if [ "$cargar_cache" = "s" ] || [ "$cargar_cache" = "S" ]; then
+    if bun run scripts/bulk-sync.ts; then
+      echo "✓ Catálogo de boletines cargado."
+    else
+      echo "⚠ No se pudo cargar el catálogo ahora. Puedes hacerlo después con:"
+      echo "  bun run scripts/bulk-sync.ts"
+    fi
+  else
+    echo "Omitido. El buscador igual se irá llenando solo; para la carga completa:"
+    echo "  bun run scripts/bulk-sync.ts"
+  fi
+fi
+
 # ── Listo ─────────────────────────────────────────────────────────────────
 say "Listo 🎉"
 echo "El portal se abrirá solo en tu navegador. La primera vez verás una"

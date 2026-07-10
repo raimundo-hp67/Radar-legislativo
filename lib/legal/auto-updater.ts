@@ -1,6 +1,7 @@
 import { env } from '~/config/env';
 import { runPoll, getLastPollDate } from '~/lib/legal/poll-runner';
 import { syncLobby } from '~/lib/legal/infolobby-service';
+import { syncRecentProjects } from '~/lib/legal/project-cache-sync';
 
 // Re-check twice per hour; actual work only happens when the configured
 // interval has elapsed since the last update.
@@ -37,6 +38,7 @@ export function startAutoUpdater(): void {
 
   const intervalMs = hours * 3_600_000;
   let lastLobbySyncAt = 0;
+  let lastCacheSyncAt = 0;
   let running = false;
 
   const tick = async () => {
@@ -55,6 +57,13 @@ export function startAutoUpdater(): void {
         console.log('[auto-update] Sincronizando audiencias de lobby…');
         const result = await syncLobby({ months: 2 });
         console.log(`[auto-update] Lobby: ${result.inserted} nuevas, ${result.skipped} existentes`);
+      }
+
+      if (Date.now() - lastCacheSyncAt >= intervalMs) {
+        lastCacheSyncAt = Date.now();
+        console.log('[auto-update] Actualizando catálogo de boletines (buscador)…');
+        const cache = await syncRecentProjects();
+        console.log(`[auto-update] Catálogo: ${cache.inserted} nuevos, ${cache.updated} actualizados`);
       }
     } catch (error) {
       console.error('[auto-update] Error:', error instanceof Error ? error.message : error);
