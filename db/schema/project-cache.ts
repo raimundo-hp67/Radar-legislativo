@@ -32,9 +32,12 @@ export const projectCache = pgTable(
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
+  // Nota: search_text NO se indexa a propósito. Las búsquedas usan
+  // ILIKE '%...%' (un btree no ayuda ahí) y los textos largos superan el
+  // máximo de fila de un índice btree (~2.7 KB), lo que hacía fallar el
+  // insert de proyectos con muchos autores/materias.
   (table) => [
     index('project_cache_boletin_idx').on(table.boletin),
-    index('project_cache_search_text_idx').on(table.searchText),
     index('project_cache_is_active_idx').on(table.isActive),
     index('project_cache_fecha_ingreso_idx').on(table.fechaIngreso),
   ],

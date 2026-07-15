@@ -1,0 +1,1 @@
+DROP INDEX "project_cache_search_text_idx";

@@ -154,6 +154,10 @@ export function ProjectResearchTab() {
   // Boletines ya agregados a la lista del usuario desde esta sesión de búsqueda
   const [followed, setFollowed] = useState<Record<string, FollowState>>({});
 
+  // Panel derecho: ficha del proyecto seleccionado o chat con el agente
+  const [selected, setSelected] = useState<SearchResultItem | null>(null);
+  const [rightPanel, setRightPanel] = useState<'proyecto' | 'chat'>('proyecto');
+
   // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState('');
@@ -194,6 +198,7 @@ export function ProjectResearchTab() {
 
   const askAboutProject = useCallback((result: SearchResultItem) => {
     setChatInput(`Cuéntame sobre el proyecto ${result.boletin}: "${result.titulo}"`);
+    setRightPanel('chat');
   }, []);
 
   // Agregar un resultado del buscador a MI lista de proyectos (pestaña
@@ -448,7 +453,16 @@ export function ProjectResearchTab() {
                           {searchResults.map((r) => (
                             <div
                               key={r.boletin}
-                              className="group px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                              onClick={() => {
+                                setSelected(r);
+                                setRightPanel('proyecto');
+                              }}
+                              title="Ver la ficha de este proyecto"
+                              className={`group cursor-pointer px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
+                                selected?.boletin === r.boletin
+                                  ? 'border-l-2 border-cyan-500 bg-cyan-50/60 dark:bg-cyan-950/20'
+                                  : 'border-l-2 border-transparent'
+                              }`}
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0 flex-1">
@@ -486,7 +500,10 @@ export function ProjectResearchTab() {
                                     : (
                                         <button
                                           type="button"
-                                          onClick={() => followProject(r)}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            followProject(r);
+                                          }}
                                           disabled={followed[r.boletin] === 'adding'}
                                           className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-2 py-1 text-xs font-medium text-cyan-700 transition-colors hover:bg-cyan-100 disabled:opacity-50 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-300 dark:hover:bg-cyan-900/50"
                                           title="Agregar este proyecto a tu lista (pestaña Proyectos)"
@@ -500,7 +517,11 @@ export function ProjectResearchTab() {
                                   <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                     <button
                                       type="button"
-                                      onClick={() => askAboutProject(r)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelected(r);
+                                        askAboutProject(r);
+                                      }}
                                       className="rounded-md p-1 text-slate-400 hover:bg-cyan-50 hover:text-cyan-600 dark:hover:bg-cyan-950/30 dark:hover:text-cyan-400"
                                       title="Preguntar al agente"
                                     >
@@ -510,6 +531,7 @@ export function ProjectResearchTab() {
                                       href={r.url}
                                       target="_blank"
                                       rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
                                       className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
                                       title="Ver en sitio oficial"
                                     >
@@ -525,127 +547,249 @@ export function ProjectResearchTab() {
           </div>
         </div>
 
-        {/* ── Right Panel: AI Chat ─────────────────────────────────────────── */}
+        {/* ── Right Panel: ficha del proyecto seleccionado / chat con IA ──── */}
         <div className="flex h-[700px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          {/* Messages list */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <AiUnavailableNotice />
-            {messages.length === 0 && (
-              <div className="flex h-full flex-col items-center justify-center text-center">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-100 shadow-sm dark:bg-cyan-900/30">
-                  <Bot className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />
-                </div>
-                <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Agente Legislativo
-                </h3>
-                <p className="mb-6 max-w-sm text-xs text-slate-500">
-                  Pregúntame sobre proyectos de ley, su estado, historial de cambios, o pídeme que envíe una alerta a Slack.
-                </p>
-                <div className="flex max-w-lg flex-wrap justify-center gap-2">
-                  {SUGGESTED_QUESTIONS.map((q, qi) => (
-                    <button
-                      key={qi}
-                      type="button"
-                      onClick={() => sendMessage(q)}
-                      disabled={isChatLoading}
-                      className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:border-cyan-600 dark:hover:bg-cyan-900/30"
-                    >
-                      <Sparkles className="h-3 w-3 shrink-0" />
-                      {q}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+          {/* Pestañas del panel */}
+          <div className="flex border-b border-slate-200 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => setRightPanel('proyecto')}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                rightPanel === 'proyecto'
+                  ? 'border-b-2 border-cyan-500 text-cyan-700 dark:text-cyan-400'
+                  : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <FileText className="h-4 w-4" />
+              Proyecto
+            </button>
+            <button
+              type="button"
+              onClick={() => setRightPanel('chat')}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                rightPanel === 'chat'
+                  ? 'border-b-2 border-cyan-500 text-cyan-700 dark:text-cyan-400'
+                  : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <Bot className="h-4 w-4" />
+              Agente IA
+            </button>
+          </div>
 
-            <div className="space-y-4">
-              {messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex items-end gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  {/* Bot avatar */}
-                  {msg.role === 'assistant' && (
-                    <div className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-900/40">
-                      <Bot className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+          {/* ── Pestaña Proyecto: ficha del resultado seleccionado ──────── */}
+          {rightPanel === 'proyecto' && (
+            <div className="flex-1 overflow-y-auto p-5">
+              {!selected
+                ? (
+                    <div className="flex h-full flex-col items-center justify-center text-center">
+                      <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                      <p className="mt-3 max-w-xs text-sm text-slate-500 dark:text-slate-400">
+                        Haz clic en un resultado del buscador para ver aquí su ficha completa.
+                      </p>
                     </div>
-                  )}
-
-                  {/* Bubble */}
-                  {msg.role === 'user'
-                    ? (
-                        <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-cyan-600 px-4 py-2.5 text-sm text-white shadow-sm">
-                          {msg.content}
+                  )
+                : (
+                    <div className="space-y-5">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded bg-slate-100 px-2 py-1 font-mono text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            {selected.boletin}
+                          </span>
+                          {selected.estado && (
+                            <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300">
+                              {selected.estado}
+                            </span>
+                          )}
                         </div>
-                      )
-                    : (
-                        <div className="max-w-[80%] rounded-2xl rounded-bl-sm border border-slate-100 bg-slate-50 px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-                          {msg.streaming && !msg.content
-                            ? (
-                              // Tool-call phase: bouncing dots
-                                <div className="flex items-center gap-1.5 py-0.5">
-                                  <span
-                                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
-                                    style={{ animationDelay: '0ms' }}
-                                  />
-                                  <span
-                                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
-                                    style={{ animationDelay: '150ms' }}
-                                  />
-                                  <span
-                                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
-                                    style={{ animationDelay: '300ms' }}
-                                  />
-                                </div>
-                              )
-                            : (
-                                <>
-                                  <SimpleMarkdown text={msg.content} />
-                                  {msg.streaming && (
-                                    // Blinking cursor while text streams in
-                                    <span className="ml-0.5 inline-block h-3.5 w-0.5 translate-y-px animate-pulse bg-slate-500 dark:bg-slate-400" />
-                                  )}
-                                </>
-                              )}
+                        <h3 className="mt-3 text-lg font-semibold leading-snug tracking-tight text-slate-900 dark:text-white">
+                          {selected.titulo}
+                        </h3>
+                        <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+                          {selected.fechaIngreso ? `Ingresado el ${selected.fechaIngreso}` : ''}
+                          {selected.fechaIngreso && selected.camara ? ' · ' : ''}
+                          {selected.camara ? `Cámara de origen: ${selected.camara}` : ''}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {followed[selected.boletin] === 'added' || followed[selected.boletin] === 'exists'
+                          ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                                <Check className="h-4 w-4" />
+                                En tu lista de proyectos
+                              </span>
+                            )
+                          : (
+                              <Button size="sm" onClick={() => followProject(selected)} disabled={followed[selected.boletin] === 'adding'}>
+                                {followed[selected.boletin] === 'adding'
+                                  ? <RefreshCw className="mr-1.5 h-4 w-4 animate-spin" />
+                                  : <Plus className="mr-1.5 h-4 w-4" />}
+                                Seguir proyecto
+                              </Button>
+                            )}
+                        <Button size="sm" variant="outline" onClick={() => askAboutProject(selected)}>
+                          <Bot className="mr-1.5 h-4 w-4" />
+                          Preguntar al agente
+                        </Button>
+                        <Button asChild size="sm" variant="outline">
+                          <a href={selected.url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="mr-1.5 h-4 w-4" />
+                            Sitio oficial
+                          </a>
+                        </Button>
+                      </div>
+
+                      {selected.autores && (
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Autores</p>
+                          <p className="mt-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{selected.autores}</p>
+                        </div>
+                      )}
+                      {selected.materia && (
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Materias</p>
+                          <p className="mt-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{selected.materia}</p>
+                        </div>
+                      )}
+                      {selected.resumen && (
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Resumen</p>
+                          <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-300">{selected.resumen}</p>
                         </div>
                       )}
 
-                  {/* User avatar */}
-                  {msg.role === 'user' && (
-                    <div className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-600">
-                      <User className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
+                      <p className="text-xs text-slate-400">
+                        Datos del catálogo local (se actualiza solo). Para el expediente completo usa &quot;Sitio oficial&quot;.
+                      </p>
                     </div>
                   )}
+            </div>
+          )}
+
+          {/* ── Pestaña Agente IA: chat ─────────────────────────────────── */}
+          {rightPanel === 'chat' && (
+            <>
+              <div className="flex-1 overflow-y-auto p-4">
+                <AiUnavailableNotice />
+                {messages.length === 0 && (
+                  <div className="flex h-full flex-col items-center justify-center text-center">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-100 shadow-sm dark:bg-cyan-900/30">
+                      <Bot className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />
+                    </div>
+                    <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      Agente Legislativo
+                    </h3>
+                    <p className="mb-6 max-w-sm text-xs text-slate-500">
+                      Pregúntame sobre proyectos de ley, su estado, historial de cambios, o pídeme que envíe una alerta a Slack.
+                    </p>
+                    <div className="flex max-w-lg flex-wrap justify-center gap-2">
+                      {SUGGESTED_QUESTIONS.map((q, qi) => (
+                        <button
+                          key={qi}
+                          type="button"
+                          onClick={() => sendMessage(q)}
+                          disabled={isChatLoading}
+                          className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:border-cyan-600 dark:hover:bg-cyan-900/30"
+                        >
+                          <Sparkles className="h-3 w-3 shrink-0" />
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {messages.map((msg, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex items-end gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      {/* Bot avatar */}
+                      {msg.role === 'assistant' && (
+                        <div className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-900/40">
+                          <Bot className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                        </div>
+                      )}
+
+                      {/* Bubble */}
+                      {msg.role === 'user'
+                        ? (
+                            <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-cyan-600 px-4 py-2.5 text-sm text-white shadow-sm">
+                              {msg.content}
+                            </div>
+                          )
+                        : (
+                            <div className="max-w-[80%] rounded-2xl rounded-bl-sm border border-slate-100 bg-slate-50 px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                              {msg.streaming && !msg.content
+                                ? (
+                              // Tool-call phase: bouncing dots
+                                    <div className="flex items-center gap-1.5 py-0.5">
+                                      <span
+                                        className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
+                                        style={{ animationDelay: '0ms' }}
+                                      />
+                                      <span
+                                        className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
+                                        style={{ animationDelay: '150ms' }}
+                                      />
+                                      <span
+                                        className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
+                                        style={{ animationDelay: '300ms' }}
+                                      />
+                                    </div>
+                                  )
+                                : (
+                                    <>
+                                      <SimpleMarkdown text={msg.content} />
+                                      {msg.streaming && (
+                                      // Blinking cursor while text streams in
+                                        <span className="ml-0.5 inline-block h-3.5 w-0.5 translate-y-px animate-pulse bg-slate-500 dark:bg-slate-400" />
+                                      )}
+                                    </>
+                                  )}
+                            </div>
+                          )}
+
+                      {/* User avatar */}
+                      {msg.role === 'user' && (
+                        <div className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-600">
+                          <User className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            <div ref={messagesEndRef} />
-          </div>
+                <div ref={messagesEndRef} />
+              </div>
 
-          {/* Input bar */}
-          <div className="border-t border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex gap-2">
-              <Input
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={handleChatKeyDown}
-                placeholder="Pregunta sobre proyectos o pide una alerta Slack..."
-                className="flex-1 text-sm"
-                disabled={isChatLoading}
-              />
-              <Button
-                size="sm"
-                onClick={() => sendMessage(chatInput)}
-                disabled={!chatInput.trim() || isChatLoading}
-                className="shrink-0"
-              >
-                {isChatLoading
-                  ? <RefreshCw className="h-4 w-4 animate-spin" />
-                  : <Send className="h-4 w-4" />}
-              </Button>
-            </div>
-          </div>
+              {/* Input bar */}
+              <div className="border-t border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+                <div className="flex gap-2">
+                  <Input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={handleChatKeyDown}
+                    placeholder="Pregunta sobre proyectos o pide una alerta Slack..."
+                    className="flex-1 text-sm"
+                    disabled={isChatLoading}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => sendMessage(chatInput)}
+                    disabled={!chatInput.trim() || isChatLoading}
+                    className="shrink-0"
+                  >
+                    {isChatLoading
+                      ? <RefreshCw className="h-4 w-4 animate-spin" />
+                      : <Send className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
