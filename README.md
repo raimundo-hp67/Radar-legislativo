@@ -93,7 +93,7 @@ Lo único indispensable es **Postgres** y un **secreto de sesión**. Con eso ya 
 | `CRON_SECRET` | Protege `/api/cron/*` en un deploy en Vercel | Solo si despliegas tu propia copia en Vercel: defínelo en el dashboard del proyecto y Vercel lo envía automáticamente |
 | `ADDITIONAL_TRUSTED_ORIGINS` | Orígenes extra permitidos para login (además de `BETTER_AUTH_URL`) | Solo si abres la app desde otra dirección: otro computador de tu red (`http://192.168.1.10:3000`) o un dominio propio además del `*.vercel.app`; sin esto, esa URL da error "Invalid origin" |
 | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` + `AUTH_ALLOWED_EMAIL_DOMAIN` | Login con Google (SSO) — mejora de seguridad **totalmente opcional** | Ver [Google SSO (opcional)](#google-sso-opcional) |
-| `AUTH_OPEN_SIGNUP` | Registro abierto en `/signup` para **instalaciones compartidas** (ej: un computador de la oficina): cada persona crea su cuenta y ve solo sus propios proyectos y notas. Sin esto, solo se crea la primera cuenta y luego se cierra | Pon `1`. Se ignora si defines `AUTH_ALLOWED_EMAIL_DOMAIN` |
+| `AUTH_OPEN_SIGNUP` | Registro abierto en `/signup`: cada persona crea su cuenta y **ve solo sus propios proyectos y notas**. El instalador lo deja en `1` por defecto | Pon `0` para cerrarlo (solo la primera cuenta + `scripts/create-user.ts`). Se ignora si defines `AUTH_ALLOWED_EMAIL_DOMAIN` |
 
 Si una variable opcional no está configurada, la funcionalidad asociada simplemente se desactiva (la app avisa, no falla).
 
@@ -114,15 +114,15 @@ Sin key, el módulo de lobby ya funciona con el feed público de InfoLobby. Si q
 
 ## Gestión de usuarios
 
-**Tu primera cuenta se crea sola, en el navegador.** La primera vez que abres una instalación nueva (sin usuarios todavía), `/signup` te muestra un formulario para crear tu cuenta ahí mismo — sin terminal. En cuanto existe una cuenta, ese formulario se cierra automáticamente y no se puede volver a usar (es solo para el arranque, no un registro abierto).
+**Cada persona crea su propia cuenta en el navegador.** Al abrir la app, `/signup` muestra un formulario de registro (nombre, email y contraseña) — sin terminal. El instalador deja el registro **abierto por defecto** (`AUTH_OPEN_SIGNUP=1`), y es seguro porque **cada cuenta ve solo sus propios proyectos y notas**: tus colegas pueden registrarse solos sin ver tu trabajo.
 
-Para agregar colegas después, usa el script de usuarios desde tu terminal:
+¿Prefieres controlar quién entra? Pon `AUTH_OPEN_SIGNUP=0` en `.env` y reinicia: el registro se cierra (solo queda la primera cuenta de arranque) y las cuentas nuevas las creas tú por terminal:
 
 ```bash
 bun run scripts/create-user.ts colega@email.com 'una-clave-segura' 'Nombre Colega'
 ```
 
-(El instalador `setup.sh` ya te crea el primero.) Para revocar el acceso de alguien que dejó el equipo:
+Para revocar el acceso de alguien que dejó el equipo:
 
 ```bash
 bun run scripts/delete-user.ts expersona@email.com
@@ -266,8 +266,8 @@ Si no configuras esas keys, nada sale de tu infraestructura.
 - **Aislamiento por usuario**: cada usuario tiene su propio radar privado. Los proyectos que sigue, sus notas, prioridades y objetivos están asociados a su cuenta (`user_id`) y **solo él los ve o edita** — todos los endpoints filtran por el usuario de la sesión (incluido el chat con IA). Los datos públicos scrapeados (historial de tramitación por boletín y las audiencias de lobby) se comparten y cachean una sola vez, sin exponer nada privado. Así una instalación compartida (`AUTH_OPEN_SIGNUP=1`, ej: un computador de la oficina) no deja que unos vean el trabajo de otros.
 - **Rate limiting**: todos los endpoints autenticados tienen límite por usuario y ruta (100 req/min por defecto). Los endpoints caros son más estrictos: chats con IA 20 req/5 min, syncs y scrapers 5 req/10 min. Los públicos se limitan por IP (`/health` 30 req/min, `/poll` 6 req/hora). Al exceder el límite se responde `429` con header `Retry-After`. El limitador es en memoria: en serverless aplica por instancia (suficiente contra ráfagas; para límites globales estrictos usa un store compartido tipo Redis).
 - **Login**: los endpoints de BetterAuth tienen su propio rate limit (20 req/min) contra fuerza bruta. El registro tiene tres modos, todos aplicados en el **servidor** (no solo en la interfaz), así que un intento directo a la API también respeta la regla:
-  - **Por defecto** — solo se puede crear la **primera** cuenta (bootstrap) y el registro se cierra en cuanto existe; las siguientes se crean con `scripts/create-user.ts`.
-  - **Abierto** (`AUTH_OPEN_SIGNUP=1`) — quien alcance la instalación puede crear su cuenta con email + contraseña. Pensado para una instalación **compartida** (equipo/oficina); el registro no verifica el email.
+  - **Abierto** (`AUTH_OPEN_SIGNUP=1`, el valor que deja el instalador) — quien alcance la instalación puede crear su cuenta con email + contraseña; el aislamiento por usuario hace que cada cuenta vea solo lo suyo. El registro no verifica el email.
+  - **Cerrado** (`AUTH_OPEN_SIGNUP=0` o vacío) — solo se puede crear la **primera** cuenta (bootstrap) y el registro se cierra en cuanto existe; las siguientes se crean con `scripts/create-user.ts`.
   - **Restringido por dominio** (SSO) — si defines `AUTH_ALLOWED_EMAIL_DOMAIN`, solo entran emails verificados de ese dominio vía Google; este modo **manda** sobre `AUTH_OPEN_SIGNUP`.
 - **`AUTH_PROVISION`**: variable interna que usa `scripts/create-user.ts` para levantar momentáneamente la restricción de registro **en el proceso del script**. Nunca la definas en un servidor desplegado: dejaría el registro abierto.
 - **Headers de seguridad**: CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` y HSTS en todas las respuestas (`next.config.ts`). El rate limiting por IP solo confía en `X-Forwarded-For` en Vercel o con `TRUST_PROXY=1` (anti-spoofing en self-hosted).

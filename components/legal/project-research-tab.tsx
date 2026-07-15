@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Search,
   Send,
@@ -10,6 +11,8 @@ import {
   Sparkles,
   FileText,
   ExternalLink,
+  Plus,
+  Check,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -136,13 +139,20 @@ function SimpleMarkdown({ text }: { text: string }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+type FollowState = 'adding' | 'added' | 'exists';
+
 export function ProjectResearchTab() {
+  const queryClient = useQueryClient();
+
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [cacheEmpty, setCacheEmpty] = useState(false);
+
+  // Boletines ya agregados a la lista del usuario desde esta sesión de búsqueda
+  const [followed, setFollowed] = useState<Record<string, FollowState>>({});
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -185,6 +195,45 @@ export function ProjectResearchTab() {
   const askAboutProject = useCallback((result: SearchResultItem) => {
     setChatInput(`Cuéntame sobre el proyecto ${result.boletin}: "${result.titulo}"`);
   }, []);
+
+  // Agregar un resultado del buscador a MI lista de proyectos (pestaña
+  // Proyectos). Si ya lo seguía, el backend responde 409 y lo marcamos igual.
+  const followProject = useCallback(async (result: SearchResultItem) => {
+    if (followed[result.boletin]) return;
+    setFollowed((prev) => ({ ...prev, [result.boletin]: 'adding' }));
+
+    try {
+      const res = await fetch('/api/legal/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          boletin: result.boletin,
+          title: result.titulo,
+          relevance: 'MEDIUM',
+          dateIngreso: result.fechaIngreso,
+          estado: result.estado,
+          camara: result.camara,
+          autores: result.autores,
+          linkProyecto: result.url || null,
+        }),
+      });
+
+      if (res.status === 409) {
+        setFollowed((prev) => ({ ...prev, [result.boletin]: 'exists' }));
+        return;
+      }
+      if (!res.ok) throw new Error('No se pudo agregar');
+
+      setFollowed((prev) => ({ ...prev, [result.boletin]: 'added' }));
+      void queryClient.invalidateQueries({ queryKey: ['legal-projects'] });
+    } catch {
+      setFollowed((prev) => {
+        const next = { ...prev };
+        delete next[result.boletin];
+        return next;
+      });
+    }
+  }, [followed, queryClient]);
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isChatLoading) return;
@@ -423,24 +472,50 @@ export function ProjectResearchTab() {
                                     </p>
                                   )}
                                 </div>
-                                <div className="flex flex-shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                                  <button
-                                    type="button"
-                                    onClick={() => askAboutProject(r)}
-                                    className="rounded-md p-1 text-slate-400 hover:bg-cyan-50 hover:text-cyan-600 dark:hover:bg-cyan-950/30 dark:hover:text-cyan-400"
-                                    title="Preguntar al agente"
-                                  >
-                                    <Bot className="h-3.5 w-3.5" />
-                                  </button>
-                                  <a
-                                    href={r.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
-                                    title="Ver en sitio oficial"
-                                  >
-                                    <ExternalLink className="h-3.5 w-3.5" />
-                                  </a>
+                                <div className="flex flex-shrink-0 items-center gap-1">
+                                  {followed[r.boletin] === 'added' || followed[r.boletin] === 'exists'
+                                    ? (
+                                        <span
+                                          className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                                          title={followed[r.boletin] === 'exists' ? 'Ya estaba en tu lista de proyectos' : 'Agregado a tu lista de proyectos'}
+                                        >
+                                          <Check className="h-3 w-3" />
+                                          En tu lista
+                                        </span>
+                                      )
+                                    : (
+                                        <button
+                                          type="button"
+                                          onClick={() => followProject(r)}
+                                          disabled={followed[r.boletin] === 'adding'}
+                                          className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-2 py-1 text-xs font-medium text-cyan-700 transition-colors hover:bg-cyan-100 disabled:opacity-50 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-300 dark:hover:bg-cyan-900/50"
+                                          title="Agregar este proyecto a tu lista (pestaña Proyectos)"
+                                        >
+                                          {followed[r.boletin] === 'adding'
+                                            ? <RefreshCw className="h-3 w-3 animate-spin" />
+                                            : <Plus className="h-3 w-3" />}
+                                          Seguir
+                                        </button>
+                                      )}
+                                  <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                    <button
+                                      type="button"
+                                      onClick={() => askAboutProject(r)}
+                                      className="rounded-md p-1 text-slate-400 hover:bg-cyan-50 hover:text-cyan-600 dark:hover:bg-cyan-950/30 dark:hover:text-cyan-400"
+                                      title="Preguntar al agente"
+                                    >
+                                      <Bot className="h-3.5 w-3.5" />
+                                    </button>
+                                    <a
+                                      href={r.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+                                      title="Ver en sitio oficial"
+                                    >
+                                      <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
+                                  </div>
                                 </div>
                               </div>
                             </div>

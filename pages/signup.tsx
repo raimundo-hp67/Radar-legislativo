@@ -10,6 +10,7 @@ export const getServerSideProps: GetServerSideProps<{
   ssoEnabled: boolean
   allowedDomain: string
   showSignup: boolean
+  openSignup: boolean
 }> = async () => {
   const allowedDomain = env.AUTH_ALLOWED_EMAIL_DOMAIN ?? '';
 
@@ -32,12 +33,13 @@ export const getServerSideProps: GetServerSideProps<{
       ssoEnabled: isGoogleSsoEnabled,
       allowedDomain,
       showSignup,
+      openSignup: isOpenSignupEnabled,
     },
   };
 };
 
 export default function SignupPage(
-  { ssoEnabled, allowedDomain, showSignup }: InferGetServerSidePropsType<typeof getServerSideProps>,
+  { ssoEnabled, allowedDomain, showSignup, openSignup }: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) {
   const ssoAvailable = ssoEnabled && allowedDomain;
 
@@ -45,7 +47,7 @@ export default function SignupPage(
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-black">
         <div className="flex flex-col items-center gap-4">
-          <SignupForm />
+          <SignupForm openSignup={openSignup} />
         </div>
       </div>
     );
@@ -61,7 +63,7 @@ export default function SignupPage(
     ? `Si tienes una cuenta @${allowedDomain}, inicia sesión con Google y tu cuenta se creará automáticamente.`
     : allowedDomain
       ? `Esta aplicación solo admite cuentas @${allowedDomain} vía Google. Pídele a quien la administra que active el login con Google, o que te cree una cuenta corriendo "bun run scripts/create-user.ts" en su terminal.`
-      : 'Esta aplicación es de uso interno y ya tiene un usuario creado: no hay registro abierto. Pídele a quien la administra que te cree una cuenta (corriendo "bun run scripts/create-user.ts" en su terminal) y que te pase el email y la contraseña.';
+      : 'El registro está cerrado en esta instalación y ya existe una cuenta. Quien la administra puede crearte una (corriendo "bun run scripts/create-user.ts" en su terminal) o reabrir el registro poniendo AUTH_OPEN_SIGNUP=1 en el archivo .env y reiniciando la app.';
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-black">

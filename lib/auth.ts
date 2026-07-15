@@ -40,16 +40,21 @@ export async function hasAnyUser(): Promise<boolean> {
 
 /**
  * BetterAuth rejects any login/signup whose browser Origin isn't in this
- * list ("Invalid origin"). `localhost` and `127.0.0.1` are the same machine
- * but different origins for a browser — a very common trip-up when running
- * locally (`bun run dev` prints one, someone opens the other). We trust both
- * automatically so that mismatch never locks anyone out.
+ * list ("Invalid origin"). Two trip-ups muy comunes corriendo local:
+ *  - `localhost` y `127.0.0.1` son la misma máquina pero orígenes distintos
+ *    para el navegador (`bun run dev` imprime uno, alguien abre el otro);
+ *  - si el puerto 3000 está ocupado, Next salta a 3001/3002 y el origen deja
+ *    de calzar — el registro/login falla sin explicación para un no técnico.
+ * Por eso, cuando la app está configurada como LOCAL (BETTER_AUTH_URL apunta
+ * a localhost/127.0.0.1), confiamos en cualquier puerto de esta máquina. En
+ * un deploy real (https://...) no se agrega ningún comodín.
  */
 function withLocalAlias(url: string): string[] {
   try {
     const { origin, hostname } = new URL(url);
-    if (hostname === 'localhost') return [origin, origin.replace('localhost', '127.0.0.1')];
-    if (hostname === '127.0.0.1') return [origin, origin.replace('127.0.0.1', 'localhost')];
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return [origin, 'http://localhost:*', 'http://127.0.0.1:*'];
+    }
     return [origin];
   } catch {
     return [url];

@@ -16,7 +16,7 @@ Aplica al código de esta repo: la app Next.js, sus endpoints (`pages/api/`), lo
 
 El detalle vive en [README → Seguridad](./README.md#seguridad). En resumen: la app corre **local por defecto** (cada usuario puede además desplegar su propia copia en cuentas que él controla), todos los endpoints de datos exigen sesión, cada usuario solo ve sus propios proyectos y notas, hay rate limiting por usuario/IP, los crons y el polling son fail-closed en producción y las comparaciones de secretos son en tiempo constante.
 
-El registro está cerrado salvo una ventana de una sola vez: `/signup` permite crear **la primera cuenta** de una instalación nueva sin usuarios todavía, y se cierra sola apenas esa cuenta existe. Esa ventana **nunca se abre** si `AUTH_ALLOWED_EMAIL_DOMAIN` está configurado (en ese caso el único camino es SSO de dominio verificado o `scripts/create-user.ts`). Fuera de esa ventana de arranque solo hay registro abierto si el operador lo activa explícitamente con `AUTH_OPEN_SIGNUP=1` (pensado para instalaciones compartidas de equipo).
+El registro tiene dos modos, aplicados en el servidor. **Abierto** (`AUTH_OPEN_SIGNUP=1`, el valor que deja el instalador local): cualquiera que alcance la instalación crea su cuenta, y el aislamiento por usuario garantiza que solo ve lo suyo. **Cerrado** (`0` o vacío, recomendado para copias desplegadas en internet): `/signup` solo permite crear **la primera cuenta** de una instalación sin usuarios y se cierra sola apenas existe; las demás se crean con `scripts/create-user.ts`. Si `AUTH_ALLOWED_EMAIL_DOMAIN` está configurado, manda sobre ambos: solo entra SSO de dominio verificado.
 
 ## Buenas prácticas al operarlo
 

@@ -71,7 +71,7 @@ El instalador hace todo solo: levanta la base de datos, crea la configuración, 
 
 Lo primero que verás en el navegador es una pantalla para **crear tu cuenta**: escribe tu nombre, un email y una contraseña (mínimo 8 caracteres), presiona "Crear cuenta" y entras directo al portal. 🎉
 
-> 💡 Si el navegador no se abre solo (algunos computadores lo bloquean), abre tú mismo <http://localhost:3000/signup> y verás la misma pantalla de crear cuenta. Esa pantalla de registro solo aparece la primera vez, mientras la instalación no tenga ninguna cuenta; apenas creas la tuya, se cierra sola por seguridad.
+> 💡 Si el navegador no se abre solo (algunos computadores lo bloquean), abre tú mismo <http://localhost:3000/signup> y verás la misma pantalla de crear cuenta. El registro queda **abierto**: si comparten la instalación, cada colega crea su propia cuenta ahí mismo y **cada cuenta ve solo sus propios proyectos y notas**. (Si prefieres cerrarlo, pon `AUTH_OPEN_SIGNUP=0` en el archivo `.env` y reinicia la app.)
 
 ## Uso diario
 
@@ -85,7 +85,7 @@ Lo primero que verás en el navegador es una pantalla para **crear tu cuenta**: 
 
   (`dev:open` abre el navegador solo; si prefieres abrirlo tú, usa `bun run dev`.)
 
-- **Crear cuentas para colegas**: con la terminal en la carpeta del proyecto:
+- **Cuentas para colegas**: no necesitas hacer nada — cada colega entra a <http://localhost:3000/signup> (o a la dirección de la instalación compartida) y **crea su propia cuenta**. Cada cuenta ve solo sus propios proyectos y notas. Si cerraste el registro (`AUTH_OPEN_SIGNUP=0` en `.env`), créalas tú por terminal:
 
   ```bash
   bun run scripts/create-user.ts colega@email.com 'una-clave-segura' 'Nombre Colega'
@@ -165,7 +165,7 @@ No en sentido estricto: es una **revisión periódica** (cada 6 horas local, dia
 
 ## Recomendaciones de seguridad (en simple)
 
-La aplicación viene protegida por diseño: nadie puede ver nada sin usuario y contraseña, no existe el "regístrate gratis" para siempre (el formulario de creación de cuenta en `/signup` solo funciona **una vez**, para la primera cuenta de una instalación nueva, y se cierra solo apenas esa cuenta existe), y ha sido auditada. Pero la seguridad también depende de cómo la uses. Estas son las reglas de oro, sin tecnicismos:
+La aplicación viene protegida por diseño: nadie puede ver nada sin usuario y contraseña, y **cada cuenta ve únicamente sus propios proyectos y notas** — por eso el registro puede venir abierto sin riesgo (quien cree una cuenta parte con su espacio vacío, no con tu trabajo). Si igual prefieres que nadie más pueda registrarse, pon `AUTH_OPEN_SIGNUP=0` en el archivo `.env` y reinicia. Pero la seguridad también depende de cómo la uses. Estas son las reglas de oro, sin tecnicismos:
 
 ### Cuentas y contraseñas
 

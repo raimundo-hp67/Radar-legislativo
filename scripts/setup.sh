@@ -65,6 +65,18 @@ else
   echo "✓ Secreto de sesión ya configurado"
 fi
 
+# Registro de cuentas abierto por defecto: cualquiera que llegue a la app
+# puede crear SU cuenta, y cada cuenta ve solo sus propios proyectos y notas.
+# (Actualiza también .env antiguos donde la variable quedó vacía; para cerrar
+# el registro deliberadamente, pon AUTH_OPEN_SIGNUP=0 en .env.)
+if grep -q '^AUTH_OPEN_SIGNUP=$' .env; then
+  sed -i.bak "s|^AUTH_OPEN_SIGNUP=$|AUTH_OPEN_SIGNUP=1|" .env && rm -f .env.bak
+  echo "✓ Registro de cuentas abierto (cada cuenta ve solo lo suyo; AUTH_OPEN_SIGNUP=0 lo cierra)"
+elif ! grep -q '^AUTH_OPEN_SIGNUP=' .env; then
+  printf '\nAUTH_OPEN_SIGNUP=1\n' >> .env
+  echo "✓ Registro de cuentas abierto (cada cuenta ve solo lo suyo; AUTH_OPEN_SIGNUP=0 lo cierra)"
+fi
+
 # ── 2. Dependencias ───────────────────────────────────────────────────────
 say "Instalando dependencias"
 bun install

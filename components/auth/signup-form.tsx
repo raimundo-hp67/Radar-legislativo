@@ -10,12 +10,12 @@ import { Label } from '~/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
 
 /**
- * Formulario de "primera cuenta" (bootstrap): solo funciona en una
- * instalación nueva sin usuarios todavía — ver lib/auth.ts. Cualquier
- * intento posterior recibe el mensaje de error del servidor explicando que
- * ya existe una cuenta.
+ * Formulario de creación de cuenta. Con registro abierto (AUTH_OPEN_SIGNUP=1,
+ * el default del instalador) cualquiera crea la suya y ve solo sus propios
+ * datos; con registro cerrado solo funciona para la primera cuenta de una
+ * instalación nueva (bootstrap) — ver lib/auth.ts.
  */
-export function SignupForm() {
+export function SignupForm({ openSignup = false }: { openSignup?: boolean }) {
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -48,7 +48,9 @@ export function SignupForm() {
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl">Crea tu cuenta</CardTitle>
         <CardDescription>
-          Solo funciona la primera vez: crea la cuenta principal de este portal.
+          {openSignup
+            ? 'Tu espacio es privado: solo tú ves tus proyectos y notas.'
+            : 'Solo funciona la primera vez: crea la cuenta principal de este portal.'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
