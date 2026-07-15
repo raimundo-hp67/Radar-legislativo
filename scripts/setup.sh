@@ -127,25 +127,17 @@ fi
 
 # ── 6. Catálogo de proyectos de ley (buscador) ────────────────────────────
 # project_cache es el catálogo de boletines desde el que los usuarios buscan y
-# suman proyectos a su lista. El actualizador integrado va agregando los más
-# recientes solo; la carga histórica COMPLETA es lenta (10-30 min) y opcional.
-# Es idempotente y se puede retomar. SKIP_CACHE_SEED=1 lo omite sin preguntar.
-if [ "${SKIP_CACHE_SEED:-0}" != "1" ] && [ -t 0 ]; then
+# suman proyectos a su lista. La carga histórica (~2024-2026) tarda 10-30 min,
+# así que corre EN SEGUNDO PLANO mientras el abogado ya usa la app; --if-empty
+# la vuelve idempotente (si ya está cargado, no hace nada). Después, el
+# actualizador integrado va sumando los boletines nuevos solo.
+# SKIP_CACHE_SEED=1 lo omite (útil en CI).
+if [ "${SKIP_CACHE_SEED:-0}" != "1" ]; then
   say "Catálogo de proyectos de ley (buscador)"
-  echo "El buscador se llena solo con los boletines recientes mientras la app corre."
-  printf "¿Cargar además el catálogo histórico completo ahora? Es LENTO (10-30 min). [s/N] "
-  read -r cargar_cache
-  if [ "$cargar_cache" = "s" ] || [ "$cargar_cache" = "S" ]; then
-    if bun run scripts/bulk-sync.ts; then
-      echo "✓ Catálogo de boletines cargado."
-    else
-      echo "⚠ No se pudo cargar el catálogo ahora. Puedes hacerlo después con:"
-      echo "  bun run scripts/bulk-sync.ts"
-    fi
-  else
-    echo "Omitido. El buscador igual se irá llenando solo; para la carga completa:"
-    echo "  bun run scripts/bulk-sync.ts"
-  fi
+  echo "Cargando el catálogo de boletines EN SEGUNDO PLANO (10-30 min la primera vez)."
+  echo "Puedes usar la app mientras tanto: el buscador se va llenando solo."
+  echo "Avance en: .radar-catalogo.log"
+  nohup bun run scripts/bulk-sync.ts --if-empty > .radar-catalogo.log 2>&1 &
 fi
 
 # ── Listo ─────────────────────────────────────────────────────────────────

@@ -40,8 +40,8 @@ function formatDateForSenado(date: Date): string {
 
 /**
  * Poll the Senado API for every tracked project, snapshot the results,
- * detect changes and send Slack notifications. Shared by the Vercel cron,
- * the manual /api/legal/poll endpoint and the built-in auto-updater.
+ * detect changes and send Slack notifications. Shared by the manual
+ * /api/legal/poll endpoint and the built-in auto-updater.
  */
 export async function runPoll(options: RunPollOptions = {}): Promise<PollSummary> {
   const digestMode = options.digestMode ?? 'always';

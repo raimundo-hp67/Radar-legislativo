@@ -1,6 +1,7 @@
 /**
- * Service for syncing legislative projects from Senado to local cache
- * Optimized for Vercel's 10-second serverless function limit
+ * Service for syncing legislative projects from Senado to local cache.
+ * Individual requests stay short and bounded to be polite with the public
+ * Senado API; the full historical load lives in scripts/bulk-sync.ts.
  */
 
 import { db } from '~/db';
@@ -23,7 +24,7 @@ interface SenadoProjectXml {
 }
 
 // Seed boletins for the quick cache refresh — defined per-theme in
-// config/radar.config.ts (kept short to stay within serverless timeouts)
+// config/radar.config.ts (kept short so a refresh takes seconds)
 const SEED_BOLETINS = radarConfig.cacheSeedBoletines;
 
 /**
@@ -194,8 +195,8 @@ async function syncProjectsToCache(projects: SenadoProjectXml[]): Promise<{ inse
 }
 
 /**
- * Main sync function - optimized for Vercel 10s timeout
- * Fetches all boletins in parallel
+ * Quick refresh of the seed boletins (fetches them all in parallel).
+ * Use syncNewBoletines() to discover bills that entered after the last sync.
  */
 export async function syncRecentProjects(): Promise<{
   total: number
@@ -244,6 +245,72 @@ export async function syncRecentProjects(): Promise<{
     updated,
     errors: allErrors,
   };
+}
+
+/**
+ * Discover bills that entered Congress AFTER the newest boletin already in
+ * the cache. Boletin numbers are assigned sequentially, so probing forward
+ * from the highest known number finds everything new without re-scanning
+ * history. Stops after a run of consecutive misses (end of the sequence)
+ * or after maxProbes attempts, whichever comes first.
+ */
+export async function syncNewBoletines(options: { maxProbes?: number } = {}): Promise<{
+  total: number
+  inserted: number
+  updated: number
+  errors: string[]
+}> {
+  const maxProbes = options.maxProbes ?? 150;
+  const missLimit = 15;
+  const batchSize = 5;
+
+  const [row] = await db
+    .select({
+      maxBoletin: sql<number | null>`max((substring(${projectCache.boletin} from '^[0-9]+'))::int)`,
+    })
+    .from(projectCache);
+
+  const start = row?.maxBoletin ? Number(row.maxBoletin) : null;
+  if (!start) {
+    return {
+      total: 0,
+      inserted: 0,
+      updated: 0,
+      errors: ['Catálogo vacío: corre `bun run scripts/bulk-sync.ts` para la carga inicial'],
+    };
+  }
+
+  const found: SenadoProjectXml[] = [];
+  let misses = 0;
+  let probes = 0;
+  let next = start + 1;
+
+  while (probes < maxProbes && misses < missLimit) {
+    const size = Math.min(batchSize, maxProbes - probes);
+    const batch = Array.from({ length: size }, (_, i) => next + i);
+    next += size;
+    probes += size;
+
+    const results = await Promise.allSettled(batch.map((b) => fetchProjectByBoletin(String(b))));
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value) {
+        found.push(result.value);
+        misses = 0;
+      } else {
+        misses += 1;
+      }
+    }
+
+    // Small pause between batches to be polite with the public API
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+
+  if (found.length === 0) {
+    return { total: 0, inserted: 0, updated: 0, errors: [] };
+  }
+
+  const { inserted, updated, errors } = await syncProjectsToCache(found);
+  return { total: found.length, inserted, updated, errors };
 }
 
 /**

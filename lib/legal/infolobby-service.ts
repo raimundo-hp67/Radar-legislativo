@@ -142,7 +142,7 @@ async function searchSparql(searchTerm: string): Promise<InfoLobbyAudiencia[]> {
 
 /**
  * Try VirtuosoLobby API endpoint - simplified to avoid timeouts
- * Only fetches current year data to stay within Vercel time limits
+ * Only fetches current year data to keep each request short
  */
 async function searchVirtuosoApi(searchTerm: string): Promise<InfoLobbyAudiencia[]> {
   const currentYear = new Date().getFullYear();
@@ -271,7 +271,7 @@ export function getInfoLobbySearchLink(projectTitle: string): string {
 
 /**
  * Search for audiencias using multiple methods
- * Optimized for Vercel serverless function time limits (~10s)
+ * Kept short and bounded (~10s) so UI calls stay responsive
  */
 export async function fetchAndPrepareAudiencias(
   boletin: string,

@@ -60,7 +60,7 @@ export const radarConfig = {
 
   /**
    * Boletines que sincroniza el refresco rápido del cache de búsqueda
-   * (`syncRecentProjects`). Máximo ~5 para no exceder timeouts serverless;
+   * (`syncRecentProjects`). Máximo ~5 para que el refresco tome segundos;
    * la carga masiva real se hace con `bun run scripts/bulk-sync.ts`.
    */
   cacheSeedBoletines: [

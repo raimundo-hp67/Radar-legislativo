@@ -28,7 +28,7 @@ cd Radar-legislativo
 ./scripts/setup.sh
 ```
 
-El instalador hace todo solo: inicia la base de datos, crea la configuración, aplica migraciones, levanta el portal y **abre tu navegador automáticamente**. La primera vez verás una pantalla para **crear tu cuenta** (nombre, email y contraseña) ahí mismo — la llenas y entras directo. No necesitas hacer nada más en la terminal.
+El instalador hace todo solo: inicia la base de datos, crea la configuración, aplica migraciones, **descarga las audiencias de lobby y el catálogo de proyectos de ley** (el catálogo termina de cargarse en segundo plano mientras ya usas la app), levanta el portal y **abre tu navegador automáticamente**. La primera vez verás una pantalla para **crear tu cuenta** (nombre, email y contraseña) ahí mismo — la llenas y entras directo. No necesitas hacer nada más en la terminal.
 
 Para apagarla, presiona `Ctrl + C` en esa ventana. Para volver a levantarla otro día: `bun run dev:open` (o `bun run dev` si no quieres que abra el navegador solo).
 
@@ -90,10 +90,9 @@ Lo único indispensable es **Postgres** y un **secreto de sesión**. Con eso ya 
 | `LEYLOBBY_API_KEY` + `LEYLOBBY_INSTITUCIONES` | Fuente oficial de Ley de Lobby (en vez del feed público de InfoLobby) | Solicita una key en el [portal de Ley de Lobby](https://www.leylobby.gob.cl); en `LEYLOBBY_INSTITUCIONES` pon los códigos de institución separados por coma (ej: `AI060,AE001`) |
 | `AUTO_UPDATE_INTERVAL_HOURS` | Frecuencia (en horas) del actualizador automático integrado cuando corre local/self-hosted; default `6`, `0` desactiva | Es solo un número, no requiere key |
 | `LEGAL_POLL_API_KEY` | Protege `/api/legal/poll` (polling manual vía curl o cron externo) | Inventa un string aleatorio |
-| `CRON_SECRET` | Protege `/api/cron/*` en Vercel | Solo deploy en Vercel: defínelo en el dashboard del proyecto y Vercel lo envía automáticamente |
-| `ADDITIONAL_TRUSTED_ORIGINS` | Dominios extra permitidos para login (además de `BETTER_AUTH_URL`) | Solo si publicaste en más de un dominio; sin esto, entrar por una URL distinta a `BETTER_AUTH_URL` da error "Invalid origin" |
+| `ADDITIONAL_TRUSTED_ORIGINS` | Orígenes extra permitidos para login (además de `BETTER_AUTH_URL`) | Solo si abres la app desde otra dirección además de localhost (ej: `http://192.168.1.10:3000` desde otro computador de tu red); sin esto, esa URL da error "Invalid origin" |
 | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` + `AUTH_ALLOWED_EMAIL_DOMAIN` | Login con Google (SSO) — mejora de seguridad **totalmente opcional** | Ver [Google SSO (opcional)](#google-sso-opcional) |
-| `AUTH_OPEN_SIGNUP` | Registro **abierto**: cualquiera crea su cuenta con email + contraseña desde `/signup` (herramienta pública). Sin esto, solo se crea la primera cuenta y luego se cierra | Pon `1`. Se ignora si defines `AUTH_ALLOWED_EMAIL_DOMAIN` |
+| `AUTH_OPEN_SIGNUP` | Registro abierto en `/signup` para **instalaciones compartidas** (ej: un computador de la oficina): cada persona crea su cuenta y ve solo sus propios proyectos y notas. Sin esto, solo se crea la primera cuenta y luego se cierra | Pon `1`. Se ignora si defines `AUTH_ALLOWED_EMAIL_DOMAIN` |
 
 Si una variable opcional no está configurada, la funcionalidad asociada simplemente se desactiva (la app avisa, no falla).
 
@@ -147,7 +146,9 @@ Si además quieres que la gente de tu organización entre con su cuenta de Googl
 
 ### Cargar datos
 
-El instalador (`setup.sh`) ya **carga solo** las audiencias de lobby de los últimos 2 años en tu base de datos, así que la pestaña Lobby queda usable desde el primer arranque. Los demás datos son opcionales y cada script puebla una cosa distinta:
+El instalador (`setup.sh`) **carga todo solo**: las audiencias de lobby de los últimos 2 años (quedan antes del primer arranque) y el catálogo histórico de boletines para el buscador (corre en segundo plano mientras ya usas la app; avance en `.radar-catalogo.log`). No tienes que ejecutar nada a mano.
+
+Los scripts siguen disponibles por si quieres recargar o ampliar datos:
 
 ```bash
 # Proyectos de ley de ejemplo → pestaña Proyectos
@@ -155,8 +156,9 @@ El instalador (`setup.sh`) ya **carga solo** las audiencias de lobby de los últ
 bun run scripts/seed-legal-projects.ts
 bun run scripts/seed-proyectos.ts
 
-# Cache de proyectos del Senado → habilita el buscador de Investigación
-#    ⏱️ demora varios minutos (respeta la API pública); acepta rango: bulk-sync.ts 16000 17000
+# Catálogo de boletines → buscador de Investigación (el setup ya lo cargó).
+#    ⏱️ demora varios minutos (respeta la API pública); acepta rango para
+#    ampliar la historia: bulk-sync.ts 16000 17000
 bun run scripts/bulk-sync.ts
 
 # Audiencias de lobby → pestaña Lobby (el setup ya las cargó; esto es para
@@ -165,17 +167,19 @@ bun run scripts/bulk-sync.ts
 bun run scripts/sync-lobby.ts --months 24
 ```
 
-> Las audiencias quedan guardadas en tu base de datos (que funciona como caché: se ven al instante, sin volver a descargarlas) y el actualizador integrado las refresca cada pocas horas.
+> Todo queda guardado en tu base de datos (que funciona como caché: se ve al instante, sin volver a descargar) y el actualizador integrado lo refresca cada pocas horas.
 
 Tus proyectos reales los agregas por la interfaz: pestaña **Proyectos → Agregar Proyecto** (necesitas el [boletín](./docs/GLOSARIO.md#boletín)).
 
 ### ¿Los datos se actualizan solos?
 
-**Sí, en todos los escenarios:**
+**Sí.** Mientras la app esté prendida (`bun run dev`), el actualizador integrado refresca cada **6 horas** (configurable con `AUTO_UPDATE_INTERVAL_HOURS` en `.env`; `0` lo desactiva):
 
-- **Corriendo en tu computador**: mientras la app esté prendida (`bun run dev`), el actualizador integrado refresca proyectos de ley y audiencias de lobby cada **6 horas** (configurable con `AUTO_UPDATE_INTERVAL_HOURS` en `.env`; `0` lo desactiva). Además, al arrancar la app revisa si los datos están vencidos y los pone al día a los pocos minutos.
-- **Publicada en Vercel**: los cron jobs de `vercel.json` actualizan proyectos y lobby **una vez al día** (el máximo que permite el plan gratuito de Vercel).
-- **Más frecuencia en producción**: el workflow [`auto-update.yml`](./.github/workflows/auto-update.yml) llama a los endpoints de actualización **cada 6 horas desde GitHub Actions**; para activarlo solo define los secrets `APP_URL` y `CRON_SECRET` en la repo (Settings → Secrets and variables → Actions).
+- los **proyectos de ley que sigues** (detecta cambios de tramitación y manda alertas si configuraste Slack),
+- las **audiencias de lobby** recientes,
+- el **catálogo de boletines** del buscador, incluyendo los proyectos de ley **nuevos** que van entrando al Congreso (los descubre solo, a partir del último boletín conocido).
+
+Además, al arrancar la app revisa si los datos están vencidos y los pone al día a los pocos minutos.
 
 Y para forzar una actualización inmediata:
 
@@ -183,7 +187,7 @@ Y para forzar una actualización inmediata:
 |------------------------|---------------|
 | Botón de sincronizar en la pestaña **Lobby** | Audiencias de lobby |
 | `curl -X POST http://localhost:3000/api/legal/poll -H "x-api-key: $LEGAL_POLL_API_KEY"` | Proyectos en seguimiento (detecta cambios + alertas Slack) |
-| `bun run scripts/bulk-sync.ts` | Cache del buscador de proyectos del Senado |
+| `bun run scripts/bulk-sync.ts` | Catálogo del buscador de proyectos del Senado |
 
 Detalles en la [guía de instalación → ¿Los datos se actualizan solos?](./docs/INSTALACION.md#los-datos-se-actualizan-solos).
 
@@ -197,54 +201,24 @@ Con la app corriendo y sesión iniciada:
 
 ---
 
-## Ponerla en vivo (Vercel, sin servidores propios)
+## ¿Y publicarla en internet?
 
-Con esto la app queda disponible 24/7 en una URL pública, actualizándose sola cada día. Todo tiene plan gratuito.
+**Esta app está pensada para correr en tu computador**, no en un hosting público. Es una decisión deliberada: al correr local, tus notas, tus proyectos seguidos y tus usuarios **nunca salen de tu máquina**, no hay una URL pública que proteger ni cuentas de hosting de por medio. Cada abogado (o cada estudio) clona la repo y corre `bash scripts/setup.sh` — eso es todo.
 
-1. **Base de datos**: crea un Postgres gratis en [Neon](https://neon.tech) (o [Supabase](https://supabase.com)) y copia la *connection string*. Sirve la URL con pooler — la app la detecta y se configura sola.
-2. **Vercel**: en [vercel.com/new](https://vercel.com/new) importa esta repo (rama `main`) y despliega.
-3. **Env vars** (Vercel → Settings → Environment Variables):
-   - `DATABASE_URL` — la connection string del paso 1
-   - `BETTER_AUTH_SECRET` — genera uno con `openssl rand -base64 32`
-   - `BETTER_AUTH_URL` — la URL que te asignó Vercel (ej: `https://radar-legislativo.vercel.app`)
-   - `CRON_SECRET` — un string aleatorio; protege los crons y sin él no corren
-   - `AUTH_OPEN_SIGNUP=1` — **si quieres que cualquier abogado se cree su propia cuenta** desde la web (herramienta pública). Sin esto, solo tú creas la primera cuenta y el registro se cierra.
-   - las opcionales que quieras (`SLACK_WEBHOOK_URL`, `OPENAI_API_KEY`, …). Redespliega después de definirlas.
-4. **Migraciones** (desde tu computador, apuntando a la base productiva; una sola vez):
-   ```bash
-   DATABASE_URL='postgresql://...' bun run db:migrate
-   ```
-   El **primer usuario** lo creas desde la propia web: entra a `https://tu-app.vercel.app/signup` y regístrate. Con `AUTH_OPEN_SIGNUP=1` los demás abogados también se registran ahí; sin esa variable, quien más necesite cuenta la creas con `DATABASE_URL='postgresql://...' bun run scripts/create-user.ts email 'clave' 'Nombre'`.
-5. **Cargar las bases una vez** (desde tu computador, apuntando a la base productiva):
-   ```bash
-   # Audiencias de lobby (Gobierno + Diputados): ~54.000, tarda 1-2 min
-   DATABASE_URL='postgresql://...' bun run scripts/sync-lobby.ts --months 24
-   # Catálogo de proyectos de ley para el buscador (histórico): LENTO (10-30 min),
-   # es idempotente y puedes retomarlo. Rango por defecto ~2024-2026.
-   DATABASE_URL='postgresql://...' bun run scripts/bulk-sync.ts
-   ```
-   Después, los datos se mantienen solos con los crons (abajo). El catálogo de boletines es el que alimenta el buscador desde el que cada usuario suma proyectos a su lista.
-6. **Listo.** Los cron jobs de `vercel.json` actualizan la data a diario:
-   - `/api/cron/legal-poll` — 12:00 UTC (poll de proyectos seguidos + digest a Slack)
-   - `/api/cron/lobby-sync` — 07:00 UTC (audiencias de lobby)
-   - `/api/cron/cache-sync` — 08:00 UTC (catálogo de boletines para el buscador)
-7. **(Opcional) Actualización cada 6 horas**: define los secrets `APP_URL` y `CRON_SECRET` en GitHub (Settings → Secrets and variables → Actions) y el workflow [`auto-update.yml`](./.github/workflows/auto-update.yml) hará el resto.
-
-> Los endpoints de scraping declaran `maxDuration = 300` (5 min), el máximo con Fluid Compute (el default en proyectos nuevos de Vercel). Si tu proyecto es Hobby legacy sin Fluid, Vercel lo limitará a 60s en el build — suficiente salvo que sigas muchísimos proyectos.
+Si igual quisieras exponerla (por ejemplo dentro de la red de tu oficina), hazlo solo en red local: la sección de Seguridad de abajo y `ADDITIONAL_TRUSTED_ORIGINS`/`TRUST_PROXY` en `.env.example` cubren ese caso.
 
 ## Costos y privacidad
 
 **¿Cuánto cuesta operarlo?** Puede ser **$0/mes**:
 
-| Componente | Plan gratis | Notas |
-|------------|-------------|-------|
-| Hosting (Vercel Hobby) | $0 | Suficiente; cron jobs limitados a 1/día |
-| Postgres (Neon free) | $0 | ~0.5 GB, de sobra para años de datos de este tipo |
+| Componente | Costo | Notas |
+|------------|-------|-------|
+| Tu computador (app + Postgres vía Docker) | $0 | Todo corre local; sin hosting ni servicios de terceros |
 | Fuentes de datos (Senado, InfoLobby, Ley de Lobby) | $0 | APIs públicas del Estado |
 | Slack (webhook) | $0 | Cualquier workspace |
 | **OpenAI (opcional)** | ~US$0.01–0.05 por conversación | Los chats usan `gpt-4o`; pago por uso con tope configurable en tu cuenta de OpenAI. Sin key, la app funciona igual (sin chats) |
 
-**¿Dónde van los datos?** Todo lo que maneja la app (proyectos de ley, audiencias de lobby) es **información pública** del Estado de Chile; lo único propio son tus notas, prioridades y usuarios, que viven en **tu** Postgres. Dos envíos a terceros que debes conocer:
+**¿Dónde van los datos?** Todo lo que maneja la app (proyectos de ley, audiencias de lobby) es **información pública** del Estado de Chile; lo único propio son tus notas, prioridades y usuarios, que viven en **tu** Postgres local. Dos envíos a terceros que debes conocer:
 
 - Con `OPENAI_API_KEY` configurada, las conversaciones de los chats (y los datos que el agente consulta para responder) **se envían a la API de OpenAI**.
 - Con `SLACK_WEBHOOK_URL` configurada, las alertas y resúmenes **se publican en tu canal de Slack**. El agente de Investigación también puede enviar alertas a Slack si se lo pides en el chat.
@@ -256,15 +230,15 @@ Si no configuras esas keys, nada sale de tu infraestructura.
 > 🔐 ¿Instalas la app sin ser técnico? Lee las **[recomendaciones de seguridad en simple](./docs/INSTALACION.md#recomendaciones-de-seguridad-en-simple)** de la guía de instalación.
 
 - **Autenticación**: todos los endpoints de datos (`/api/legal/*`) exigen sesión (devuelven `401` sin ella). El único endpoint público es `/api/legal/health`, que solo expone conteos.
-- **Aislamiento por usuario**: cada usuario tiene su propio radar privado. Los proyectos que sigue, sus notas, prioridades y objetivos están asociados a su cuenta (`user_id`) y **solo él los ve o edita** — todos los endpoints filtran por el usuario de la sesión (incluido el chat con IA). Los datos públicos scrapeados (historial de tramitación por boletín y las audiencias de lobby) se comparten y cachean una sola vez, sin exponer nada privado. Así una instalación pública (`AUTH_OPEN_SIGNUP=1`) puede abrirse a la comunidad sin que unos vean el trabajo de otros.
-- **Rate limiting**: todos los endpoints autenticados tienen límite por usuario y ruta (100 req/min por defecto). Los endpoints caros son más estrictos: chats con IA 20 req/5 min, syncs y scrapers 5 req/10 min. Los públicos se limitan por IP (`/health` 30 req/min, `/poll` 6 req/hora). Al exceder el límite se responde `429` con header `Retry-After`. El limitador es en memoria: en serverless aplica por instancia (suficiente contra ráfagas; para límites globales estrictos usa un store compartido tipo Redis).
+- **Aislamiento por usuario**: cada usuario tiene su propio radar privado. Los proyectos que sigue, sus notas, prioridades y objetivos están asociados a su cuenta (`user_id`) y **solo él los ve o edita** — todos los endpoints filtran por el usuario de la sesión (incluido el chat con IA). Los datos públicos scrapeados (historial de tramitación por boletín y las audiencias de lobby) se comparten y cachean una sola vez, sin exponer nada privado. Así una instalación compartida (`AUTH_OPEN_SIGNUP=1`, ej: un computador de la oficina) no deja que unos vean el trabajo de otros.
+- **Rate limiting**: todos los endpoints autenticados tienen límite por usuario y ruta (100 req/min por defecto). Los endpoints caros son más estrictos: chats con IA 20 req/5 min, syncs y scrapers 5 req/10 min. Los públicos se limitan por IP (`/health` 30 req/min, `/poll` 6 req/hora). Al exceder el límite se responde `429` con header `Retry-After`.
 - **Login**: los endpoints de BetterAuth tienen su propio rate limit (20 req/min) contra fuerza bruta. El registro tiene tres modos, todos aplicados en el **servidor** (no solo en la interfaz), así que un intento directo a la API también respeta la regla:
   - **Por defecto** — solo se puede crear la **primera** cuenta (bootstrap) y el registro se cierra en cuanto existe; las siguientes se crean con `scripts/create-user.ts`.
-  - **Abierto** (`AUTH_OPEN_SIGNUP=1`) — cualquiera crea su cuenta con email + contraseña. Pensado para una herramienta **pública**; el registro no verifica el email, así que apóyate en el rate limit.
+  - **Abierto** (`AUTH_OPEN_SIGNUP=1`) — quien alcance la instalación puede crear su cuenta con email + contraseña. Pensado para una instalación **compartida** (equipo/oficina); el registro no verifica el email.
   - **Restringido por dominio** (SSO) — si defines `AUTH_ALLOWED_EMAIL_DOMAIN`, solo entran emails verificados de ese dominio vía Google; este modo **manda** sobre `AUTH_OPEN_SIGNUP`.
 - **`AUTH_PROVISION`**: variable interna que usa `scripts/create-user.ts` para levantar momentáneamente la restricción de registro **en el proceso del script**. Nunca la definas en un servidor desplegado: dejaría el registro abierto.
-- **Headers de seguridad**: CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` y HSTS en todas las respuestas (`next.config.ts`). El rate limiting por IP solo confía en `X-Forwarded-For` en Vercel o con `TRUST_PROXY=1` (anti-spoofing en self-hosted).
-- **Crons y polling fail-closed**: en producción, `/api/cron/*` rechaza todo si `CRON_SECRET` no está configurado, y `/api/legal/poll` rechaza la API key por defecto (`change-me-in-production`). Las comparaciones de secretos son en tiempo constante.
+- **Headers de seguridad**: CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` y HSTS en todas las respuestas (`next.config.ts`). El rate limiting por IP solo confía en `X-Forwarded-For` con `TRUST_PROXY=1` (anti-spoofing detrás de tu propio proxy).
+- **Polling fail-closed**: en producción, `/api/legal/poll` rechaza la API key por defecto (`change-me-in-production`). Las comparaciones de secretos son en tiempo constante.
 
 ## Fuentes de datos
 

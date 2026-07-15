@@ -10,9 +10,6 @@ import {
   searchByBoletin,
 } from '~/lib/legal/project-search';
 
-// Vercel: allow up to 60s for tool calls + streaming
-export const maxDuration = 60;
-
 export const config = {
   api: {
     bodyParser: true,

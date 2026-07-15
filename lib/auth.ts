@@ -86,8 +86,7 @@ export const auth = betterAuth({
         },
       }
     : {}),
-  // Throttle auth endpoints (login brute force, signup spam). In-memory store;
-  // per-instance on serverless, which still blunts single-source bursts.
+  // Throttle auth endpoints (login brute force, signup spam). In-memory store.
   rateLimit: {
     enabled: true,
     window: 60,

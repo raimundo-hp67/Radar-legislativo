@@ -8,6 +8,8 @@
  * Uso:
  *   bun run scripts/bulk-sync.ts                  # rango por defecto (17000-18500, ~2024-2026)
  *   bun run scripts/bulk-sync.ts 16000 17000      # rango de boletines a elección
+ *   bun run scripts/bulk-sync.ts --if-empty       # no hace nada si el catálogo ya está cargado
+ *                                                 # (lo usa el instalador para ser idempotente)
  */
 
 import postgres from 'postgres';
@@ -253,16 +255,38 @@ async function bulkSync(startBoletin: number, endBoletin: number) {
 }
 
 // Rango por CLI o default 2024-2026 (aprox. boletines 17000-18500)
-const start = Number(process.argv[2] ?? 17000);
-const end = Number(process.argv[3] ?? 18500);
+const flags = process.argv.slice(2).filter((a) => a.startsWith('--'));
+const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+const ifEmpty = flags.includes('--if-empty');
+
+const start = Number(positional[0] ?? 17000);
+const end = Number(positional[1] ?? 18500);
 
 if (!Number.isInteger(start) || !Number.isInteger(end) || start >= end) {
-  console.error('Uso: bun run scripts/bulk-sync.ts [inicio] [fin]   (ej: 17000 18500)');
+  console.error('Uso: bun run scripts/bulk-sync.ts [inicio] [fin] [--if-empty]   (ej: 17000 18500)');
   process.exit(1);
 }
 
-const estimatedMinutes = Math.max(1, Math.round(((end - start) / 10) * 0.5 / 60 * 3));
-console.log(`Rango de boletines: ${start}-${end} (~${end - start} boletines)`);
-console.log(`⏱️  Duración estimada: ~${estimatedMinutes} minutos. Puedes interrumpir con Ctrl+C y retomar después.\n`);
+// Con --if-empty, un catálogo ya poblado significa "nada que hacer": permite
+// que el instalador lance este script en cada corrida sin recargar todo.
+const ALREADY_LOADED_THRESHOLD = 500;
 
-bulkSync(start, end);
+async function main() {
+  if (ifEmpty) {
+    const [{ count }] = await sql`SELECT COUNT(*) as count FROM project_cache`;
+    if (Number(count) >= ALREADY_LOADED_THRESHOLD) {
+      console.log(`✓ Catálogo ya cargado (${count} boletines) — nada que hacer.`);
+      console.log('  (La app va agregando los boletines nuevos sola mientras corre.)');
+      await sql.end();
+      return;
+    }
+  }
+
+  const estimatedMinutes = Math.max(1, Math.round(((end - start) / 10) * 0.5 / 60 * 3));
+  console.log(`Rango de boletines: ${start}-${end} (~${end - start} boletines)`);
+  console.log(`⏱️  Duración estimada: ~${estimatedMinutes} minutos. Puedes interrumpir con Ctrl+C y retomar después.\n`);
+
+  await bulkSync(start, end);
+}
+
+main();

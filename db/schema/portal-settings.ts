@@ -2,8 +2,8 @@ import { pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 /**
  * Personalización del portal (una sola fila).
- * logoDataUrl guarda el logo subido como data URI (base64) — así funciona
- * igual en local y en serverless, sin necesitar storage de archivos.
+ * logoDataUrl guarda el logo subido como data URI (base64) — así vive en la
+ * base de datos junto a todo lo demás, sin necesitar storage de archivos.
  */
 export const portalSettings = pgTable('portal_settings', {
   id: serial('id').primaryKey(),

@@ -6,9 +6,6 @@ import { protectedHandler } from '~/lib/api/protected-handler';
 import { fetchProjectStatus } from '~/lib/legal/congress-scraper';
 import { diffSnapshots } from '~/lib/legal/diff-engine';
 
-// Vercel: refreshing every project (fetch + 500ms delay each) can take minutes
-export const maxDuration = 300;
-
 /**
  * POST /api/legal/refresh-all
  * Fetches fresh data from the Senado API for all projects

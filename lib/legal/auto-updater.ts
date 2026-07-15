@@ -1,7 +1,7 @@
 import { env } from '~/config/env';
 import { runPoll, getLastPollDate } from '~/lib/legal/poll-runner';
 import { syncLobby } from '~/lib/legal/infolobby-service';
-import { syncRecentProjects } from '~/lib/legal/project-cache-sync';
+import { syncRecentProjects, syncNewBoletines } from '~/lib/legal/project-cache-sync';
 
 // Re-check twice per hour; actual work only happens when the configured
 // interval has elapsed since the last update.
@@ -16,11 +16,9 @@ declare global {
 }
 
 /**
- * Built-in scheduler for self-hosted / local runs: while the app is running,
- * it refreshes bill projects and lobby audiencias every
+ * Built-in scheduler: while the app is running, it refreshes tracked bill
+ * projects, lobby audiencias and the bill catalog every
  * AUTO_UPDATE_INTERVAL_HOURS hours (0 disables it).
- *
- * Not used on Vercel, where the cron jobs in vercel.json do this work.
  *
  * The bill poll is gated on the newest snapshot in the database, so
  * restarting the app doesn't re-poll if data is already fresh. Slack digests
@@ -63,7 +61,11 @@ export function startAutoUpdater(): void {
         lastCacheSyncAt = Date.now();
         console.log('[auto-update] Actualizando catálogo de boletines (buscador)…');
         const cache = await syncRecentProjects();
-        console.log(`[auto-update] Catálogo: ${cache.inserted} nuevos, ${cache.updated} actualizados`);
+        const nuevos = await syncNewBoletines();
+        console.log(
+          `[auto-update] Catálogo: ${cache.inserted + nuevos.inserted} nuevos, `
+          + `${cache.updated + nuevos.updated} actualizados`,
+        );
       }
     } catch (error) {
       console.error('[auto-update] Error:', error instanceof Error ? error.message : error);
