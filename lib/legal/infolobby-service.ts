@@ -4,6 +4,7 @@ import type { NewLobbyAudiencia } from '~/db/schema';
 import { isLeyLobbyEnabled, syncLobbyFromLeyLobby } from './leylobby-service';
 import { parseAudienciasCsv } from './infolobby-csv';
 import { syncLobbyFromCamara } from './camara-service';
+import { syncLobbyFromSenado } from './senado-service';
 
 /**
  * InfoLobby Service
@@ -417,8 +418,7 @@ export async function syncLobbyFromInfoLobby(options: {
  *      configurada (LEYLOBBY_API_KEY + LEYLOBBY_INSTITUCIONES), o el feed
  *      público de InfoLobby en su defecto.
  *   2. Cámara de Diputadas y Diputados → tabla HTML de camara.cl.
- *
- * (El Senado se sumará cuando confirmemos el formato de su API GetReuniones.)
+ *   3. Senado → API JSON web-back.senado.cl/api/transparency/audiences.
  *
  * Cada fuente falla de forma aislada: si una no responde, las demás igual se
  * sincronizan y sus totales se suman en el resultado.
@@ -438,10 +438,10 @@ export async function syncLobby(options: {
   // 1. Gobierno (InfoLobby o API oficial).
   try {
     if (isLeyLobbyEnabled()) {
-      if (options.verbose) console.log('[Lobby] Fuente 1/2: API oficial Ley de Lobby');
+      if (options.verbose) console.log('[Lobby] Fuente 1/3: API oficial Ley de Lobby');
       add(await syncLobbyFromLeyLobby(options));
     } else {
-      if (options.verbose) console.log('[Lobby] Fuente 1/2: feed público InfoLobby');
+      if (options.verbose) console.log('[Lobby] Fuente 1/3: feed público InfoLobby');
       add(await syncLobbyFromInfoLobby(options));
     }
   } catch (error) {
@@ -450,8 +450,12 @@ export async function syncLobby(options: {
   }
 
   // 2. Cámara de Diputados (no lanza; se omite sola si Cloudflare bloquea).
-  if (options.verbose) console.log('[Lobby] Fuente 2/2: Cámara de Diputados');
+  if (options.verbose) console.log('[Lobby] Fuente 2/3: Cámara de Diputados');
   add(await syncLobbyFromCamara(options));
+
+  // 3. Senado (no lanza; se omite sola si su API no responde).
+  if (options.verbose) console.log('[Lobby] Fuente 3/3: Senado');
+  add(await syncLobbyFromSenado(options));
 
   if (options.verbose) {
     console.log(`[Lobby] Total combinado — insertadas: ${total.inserted}, existentes: ${total.skipped}, errores: ${total.errors}`);

@@ -126,8 +126,8 @@ fi
 # SKIP_LOBBY_SEED=1 lo omite (útil en CI para no bajar ~10 MB en cada build).
 if [ "${SKIP_LOBBY_SEED:-0}" != "1" ]; then
   say "Audiencias de lobby (histórico)"
-  echo "Descargando audiencias de los últimos 2 años desde InfoLobby…"
-  echo "(es una sola vez y puede tardar 1-2 minutos)"
+  echo "Descargando audiencias de los últimos 2 años (Gobierno, Cámara y Senado)…"
+  echo "(es una sola vez y puede tardar 3-6 minutos)"
   if bun run scripts/sync-lobby.ts --months 24; then
     echo "✓ Audiencias de lobby cargadas en tu base de datos."
   else

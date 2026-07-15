@@ -39,7 +39,7 @@ Para apagarla, presiona `Ctrl + C` en esa ventana. Para volver a levantarla otro
 ## Funcionalidades
 
 - **Radar legislativo**: seguimiento de proyectos de ley por boletín, con estado, etapa, urgencia, comisión y detección automática de cambios (snapshots + diff).
-- **Lobby**: sincronización de audiencias de lobby desde la API oficial de [Ley de Lobby](https://www.leylobby.gob.cl) (o el feed público de InfoLobby como fallback), con explorador, analytics y cruces institución ↔ organización/persona ("¿quién se reúne con quién?").
+- **Lobby**: sincronización de audiencias de lobby desde **tres fuentes** — Gobierno (API oficial de [Ley de Lobby](https://www.leylobby.gob.cl) o el feed público de InfoLobby), **Cámara de Diputadas y Diputados** y **Senado** — con explorador, analytics y cruces institución ↔ organización/persona ("¿quién se reúne con quién?").
 - **Alertas**: notificaciones a Slack ante cambios en proyectos de alta prioridad y nuevas audiencias en las instituciones que tú vigiles, más un resumen periódico.
 - **Investigación**: agentes de chat (OpenAI) para analizar proyectos y audiencias en lenguaje natural.
 
@@ -226,7 +226,7 @@ Por defecto la app corre en tu computador. Pero si quieres que **tu** radar est�
    El **primer usuario** lo creas desde la propia web: entra a `https://tu-app.vercel.app/signup` y regístrate.
 5. **Cargar las bases una vez** (desde tu computador, apuntando a tu base productiva):
    ```bash
-   # Audiencias de lobby (Gobierno + Diputados): ~54.000, tarda 1-2 min
+   # Audiencias de lobby (Gobierno + Diputados + Senado): tarda unos minutos
    DATABASE_URL='postgresql://...' bun run scripts/sync-lobby.ts --months 24
    # Catálogo de boletines para el buscador: LENTO (10-30 min), idempotente y retomable
    DATABASE_URL='postgresql://...' bun run scripts/bulk-sync.ts
@@ -277,6 +277,8 @@ Si no configuras esas keys, nada sale de tu infraestructura.
 
 - [Senado de Chile — tramitación de proyectos](https://tramitacion.senado.cl) (API XML pública, sin key)
 - [Ley de Lobby](https://www.leylobby.gob.cl) (API oficial, con key) / [InfoLobby](https://www.infolobby.cl) (feed público, sin key)
+- [Cámara de Diputadas y Diputados — audiencias de lobby](https://www.camara.cl/transparencia/listadodeaudiencias.aspx) (tabla pública, sin key)
+- [Senado — audiencias de lobby](https://www.senado.cl/transparencia/lobby/registros-de-audiencias) (API JSON pública, sin key)
 
 ## Licencia
 

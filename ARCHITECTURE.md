@@ -93,7 +93,9 @@ sequenceDiagram
 ### 2. Sincronización de lobby
 
 - `lib/legal/leylobby-service.ts`: API oficial (requiere `LEYLOBBY_API_KEY` + códigos de institución).
-- `lib/legal/infolobby-service.ts`: feed público de InfoLobby (fallback sin key).
+- `lib/legal/infolobby-service.ts`: feed público de InfoLobby (fallback sin key) y orquestador `syncLobby` que combina las tres fuentes.
+- `lib/legal/camara-lobby.ts` + `camara-service.ts`: tabla HTML de camara.cl (audiencias de diputados/as).
+- `lib/legal/senado-lobby.ts` + `senado-service.ts`: API JSON `web-back.senado.cl/api/transparency/audiences` (audiencias de senadores/as).
 - Entradas: auto-updater integrado (mismo ciclo que el poll), cron `/api/cron/lobby-sync` (deploy en Vercel, diario), botón de sincronizar en la pestaña Lobby, o `bun run scripts/sync-lobby.ts` (el instalador lo corre solo con `--months 24`).
 - Si una audiencia nueva involucra alguna de las instituciones vigiladas (configurables en `config/radar.config.ts` → `lobbyWatchKeywords`), se notifica a Slack.
 - La pestaña Cruces (`/api/legal/lobby/crossref`) cruza **instituciones (sujeto pasivo) ↔ organizaciones/personas (sujeto activo)**: responde "¿quién se reúne con quién y cuántas veces?". No cruza contra proyectos de ley.
