@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Users, Building2, Calendar, MapPin, MessageSquare, ExternalLink, Briefcase } from 'lucide-react';
 import { Button } from '~/components/ui/button';
@@ -182,8 +183,13 @@ export function LobbyTab({ boletin, projectTitle }: LobbyTabProps) {
 }
 
 function AudienciaCard({ audiencia }: { audiencia: LobbyAudiencia }) {
+  const router = useRouter();
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+    <div
+      onClick={() => router.push(`/legal/lobby/${audiencia.id}`)}
+      title="Ver el detalle de esta audiencia"
+      className="cursor-pointer rounded-lg border bg-white p-4 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           {/* Header with date and type */}
@@ -270,6 +276,7 @@ function AudienciaCard({ audiencia }: { audiencia: LobbyAudiencia }) {
             href={audiencia.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="shrink-0 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             title="Ver en InfoLobby"
           >

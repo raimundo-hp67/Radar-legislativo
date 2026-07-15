@@ -110,7 +110,16 @@ export default function LegalDashboard(
   const [viewMode, setViewMode] = useViewMode();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [activeTab, setActiveTab] = useState<DashboardTab>('inicio');
+  // Permite llegar directo a una pestaña vía /legal?tab=lobby (lo usan los
+  // enlaces "volver" de las páginas de detalle). La URL manda hasta que el
+  // usuario hace clic en otra pestaña; entonces manda el clic.
+  const [clickedTab, setClickedTab] = useState<DashboardTab | null>(null);
+  const queryTab = typeof router.query.tab === 'string'
+    && ['inicio', 'proyectos', 'lobby', 'investigacion'].includes(router.query.tab)
+    ? (router.query.tab as DashboardTab)
+    : null;
+  const activeTab: DashboardTab = clickedTab ?? queryTab ?? 'inicio';
+  const setActiveTab = (tab: DashboardTab) => setClickedTab(tab);
 
   const { data: projects, isLoading } = useQuery({
     queryKey: ['legal-projects'],

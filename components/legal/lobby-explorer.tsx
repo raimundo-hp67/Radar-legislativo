@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import { useQuery } from '@tanstack/react-query';
 import {
   Search, ExternalLink, Building2, User, Calendar,
@@ -44,6 +45,7 @@ const PAGE_SIZE = 15;
 const LEYLOBBY_INSTITUCIONES_URL = 'https://www.leylobby.gob.cl/instituciones';
 
 export function LobbyExplorer() {
+  const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [institution, setInstitution] = useState('all');
   const [cargo, setCargo] = useState('all');
@@ -262,7 +264,9 @@ export function LobbyExplorer() {
                       {audiencias.map((a) => (
                         <tr
                           key={a.id}
-                          className="border-b border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800/70 dark:hover:bg-slate-800/40"
+                          onClick={() => router.push(`/legal/lobby/${a.id}`)}
+                          title="Ver el detalle de esta audiencia"
+                          className="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800/70 dark:hover:bg-slate-800/40"
                         >
                           <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-600 dark:text-slate-400">
                             <div className="flex items-center gap-1.5">
@@ -299,10 +303,11 @@ export function LobbyExplorer() {
                           </td>
                           <td className="px-3 py-2.5">
                             <a
-                              href={LEYLOBBY_INSTITUCIONES_URL}
+                              href={a.sourceUrl || LEYLOBBY_INSTITUCIONES_URL}
                               target="_blank"
                               rel="noopener noreferrer"
-                              title="Abrir el registro oficial de instituciones en leylobby.gob.cl"
+                              onClick={(e) => e.stopPropagation()}
+                              title={a.sourceUrl ? 'Abrir el registro en la fuente oficial' : 'Abrir el registro oficial de instituciones en leylobby.gob.cl'}
                               className="text-cyan-500 hover:text-cyan-700"
                             >
                               <ExternalLink className="h-3.5 w-3.5" />

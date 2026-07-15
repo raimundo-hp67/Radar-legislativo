@@ -44,6 +44,13 @@ type SortableHeaderProps = {
 
 const RELEVANCE_ORDER = { HIGH: 0, MEDIUM: 1, LOW: 2 };
 
+// Estado a mostrar: manda la última consulta al Senado (snapshot); el campo
+// estático `estado` (fijado al crear el proyecto o por seeds) es solo fallback.
+// Así todas las filas usan la misma nomenclatura oficial de tramitación.
+function displayEstado(project: ExtendedProject): string {
+  return project.latestSnapshot?.stage || project.estado || '—';
+}
+
 function SortIcon({ field, sortField, sortDirection }: { field: SortField, sortField: SortField, sortDirection: SortDirection }) {
   if (sortField !== field) {
     return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
@@ -108,7 +115,7 @@ export function ProjectTable({ projects, onDelete, viewMode = 'basic' }: Project
             - (RELEVANCE_ORDER[b.relevance as keyof typeof RELEVANCE_ORDER] || 2);
           break;
         case 'estado':
-          comparison = (a.estado || '').localeCompare(b.estado || '');
+          comparison = displayEstado(a).localeCompare(displayEstado(b));
           break;
         case 'dateIngreso':
           comparison = (a.dateIngreso || '').localeCompare(b.dateIngreso || '');
@@ -215,7 +222,7 @@ export function ProjectTable({ projects, onDelete, viewMode = 'basic' }: Project
           </TableHeader>
           <TableBody>
             {sortedProjects.map((project) => {
-              const estado = project.estado || project.latestSnapshot?.stage || '—';
+              const estado = displayEstado(project);
               return (
                 <TableRow key={project.id} className={cn(project.hasRecentChanges && 'bg-yellow-50 dark:bg-yellow-950/20')}>
                   {renderBoletinCell(project)}

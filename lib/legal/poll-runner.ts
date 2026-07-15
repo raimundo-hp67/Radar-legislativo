@@ -150,6 +150,24 @@ export async function runPoll(options: RunPollOptions = {}): Promise<PollSummary
         })
         .returning();
 
+      // Sincronizar los campos visibles de TODOS los proyectos que siguen
+      // este boletín (de cualquier usuario: el dato scrapeado es compartido).
+      // Sin esto, la columna Estado queda congelada con el valor de creación.
+      await db
+        .update(legalProjects)
+        .set({
+          ...(scrapedData.stage
+            ? { estado: scrapedData.stage.charAt(0).toUpperCase() + scrapedData.stage.slice(1) }
+            : {}),
+          ...(scrapedData.chamberCurrent
+            ? { camara: scrapedData.chamberCurrent.includes('Diputados') ? 'Diputados' : 'Senado' }
+            : {}),
+          ...(scrapedData.urgency ? { urgencia: scrapedData.urgency } : {}),
+          ...(scrapedData.commission ? { comision: scrapedData.commission } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(legalProjects.boletin, project.boletin));
+
       const result: PollResult = {
         boletin: project.boletin,
         title: project.title,

@@ -63,6 +63,24 @@ export default protectedHandler(async (req, res: NextApiResponse, session) => {
       })
       .returning();
 
+    // Sincronizar los campos visibles del proyecto con lo recién scrapeado
+    // (antes solo se guardaba el snapshot y la columna Estado quedaba
+    // congelada con el valor de cuando se creó el proyecto).
+    await db
+      .update(legalProjects)
+      .set({
+        ...(scrapedData.stage
+          ? { estado: scrapedData.stage.charAt(0).toUpperCase() + scrapedData.stage.slice(1) }
+          : {}),
+        ...(scrapedData.chamberCurrent
+          ? { camara: scrapedData.chamberCurrent.includes('Diputados') ? 'Diputados' : 'Senado' }
+          : {}),
+        ...(scrapedData.urgency ? { urgencia: scrapedData.urgency } : {}),
+        ...(scrapedData.commission ? { comision: scrapedData.commission } : {}),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(legalProjects.id, id), eq(legalProjects.userId, session.user.id)));
+
     // Update notes with summary if empty
     if (!project.notes) {
       const parts = [];

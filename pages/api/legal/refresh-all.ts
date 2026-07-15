@@ -65,24 +65,27 @@ export default protectedHandler(async (req, res: NextApiResponse, session) => {
           changesDetected: changes.length > 0 ? changes : null,
         });
 
-      // Update project fields from scraped data (only if currently empty)
+      // Update project fields from scraped data. Se SOBRESCRIBE siempre que
+      // el Senado entregue un valor: si solo se rellenaran campos vacíos, un
+      // estado fijado a mano (o por los seeds) quedaría desactualizado para
+      // siempre aunque el proyecto avance de trámite.
       const updateData: Record<string, unknown> = { updatedAt: new Date() };
       let fieldsUpdated = false;
 
-      if (!project.estado && scrapedData.stage) {
+      if (scrapedData.stage) {
         // Capitalize first letter
         updateData.estado = scrapedData.stage.charAt(0).toUpperCase() + scrapedData.stage.slice(1);
         fieldsUpdated = true;
       }
-      if (!project.camara && scrapedData.chamberCurrent) {
+      if (scrapedData.chamberCurrent) {
         updateData.camara = scrapedData.chamberCurrent.includes('Diputados') ? 'Diputados' : 'Senado';
         fieldsUpdated = true;
       }
-      if (!project.urgencia && scrapedData.urgency) {
+      if (scrapedData.urgency) {
         updateData.urgencia = scrapedData.urgency;
         fieldsUpdated = true;
       }
-      if (!project.comision && scrapedData.commission) {
+      if (scrapedData.commission) {
         updateData.comision = scrapedData.commission;
         fieldsUpdated = true;
       }
