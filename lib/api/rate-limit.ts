@@ -3,10 +3,10 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 /**
  * In-memory fixed-window rate limiter.
  *
- * Limitation: state lives in the process, so counters reset on restart and
- * are per-process. For a single long-lived local server (this app's model)
- * that's exactly what's needed; strict global limits across many processes
- * would need a shared store (e.g. Redis).
+ * Limitation: state lives in the process, so on serverless platforms each
+ * instance keeps its own counters. That still throttles bursts against a
+ * single instance (the common abuse pattern), but for strict global limits
+ * across many instances you'd need a shared store (e.g. Redis).
  */
 
 type WindowEntry = {
@@ -62,12 +62,12 @@ export function rateLimit(key: string, options: RateLimitOptions): RateLimitResu
 
 /**
  * Best-effort client IP. x-forwarded-for is attacker-controlled unless a
- * trusted proxy rewrites it, so it is only honored when the operator sets
- * TRUST_PROXY=1 behind their own proxy (nginx, Caddy). Otherwise the socket
- * address is used, so spoofed headers can't reset IP rate limits.
+ * trusted proxy rewrites it, so it is only honored on Vercel (which does)
+ * or when the operator sets TRUST_PROXY=1 behind their own proxy. Otherwise
+ * the socket address is used, so spoofed headers can't reset IP rate limits.
  */
 export function getClientIp(req: NextApiRequest): string {
-  const trustProxy = process.env.TRUST_PROXY === '1';
+  const trustProxy = Boolean(process.env.VERCEL) || process.env.TRUST_PROXY === '1';
   if (trustProxy) {
     const forwarded = req.headers['x-forwarded-for'];
     if (typeof forwarded === 'string' && forwarded.length > 0) {

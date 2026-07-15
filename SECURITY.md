@@ -10,11 +10,11 @@ Incluye pasos para reproducir y el impacto que observaste. Respondemos tan pront
 
 ## Alcance
 
-Aplica al código de esta repo: la app Next.js, sus endpoints (`pages/api/`) y los scripts (`scripts/`). Las plataformas externas (Slack, OpenAI, APIs del Estado) tienen sus propios programas.
+Aplica al código de esta repo: la app Next.js, sus endpoints (`pages/api/`), los scripts (`scripts/`) y la configuración de deploy incluida. Las plataformas externas (Vercel, Neon, Slack, OpenAI, APIs del Estado) tienen sus propios programas.
 
 ## Diseño de seguridad actual
 
-El detalle vive en [README → Seguridad](./README.md#seguridad). En resumen: la app está diseñada para correr **local** (los datos nunca salen de tu máquina salvo que conectes Slack/OpenAI), todos los endpoints de datos exigen sesión, cada usuario solo ve sus propios proyectos y notas, hay rate limiting por usuario/IP, el polling es fail-closed en producción y las comparaciones de secretos son en tiempo constante.
+El detalle vive en [README → Seguridad](./README.md#seguridad). En resumen: la app corre **local por defecto** (cada usuario puede además desplegar su propia copia en cuentas que él controla), todos los endpoints de datos exigen sesión, cada usuario solo ve sus propios proyectos y notas, hay rate limiting por usuario/IP, los crons y el polling son fail-closed en producción y las comparaciones de secretos son en tiempo constante.
 
 El registro está cerrado salvo una ventana de una sola vez: `/signup` permite crear **la primera cuenta** de una instalación nueva sin usuarios todavía, y se cierra sola apenas esa cuenta existe. Esa ventana **nunca se abre** si `AUTH_ALLOWED_EMAIL_DOMAIN` está configurado (en ese caso el único camino es SSO de dominio verificado o `scripts/create-user.ts`). Fuera de esa ventana de arranque solo hay registro abierto si el operador lo activa explícitamente con `AUTH_OPEN_SIGNUP=1` (pensado para instalaciones compartidas de equipo).
 
@@ -22,5 +22,6 @@ El registro está cerrado salvo una ventana de una sola vez: `/signup` permite c
 
 - Nunca definas `AUTH_PROVISION` fuera del proceso de `scripts/create-user.ts`.
 - Si expones la app fuera de localhost, cambia `LEGAL_POLL_API_KEY` (el valor de fábrica se rechaza en producción).
+- Si despliegas tu propia copia en Vercel, define `CRON_SECRET`; sin él los crons rechazan todo.
 - No compartas tu `.env` ni lo subas a git (ya está en `.gitignore`).
-- Si compartes una instalación nueva con más gente (ej: en la red de la oficina), crea tu cuenta vía `/signup` o `create-user.ts` **antes** de compartir la dirección — la ventana de bootstrap la gana quien llegue primero.
+- Si compartes una instalación nueva con más gente (red de la oficina o tu copia desplegada), crea tu cuenta vía `/signup` o `create-user.ts` **antes** de compartir la dirección — la ventana de bootstrap la gana quien llegue primero.

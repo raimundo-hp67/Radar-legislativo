@@ -19,7 +19,7 @@ flowchart LR
     subgraph App["Next.js (portal + API)"]
         UI[Páginas /legal]
         API[API routes /api/legal/*]
-        UPD[Auto-updater integrado<br/>cada 6h]
+        UPD[Auto-updater cada 6h<br/>o crons /api/cron/* en Vercel]
         AUTH[BetterAuth /api/auth/*]
     end
 
@@ -47,6 +47,7 @@ flowchart LR
     UPD -->|sync audiencias| LOBBY
     UPD --> DB
     UPD -.alertas.-> SLACK
+%% en un deploy en Vercel, UPD son los crons de vercel.json
     API -.chat agentes.-> OAI
 ```
 
@@ -74,7 +75,7 @@ sequenceDiagram
 
     U->>P: Agrega boletín (ej 15322-05)
     P->>DB: INSERT legal_projects
-    Note over P,S: cada 6h (auto-update) / manual
+    Note over P,S: cada 6h (auto-update) / diario (cron en Vercel) / manual
     P->>S: fetchProjectStatus(boletín)
     S-->>P: etapa, urgencia, último trámite
     P->>DB: INSERT project_snapshot + diff vs anterior
@@ -87,13 +88,13 @@ sequenceDiagram
 - Scraper: `lib/legal/congress-scraper.ts` (Senado primero, BCN como fallback; si ambos fallan **lanza error** — nunca guarda un snapshot vacío).
 - Diff: `lib/legal/diff-engine.ts` compara snapshot nuevo vs anterior campo a campo.
 - Notificaciones: `lib/legal/slack-notifier.ts`.
-- Entradas: auto-updater integrado (`instrumentation.ts` → `lib/legal/auto-updater.ts`, cada `AUTO_UPDATE_INTERVAL_HOURS` horas), `/api/legal/poll` (manual con API key), botón "Actualizar" por proyecto (`/api/legal/projects/[id]/refresh`).
+- Entradas: auto-updater integrado (`instrumentation.ts` → `lib/legal/auto-updater.ts`, cada `AUTO_UPDATE_INTERVAL_HOURS` horas en local/self-hosted), cron `/api/cron/legal-poll` (deploy en Vercel, diario), `/api/legal/poll` (manual con API key), botón "Actualizar" por proyecto (`/api/legal/projects/[id]/refresh`).
 
 ### 2. Sincronización de lobby
 
 - `lib/legal/leylobby-service.ts`: API oficial (requiere `LEYLOBBY_API_KEY` + códigos de institución).
 - `lib/legal/infolobby-service.ts`: feed público de InfoLobby (fallback sin key).
-- Entradas: auto-updater integrado (mismo ciclo que el poll), botón de sincronizar en la pestaña Lobby, o `bun run scripts/sync-lobby.ts` (el instalador lo corre solo con `--months 24`).
+- Entradas: auto-updater integrado (mismo ciclo que el poll), cron `/api/cron/lobby-sync` (deploy en Vercel, diario), botón de sincronizar en la pestaña Lobby, o `bun run scripts/sync-lobby.ts` (el instalador lo corre solo con `--months 24`).
 - Si una audiencia nueva involucra alguna de las instituciones vigiladas (configurables en `config/radar.config.ts` → `lobbyWatchKeywords`), se notifica a Slack.
 - La pestaña Cruces (`/api/legal/lobby/crossref`) cruza **instituciones (sujeto pasivo) ↔ organizaciones/personas (sujeto activo)**: responde "¿quién se reúne con quién y cuántas veces?". No cruza contra proyectos de ley.
 
@@ -112,15 +113,16 @@ pages/
   legal/changes.tsx      ← timeline de cambios detectados
   api/legal/projects/…   ← CRUD + refresh + chat
   api/legal/lobby/…      ← búsqueda, analytics, crossref, sync, chat
+  api/cron/…             ← jobs diarios (cron de Vercel, ver vercel.json)
   api/auth/[...all].ts   ← BetterAuth (login, SSO Google)
 components/legal/        ← componentes del dashboard
 lib/legal/               ← scrapers, diff, notificaciones, servicios de lobby
-lib/api/                 ← protectedHandler (auth + rate limit), rate-limit, safe-equal
+lib/api/                 ← protectedHandler (auth + rate limit), cron-auth, rate-limit
 db/schema/               ← tablas Drizzle; migraciones generadas en drizzle/
 scripts/                 ← create-user, seeds, syncs manuales
 ```
 
-Convenciones de seguridad: **todo endpoint de datos usa `protectedHandler`** (sesión + rate limit por usuario/ruta); detalles en la sección Seguridad del README.
+Convenciones de seguridad: **todo endpoint de datos usa `protectedHandler`** (sesión + rate limit por usuario/ruta); los crons validan `CRON_SECRET` fail-closed; detalles en la sección Seguridad del README.
 
 ## Cómo se usa, paso a paso
 
@@ -131,7 +133,7 @@ El repo incluye `CLAUDE.md` / `AGENTS.md` con las convenciones del proyecto, as�
 1. **Levantar**: pídele al agente *"levanta el proyecto"* — va a correr `docker compose up -d`, `./scripts/setup.sh` (crea `.env` con secreto generado, instala deps, migra) y `bun run dev`.
 2. **Crear tu usuario**: *"créame un usuario admin@miempresa.com"* → `bun run scripts/create-user.ts admin@miempresa.com 'clave' 'Nombre'`.
 3. **Cargar proyectos**: *"agrega los boletines 15322-05 y 16821-19 al tracker con prioridad alta"* — el agente puede insertarlos vía la página `/legal/projects/new`, la API, o un seed. También puedes pedirle *"busca en el Senado proyectos sobre protección de datos y agrégalos"* (usa `scripts/bulk-sync.ts` + el buscador del cache).
-4. **Seguimiento**: la actualización automática hace el resto (cada 6h con la app corriendo); puedes forzarla con `curl -X POST /api/legal/poll -H "x-api-key: …"`.
+4. **Seguimiento**: la actualización automática hace el resto (cada 6h con la app corriendo; diaria en un deploy en Vercel); puedes forzarla con `curl -X POST /api/legal/poll -H "x-api-key: …"`.
 5. **Lobby**: *"sincroniza las audiencias de lobby"* → `bun run scripts/sync-lobby.ts`.
 
 ### Opción B: manual
@@ -146,6 +148,6 @@ Scripts sueltos si los necesitas después: `create-user.ts` (más cuentas), `syn
 
 Desde el portal: pestaña **Proyectos** para ver el radar y agregar boletines nuevos, **Lobby** para explorar audiencias, **Investigación** para el chat con IA (si configuraste OpenAI).
 
-### ¿Y producción / hosting?
+### Producción (tu propia copia en Vercel, opcional)
 
-No hay: la app está diseñada para correr **local** (computador propio o, como mucho, un equipo dentro de la red de la oficina). Es una decisión de privacidad — las notas y el radar de cada usuario nunca salen de la máquina donde se instala. El actualizador integrado cubre la actualización automática mientras la app corre, y al arrancar se pone al día solo.
+El modo por defecto es local, pero cada usuario puede desplegar **su propia copia** en su cuenta de Vercel: eso activa los crons de `vercel.json` (poll de proyectos, sync de lobby y catálogo de boletines, diarios); para más frecuencia está el workflow `.github/workflows/auto-update.yml` (cada 6h vía GitHub Actions, requiere secrets `APP_URL` y `CRON_SECRET` en el fork propio). Configura las env vars y aplica migraciones contra tu Postgres productivo; guía completa en el README. En Vercel el auto-updater integrado se desactiva solo (`instrumentation.ts`) porque los crons hacen ese trabajo.

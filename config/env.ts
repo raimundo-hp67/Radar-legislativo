@@ -5,18 +5,22 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string().optional().default('http://localhost:3000'),
   BETTER_AUTH_SECRET: z.string().min(32),
   // Extra orígenes permitidos para login además de BETTER_AUTH_URL (coma-
-  // separados). Útil si abres la app desde otra dirección además de
-  // localhost (ej: http://192.168.1.10:3000 desde otro computador de la red).
+  // separados). Útil si la app responde en más de una dirección: otro
+  // computador de tu red (http://192.168.1.10:3000) o, en un deploy, un
+  // dominio propio además del *.vercel.app asignado.
   ADDITIONAL_TRUSTED_ORIGINS: z.string().optional(),
   // Legal Tracker
   SLACK_WEBHOOK_URL: z.string().optional(),
   LEGAL_POLL_API_KEY: z.string().optional().default('change-me-in-production'),
   // Built-in auto-updater interval (hours): while the app is running it
   // refreshes projects, lobby and the bill catalog. 0 disables it.
+  // Ignored on Vercel (the cron jobs in vercel.json do this work there).
   AUTO_UPDATE_INTERVAL_HOURS: z.preprocess(
     (v) => (v === '' || v === undefined ? undefined : v),
     z.coerce.number().min(0).default(6),
   ),
+  // Vercel Cron authentication (only needed when deployed to Vercel)
+  CRON_SECRET: z.string().optional(),
   // Google SSO (OAuth). When both are set, "Continue with Google" is enabled.
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),

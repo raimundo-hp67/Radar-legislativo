@@ -90,7 +90,8 @@ Lo único indispensable es **Postgres** y un **secreto de sesión**. Con eso ya 
 | `LEYLOBBY_API_KEY` + `LEYLOBBY_INSTITUCIONES` | Fuente oficial de Ley de Lobby (en vez del feed público de InfoLobby) | Solicita una key en el [portal de Ley de Lobby](https://www.leylobby.gob.cl); en `LEYLOBBY_INSTITUCIONES` pon los códigos de institución separados por coma (ej: `AI060,AE001`) |
 | `AUTO_UPDATE_INTERVAL_HOURS` | Frecuencia (en horas) del actualizador automático integrado cuando corre local/self-hosted; default `6`, `0` desactiva | Es solo un número, no requiere key |
 | `LEGAL_POLL_API_KEY` | Protege `/api/legal/poll` (polling manual vía curl o cron externo) | Inventa un string aleatorio |
-| `ADDITIONAL_TRUSTED_ORIGINS` | Orígenes extra permitidos para login (además de `BETTER_AUTH_URL`) | Solo si abres la app desde otra dirección además de localhost (ej: `http://192.168.1.10:3000` desde otro computador de tu red); sin esto, esa URL da error "Invalid origin" |
+| `CRON_SECRET` | Protege `/api/cron/*` en un deploy en Vercel | Solo si despliegas tu propia copia en Vercel: defínelo en el dashboard del proyecto y Vercel lo envía automáticamente |
+| `ADDITIONAL_TRUSTED_ORIGINS` | Orígenes extra permitidos para login (además de `BETTER_AUTH_URL`) | Solo si abres la app desde otra dirección: otro computador de tu red (`http://192.168.1.10:3000`) o un dominio propio además del `*.vercel.app`; sin esto, esa URL da error "Invalid origin" |
 | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` + `AUTH_ALLOWED_EMAIL_DOMAIN` | Login con Google (SSO) — mejora de seguridad **totalmente opcional** | Ver [Google SSO (opcional)](#google-sso-opcional) |
 | `AUTH_OPEN_SIGNUP` | Registro abierto en `/signup` para **instalaciones compartidas** (ej: un computador de la oficina): cada persona crea su cuenta y ve solo sus propios proyectos y notas. Sin esto, solo se crea la primera cuenta y luego se cierra | Pon `1`. Se ignora si defines `AUTH_ALLOWED_EMAIL_DOMAIN` |
 
@@ -173,13 +174,17 @@ Tus proyectos reales los agregas por la interfaz: pestaña **Proyectos → Agreg
 
 ### ¿Los datos se actualizan solos?
 
-**Sí.** Mientras la app esté prendida (`bun run dev`), el actualizador integrado refresca cada **6 horas** (configurable con `AUTO_UPDATE_INTERVAL_HOURS` en `.env`; `0` lo desactiva):
+**Sí, en todos los escenarios.** Se actualiza:
 
 - los **proyectos de ley que sigues** (detecta cambios de tramitación y manda alertas si configuraste Slack),
 - las **audiencias de lobby** recientes,
 - el **catálogo de boletines** del buscador, incluyendo los proyectos de ley **nuevos** que van entrando al Congreso (los descubre solo, a partir del último boletín conocido).
 
-Además, al arrancar la app revisa si los datos están vencidos y los pone al día a los pocos minutos.
+¿Cuándo?
+
+- **Corriendo en tu computador**: mientras la app esté prendida (`bun run dev`), el actualizador integrado refresca cada **6 horas** (configurable con `AUTO_UPDATE_INTERVAL_HOURS` en `.env`; `0` lo desactiva). Además, al arrancar revisa si los datos están vencidos y los pone al día a los pocos minutos.
+- **Desplegada en tu propio Vercel**: los cron jobs de `vercel.json` hacen lo mismo **una vez al día** (el máximo del plan gratuito), sin que tu computador esté prendido. Ver [Desplegar tu propia copia](#desplegar-tu-propia-copia-en-la-nube-vercel--neon-opcional).
+- **Más frecuencia en tu deploy**: el workflow [`auto-update.yml`](./.github/workflows/auto-update.yml) llama a los endpoints de actualización **cada 6 horas desde GitHub Actions**; para activarlo define los secrets `APP_URL` y `CRON_SECRET` en tu fork (Settings → Secrets and variables → Actions).
 
 Y para forzar una actualización inmediata:
 
@@ -201,11 +206,38 @@ Con la app corriendo y sesión iniciada:
 
 ---
 
-## ¿Y publicarla en internet?
+## Desplegar tu propia copia en la nube (Vercel + Neon, opcional)
 
-**Esta app está pensada para correr en tu computador**, no en un hosting público. Es una decisión deliberada: al correr local, tus notas, tus proyectos seguidos y tus usuarios **nunca salen de tu máquina**, no hay una URL pública que proteger ni cuentas de hosting de por medio. Cada abogado (o cada estudio) clona la repo y corre `bash scripts/setup.sh` — eso es todo.
+Por defecto la app corre en tu computador. Pero si quieres que **tu** radar esté disponible 24/7 y se actualice aunque tu computador esté apagado, puedes desplegar **tu propia copia** en Vercel + Neon (ambos con plan gratuito). Importante entender el modelo: **cada abogado o estudio despliega la suya**, en su propia cuenta de Vercel y con su propia base de datos — nadie hostea nada para nadie, y tus datos quedan solo en las cuentas que tú controlas.
 
-Si igual quisieras exponerla (por ejemplo dentro de la red de tu oficina), hazlo solo en red local: la sección de Seguridad de abajo y `ADDITIONAL_TRUSTED_ORIGINS`/`TRUST_PROXY` en `.env.example` cubren ese caso.
+1. **Base de datos**: crea un Postgres gratis en [Neon](https://neon.tech) (o [Supabase](https://supabase.com)) y copia la *connection string*. Sirve la URL con pooler — la app la detecta y se configura sola.
+2. **Vercel**: haz un fork de esta repo (o usa tu clon) y en [vercel.com/new](https://vercel.com/new) impórtala (rama `main`) y despliega.
+3. **Env vars** (Vercel → Settings → Environment Variables, en Production y Preview):
+   - `DATABASE_URL` — la connection string del paso 1
+   - `BETTER_AUTH_SECRET` — genera uno con `openssl rand -base64 32`
+   - `BETTER_AUTH_URL` — la URL exacta que te asignó Vercel (ej: `https://mi-radar.vercel.app`, sin `/` final)
+   - `CRON_SECRET` — un string aleatorio; protege los crons y sin él no corren
+   - `AUTH_OPEN_SIGNUP=1` — solo si compartirás tu instancia con tu equipo y quieres que cada uno cree su cuenta (cada cuenta ve solo lo suyo). Sin esto, solo se crea la primera cuenta y el registro se cierra.
+   - las opcionales que quieras (`SLACK_WEBHOOK_URL`, `OPENAI_API_KEY`, …). **Redespliega** después de definirlas.
+4. **Migraciones** (desde tu computador, apuntando a tu base productiva; una sola vez):
+   ```bash
+   DATABASE_URL='postgresql://...' bun run db:migrate
+   ```
+   El **primer usuario** lo creas desde la propia web: entra a `https://tu-app.vercel.app/signup` y regístrate.
+5. **Cargar las bases una vez** (desde tu computador, apuntando a tu base productiva):
+   ```bash
+   # Audiencias de lobby (Gobierno + Diputados): ~54.000, tarda 1-2 min
+   DATABASE_URL='postgresql://...' bun run scripts/sync-lobby.ts --months 24
+   # Catálogo de boletines para el buscador: LENTO (10-30 min), idempotente y retomable
+   DATABASE_URL='postgresql://...' bun run scripts/bulk-sync.ts
+   ```
+6. **Listo.** Los cron jobs de `vercel.json` mantienen todo al día, a diario:
+   - `/api/cron/legal-poll` — 12:00 UTC (poll de proyectos seguidos + digest a Slack)
+   - `/api/cron/lobby-sync` — 07:00 UTC (audiencias de lobby)
+   - `/api/cron/cache-sync` — 08:00 UTC (catálogo + boletines nuevos que entran al Congreso)
+7. **(Opcional) Actualización cada 6 horas**: en tu fork define los secrets `APP_URL` y `CRON_SECRET` (GitHub → Settings → Secrets and variables → Actions) y el workflow [`auto-update.yml`](./.github/workflows/auto-update.yml) hará el resto.
+
+> Los endpoints de scraping declaran `maxDuration = 300` (5 min), el máximo con Fluid Compute (el default en proyectos nuevos de Vercel). Si tu proyecto es Hobby legacy sin Fluid, Vercel lo limitará a 60s en el build — suficiente salvo que sigas muchísimos proyectos.
 
 ## Costos y privacidad
 
@@ -213,12 +245,13 @@ Si igual quisieras exponerla (por ejemplo dentro de la red de tu oficina), hazlo
 
 | Componente | Costo | Notas |
 |------------|-------|-------|
-| Tu computador (app + Postgres vía Docker) | $0 | Todo corre local; sin hosting ni servicios de terceros |
+| Tu computador (app + Postgres vía Docker) | $0 | El modo por defecto: todo corre local |
+| Hosting propio opcional (Vercel Hobby + Neon free) | $0 | Solo si despliegas tu copia 24/7; crons limitados a 1/día y ~0.5 GB de base (de sobra) |
 | Fuentes de datos (Senado, InfoLobby, Ley de Lobby) | $0 | APIs públicas del Estado |
 | Slack (webhook) | $0 | Cualquier workspace |
 | **OpenAI (opcional)** | ~US$0.01–0.05 por conversación | Los chats usan `gpt-4o`; pago por uso con tope configurable en tu cuenta de OpenAI. Sin key, la app funciona igual (sin chats) |
 
-**¿Dónde van los datos?** Todo lo que maneja la app (proyectos de ley, audiencias de lobby) es **información pública** del Estado de Chile; lo único propio son tus notas, prioridades y usuarios, que viven en **tu** Postgres local. Dos envíos a terceros que debes conocer:
+**¿Dónde van los datos?** Todo lo que maneja la app (proyectos de ley, audiencias de lobby) es **información pública** del Estado de Chile; lo único propio son tus notas, prioridades y usuarios, que viven en **tu** Postgres (local, o el Neon de tu cuenta si desplegaste). Dos envíos a terceros que debes conocer:
 
 - Con `OPENAI_API_KEY` configurada, las conversaciones de los chats (y los datos que el agente consulta para responder) **se envían a la API de OpenAI**.
 - Con `SLACK_WEBHOOK_URL` configurada, las alertas y resúmenes **se publican en tu canal de Slack**. El agente de Investigación también puede enviar alertas a Slack si se lo pides en el chat.
@@ -231,14 +264,14 @@ Si no configuras esas keys, nada sale de tu infraestructura.
 
 - **Autenticación**: todos los endpoints de datos (`/api/legal/*`) exigen sesión (devuelven `401` sin ella). El único endpoint público es `/api/legal/health`, que solo expone conteos.
 - **Aislamiento por usuario**: cada usuario tiene su propio radar privado. Los proyectos que sigue, sus notas, prioridades y objetivos están asociados a su cuenta (`user_id`) y **solo él los ve o edita** — todos los endpoints filtran por el usuario de la sesión (incluido el chat con IA). Los datos públicos scrapeados (historial de tramitación por boletín y las audiencias de lobby) se comparten y cachean una sola vez, sin exponer nada privado. Así una instalación compartida (`AUTH_OPEN_SIGNUP=1`, ej: un computador de la oficina) no deja que unos vean el trabajo de otros.
-- **Rate limiting**: todos los endpoints autenticados tienen límite por usuario y ruta (100 req/min por defecto). Los endpoints caros son más estrictos: chats con IA 20 req/5 min, syncs y scrapers 5 req/10 min. Los públicos se limitan por IP (`/health` 30 req/min, `/poll` 6 req/hora). Al exceder el límite se responde `429` con header `Retry-After`.
+- **Rate limiting**: todos los endpoints autenticados tienen límite por usuario y ruta (100 req/min por defecto). Los endpoints caros son más estrictos: chats con IA 20 req/5 min, syncs y scrapers 5 req/10 min. Los públicos se limitan por IP (`/health` 30 req/min, `/poll` 6 req/hora). Al exceder el límite se responde `429` con header `Retry-After`. El limitador es en memoria: en serverless aplica por instancia (suficiente contra ráfagas; para límites globales estrictos usa un store compartido tipo Redis).
 - **Login**: los endpoints de BetterAuth tienen su propio rate limit (20 req/min) contra fuerza bruta. El registro tiene tres modos, todos aplicados en el **servidor** (no solo en la interfaz), así que un intento directo a la API también respeta la regla:
   - **Por defecto** — solo se puede crear la **primera** cuenta (bootstrap) y el registro se cierra en cuanto existe; las siguientes se crean con `scripts/create-user.ts`.
   - **Abierto** (`AUTH_OPEN_SIGNUP=1`) — quien alcance la instalación puede crear su cuenta con email + contraseña. Pensado para una instalación **compartida** (equipo/oficina); el registro no verifica el email.
   - **Restringido por dominio** (SSO) — si defines `AUTH_ALLOWED_EMAIL_DOMAIN`, solo entran emails verificados de ese dominio vía Google; este modo **manda** sobre `AUTH_OPEN_SIGNUP`.
 - **`AUTH_PROVISION`**: variable interna que usa `scripts/create-user.ts` para levantar momentáneamente la restricción de registro **en el proceso del script**. Nunca la definas en un servidor desplegado: dejaría el registro abierto.
-- **Headers de seguridad**: CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` y HSTS en todas las respuestas (`next.config.ts`). El rate limiting por IP solo confía en `X-Forwarded-For` con `TRUST_PROXY=1` (anti-spoofing detrás de tu propio proxy).
-- **Polling fail-closed**: en producción, `/api/legal/poll` rechaza la API key por defecto (`change-me-in-production`). Las comparaciones de secretos son en tiempo constante.
+- **Headers de seguridad**: CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` y HSTS en todas las respuestas (`next.config.ts`). El rate limiting por IP solo confía en `X-Forwarded-For` en Vercel o con `TRUST_PROXY=1` (anti-spoofing en self-hosted).
+- **Crons y polling fail-closed**: en producción, `/api/cron/*` rechaza todo si `CRON_SECRET` no está configurado, y `/api/legal/poll` rechaza la API key por defecto (`change-me-in-production`). Las comparaciones de secretos son en tiempo constante.
 
 ## Fuentes de datos
 

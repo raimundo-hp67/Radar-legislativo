@@ -16,9 +16,11 @@ declare global {
 }
 
 /**
- * Built-in scheduler: while the app is running, it refreshes tracked bill
- * projects, lobby audiencias and the bill catalog every
- * AUTO_UPDATE_INTERVAL_HOURS hours (0 disables it).
+ * Built-in scheduler for self-hosted / local runs: while the app is running,
+ * it refreshes tracked bill projects, lobby audiencias and the bill catalog
+ * every AUTO_UPDATE_INTERVAL_HOURS hours (0 disables it).
+ *
+ * Not used on Vercel, where the cron jobs in vercel.json do this work.
  *
  * The bill poll is gated on the newest snapshot in the database, so
  * restarting the app doesn't re-poll if data is already fresh. Slack digests

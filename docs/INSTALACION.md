@@ -12,6 +12,8 @@ Sí: Radar Legislativo **corre en tu propio computador** — así tus notas, tus
 
 La buena noticia: la instalación es **una sola vez** y el instalador hace prácticamente todo solo, incluyendo descargar los datos iniciales (audiencias de lobby y el catálogo de proyectos de ley).
 
+> ☁️ ¿Quieres además que **tu** radar funcione 24/7, aunque tu computador esté apagado? Puedes desplegar **tu propia copia** en la nube con cuentas gratuitas que tú controlas — ver [README → Desplegar tu propia copia](../README.md#desplegar-tu-propia-copia-en-la-nube-vercel--neon-opcional). No es obligatorio: la instalación local de esta guía es autosuficiente.
+
 ## Antes de empezar: ¿qué es "la terminal"?
 
 Varios pasos dicen "escribe esto en la terminal". La terminal es una ventana donde le das órdenes al computador escribiendo texto en vez de haciendo clic. Se abre así:
@@ -141,9 +143,23 @@ Con la aplicación corriendo (`bun run dev`):
 
 No pasa nada: los datos no se pierden ni se "vencen". La próxima vez que enciendas la app, el actualizador nota que los datos están atrasados y **se pone al día solo a los pocos minutos** (proyectos, lobby y boletines nuevos). Lo único que no existe con el computador apagado son las alertas de Slack de esos días — los cambios igual quedan registrados y los ves al volver.
 
+### Actualización 24/7 (aunque tu computador esté apagado)
+
+Si quieres que **tu** radar se actualice siempre, la opción es desplegar **tu propia copia** en la nube (tú controlas las cuentas; nadie hostea nada por ti):
+
+1. **Tu propia copia en Vercel** (recomendado). El archivo [`vercel.json`](../vercel.json) trae tres tareas programadas **diarias**: proyectos de ley (12:00 UTC), lobby (07:00 UTC) y catálogo de boletines (08:00 UTC). El paso a paso está en [README → Desplegar tu propia copia](../README.md#desplegar-tu-propia-copia-en-la-nube-vercel--neon-opcional).
+2. **GitHub Actions** (gratis, complementa lo anterior). La repo incluye [`auto-update.yml`](../.github/workflows/auto-update.yml), que llama a los endpoints de actualización **cada 6 horas**. Para activarlo, en **tu fork** ve a **Settings → Secrets and variables → Actions** y crea dos secrets: `APP_URL` (la URL de tu copia desplegada) y `CRON_SECRET` (el mismo valor que configuraste en Vercel). Sin esos secrets el workflow no hace nada.
+3. **Un cron externo** apuntando a tu instancia: cualquier servicio de tareas programadas que haga `POST /api/legal/poll` con el header `x-api-key` (definiendo un `LEGAL_POLL_API_KEY` propio). Requiere que tu copia esté accesible desde internet.
+
 ### ¿Y es "en vivo"?
 
-No en sentido estricto: es una **revisión periódica** (cada 6 horas mientras la app corre). Para este caso de uso es suficiente — la tramitación legislativa se mueve en días, no en segundos — y evita saturar la API pública del Senado.
+No en sentido estricto: es una **revisión periódica** (cada 6 horas local, diaria en un deploy en Vercel, cada 6 horas con GitHub Actions). Para este caso de uso es suficiente — la tramitación legislativa se mueve en días, no en segundos — y evita saturar la API pública del Senado.
+
+| Escenario | ¿Se actualiza sola? | Frecuencia por defecto |
+|-----------|--------------------|------------------------|
+| Corriendo en tu computador (`bun run dev`) | ✅ Sí, mientras esté prendida | Cada 6 h (`AUTO_UPDATE_INTERVAL_HOURS`) |
+| Tu copia desplegada en Vercel | ✅ Sí, 24/7 | Diaria (`vercel.json`) |
+| Tu copia + GitHub Actions | ✅ Sí, 24/7 | Cada 6 h (`auto-update.yml`) |
 
 ---
 
@@ -178,7 +194,13 @@ Dentro de la carpeta del proyecto hay un archivo llamado `.env` que contiene los
 
 - Si configuraste la IA (`OPENAI_API_KEY`), ponle un **límite de gasto mensual** en tu cuenta de OpenAI (Settings → Limits): cualquier usuario de tu instalación puede usar los chats, y los chats cuestan dinero.
 - Recuerda que con Slack/OpenAI configurados, **parte de la información viaja a esos servicios** (detalle en [README → Costos y privacidad](../README.md#costos-y-privacidad)). Sin esas keys, nada sale de tu computador.
-- La app está pensada para correr **solo en tu computador** (o como mucho en la red de tu oficina). No la publiques en internet: mantenerla local es justamente lo que garantiza que tu trabajo quede privado.
+
+### Si despliegas tu propia copia en internet (Vercel)
+
+- Usa siempre la dirección **https://** (Vercel la entrega automáticamente — nunca configures un dominio sin candado).
+- Define `CRON_SECRET` y cambia `LEGAL_POLL_API_KEY` por textos largos e impredecibles (la app **rechaza** el valor de fábrica en producción, no lo dejes pasar).
+- Crea tu cuenta en `/signup` **antes** de compartir la URL con nadie (la ventana de la primera cuenta la gana quien llegue primero).
+- Recuerda el modelo: es **tu** copia, en **tus** cuentas de Vercel y Neon. Si compartes la URL con tu equipo, activa `AUTH_OPEN_SIGNUP=1` para que cada uno tenga su cuenta (cada cuenta ve solo lo suyo).
 
 ### Mantente al día
 
@@ -221,6 +243,7 @@ y vuelve a arrancarla con `bun run dev`. Tus datos no se tocan (las migraciones 
    - Si además quieres **borrar los datos**: `docker compose down -v` (destruye el respaldo automático — haz un `pg_dump` antes si te importa)
 2. Borra la carpeta `Radar-legislativo`.
 3. (Opcional) Desinstala Docker Desktop y Bun como cualquier programa.
+4. Si desplegaste tu propia copia: borra el proyecto en Vercel y la base en Neon desde sus dashboards.
 
 ### Glosario
 
