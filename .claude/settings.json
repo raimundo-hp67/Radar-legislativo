@@ -1,0 +1,25 @@
+{
+  "extraKnownMarketplaces": {
+    "claude-for-legal": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-for-legal"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "commercial-legal@claude-for-legal": true,
+    "privacy-legal@claude-for-legal": true,
+    "product-legal@claude-for-legal": true,
+    "corporate-legal@claude-for-legal": true,
+    "employment-legal@claude-for-legal": true,
+    "regulatory-legal@claude-for-legal": true,
+    "ai-governance-legal@claude-for-legal": true,
+    "litigation-legal@claude-for-legal": true,
+    "law-student@claude-for-legal": true,
+    "legal-clinic@claude-for-legal": true,
+    "legal-builder-hub@claude-for-legal": true,
+    "ip-legal@claude-for-legal": true,
+    "cocounsel-legal@claude-for-legal": false
+  }
+}
