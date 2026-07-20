@@ -2,6 +2,8 @@
 
 Esta guía explica cómo instalar y usar Radar Legislativo **sin saber programar**. Si ya sabes usar una terminal, el [README](../README.md) tiene la versión corta.
 
+> 🤖 **Atajo**: si tienes Claude Code (u otro asistente de IA de código), puedes pedirle que instale todo por ti conversando — el paso a paso con el prompt listo está en **[Instalar con Claude Code](./INSTALAR-CON-CLAUDE.md)**.
+
 ## ¿De verdad necesito instalar algo?
 
 Sí: Radar Legislativo **corre en tu propio computador** — así tus notas, tus proyectos seguidos y tus usuarios nunca salen de tu máquina. Para eso necesitas tres programas gratuitos: **Docker Desktop**, **Git** y **Bun**. Esta guía te lleva de la mano por cada uno. Ninguno es opcional:

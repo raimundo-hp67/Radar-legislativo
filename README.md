@@ -34,7 +34,7 @@ Para apagarla, presiona `Ctrl + C` en esa ventana. Para volver a levantarla otro
 
 > 🧭 **¿Nunca has usado una terminal?** Sigue la **[guía de instalación paso a paso](./docs/INSTALACION.md)**, escrita para personas sin experiencia en código (incluye cómo instalar Bun, Docker y Git, y cómo mantener los datos actualizados).
 
-> 💡 Si usas un agente de código (Claude Code, Codex, Cursor), basta con pedirle *"levanta el proyecto y créame un usuario"* — el repo incluye `CLAUDE.md`/`AGENTS.md` con todo el contexto que necesita.
+> 💡 **¿Prefieres que una IA lo instale por ti?** La **[guía para instalar con Claude Code](./docs/INSTALAR-CON-CLAUDE.md)** trae el prompt listo para copiar y pegar: el asistente clona la repo, corre el instalador, resuelve los problemas y te deja en la pantalla de crear tu cuenta. Funciona también con Codex o Cursor (el repo incluye `CLAUDE.md`/`AGENTS.md` con todo el contexto que necesitan).
 
 ## Funcionalidades
 
