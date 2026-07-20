@@ -1,0 +1,4 @@
+# Revisor obligatorio de todos los Pull Requests.
+# Con la protección de rama activada ("Require review from Code Owners"),
+# GitHub exige la aprobación de esta persona antes de permitir el merge.
+* @raimundo-hp67

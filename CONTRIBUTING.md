@@ -13,6 +13,10 @@ bun run dev
 
 Requisitos: [Bun](https://bun.sh) y [Docker Desktop](https://docs.docker.com/get-docker/). Detalles en [docs/INSTALACION.md](./docs/INSTALACION.md); arquitectura y mapa del código en [ARCHITECTURE.md](./ARCHITECTURE.md); convenciones para agentes de código en [AGENTS.md](./AGENTS.md).
 
+## Cómo se aceptan los cambios
+
+Todo cambio entra por **Pull Request** desde un fork, y lo revisa y mergea el mantenedor (`@raimundo-hp67`, definido en [`.github/CODEOWNERS`](./.github/CODEOWNERS)). Nadie escribe directo en `main`. PRs pequeños y enfocados se revisan más rápido que uno gigante.
+
 ## Antes de abrir un PR
 
 El CI corre esto mismo; ahórrate la vuelta:
