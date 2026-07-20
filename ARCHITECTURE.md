@@ -59,6 +59,7 @@ flowchart LR
 | `project_snapshots` | Una fila por cada consulta al Congreso: etapa, cámara, urgencia, último trámite, y el diff `changes_detected` contra el snapshot anterior |
 | `project_cache` | Cache local del catálogo de proyectos del Senado (para el buscador y el agente de investigación) |
 | `lobby_audiencias` | Audiencias de lobby sincronizadas, con texto de búsqueda precalculado |
+| `sync_state` | Estado interno de los syncs (ej: marcador de que el histórico del Senado ya se cargó completo) |
 | `user`, `session`, `account`, `verification` | Tablas de BetterAuth |
 
 ## Flujos principales

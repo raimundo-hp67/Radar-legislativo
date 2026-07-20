@@ -16,9 +16,9 @@
  * Igual que la Cámara: NUNCA lanza; si la fuente falla, devuelve ceros y el
  * resto del sync continúa.
  */
-import { like, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '~/db';
-import { lobbyAudiencias } from '~/db/schema';
+import { lobbyAudiencias, syncState } from '~/db/schema';
 import type { NewLobbyAudiencia } from '~/db/schema';
 import {
   SENADO_AUDIENCIAS_URL,
@@ -39,6 +39,12 @@ const HARD_MAX_PAGES = 1200;
 const PAGE_DELAY_MS = 250;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Marcador en sync_state: existe solo cuando una corrida recorrió el
+// histórico completo SIN errores. Si la primera carga se interrumpe
+// (Ctrl+C, corte de luz), quedan filas parciales pero el marcador no,
+// y la siguiente corrida vuelve a recorrer todo — sin hoyos.
+const FULL_SCAN_KEY = 'senado_lobby_full_scan';
 
 async function fetchSenadoPage(page: number, attempts = 3): Promise<unknown | null> {
   const url = `${SENADO_AUDIENCIAS_URL}?per_page=10&page=${page}`;
@@ -91,20 +97,22 @@ export async function syncLobbyFromSenado(options: {
   const lastPage = Math.min(firstPage.lastPage, HARD_MAX_PAGES);
   if (verbose) console.log(`[Senado] ${firstPage.total} registros históricos en ${firstPage.lastPage} páginas`);
 
-  // Primera carga (aún no hay registros del Senado en la base): recorrer el
-  // histórico COMPLETO una única vez, sin corte adaptativo — el orden de la
-  // API no es cronológico y un corte temprano dejaría hoyos. Las corridas
-  // siguientes sí cortan apenas entran en territorio ya conocido.
-  const [{ existing }] = await db
-    .select({ existing: sql<number>`count(*)` })
-    .from(lobbyAudiencias)
-    .where(like(lobbyAudiencias.infolobbyId, 'senado:%'));
-  const streakLimit = Number(existing) > 0 ? NO_NEW_STREAK_LIMIT : Number.POSITIVE_INFINITY;
-  if (verbose && streakLimit === Number.POSITIVE_INFINITY) {
-    console.log('[Senado] Primera carga: se recorrerá el histórico completo (una sola vez).');
+  // Mientras NO exista el marcador de "histórico completo" en sync_state,
+  // recorremos TODO sin corte adaptativo — el orden de la API no es
+  // cronológico y un corte temprano dejaría hoyos. Contar filas no sirve
+  // como señal (una carga interrumpida deja filas parciales); el marcador
+  // solo se escribe cuando una corrida terminó el recorrido sin errores.
+  const [marker] = await db
+    .select({ key: syncState.key })
+    .from(syncState)
+    .where(eq(syncState.key, FULL_SCAN_KEY));
+  const streakLimit = marker ? NO_NEW_STREAK_LIMIT : Number.POSITIVE_INFINITY;
+  if (verbose && !marker) {
+    console.log('[Senado] Carga completa del histórico (se hace una sola vez; si se interrumpe, la próxima corrida la retoma desde cero).');
   }
 
   let noNewStreak = 0;
+  let cutEarly = false;
 
   for (let page = 1; page <= lastPage; page++) {
     const json = page === 1 ? firstJson : await fetchSenadoPage(page);
@@ -143,6 +151,7 @@ export async function syncLobbyFromSenado(options: {
       if (verbose) {
         console.log(`[Senado] ${streakLimit} páginas seguidas sin registros nuevos — corte en la página ${page}/${lastPage}.`);
       }
+      cutEarly = true;
       break;
     }
 
@@ -151,6 +160,24 @@ export async function syncLobbyFromSenado(options: {
     }
 
     if (page < lastPage) await sleep(PAGE_DELAY_MS);
+  }
+
+  // El marcador de histórico completo se escribe solo si el recorrido llegó
+  // al final (sin corte adaptativo) y sin páginas caídas: con errores podría
+  // haber hoyos, y preferimos repetir el recorrido en la próxima corrida.
+  if (!marker && !cutEarly && result.errors === 0) {
+    try {
+      await db
+        .insert(syncState)
+        .values({ key: FULL_SCAN_KEY, value: new Date().toISOString() })
+        .onConflictDoUpdate({
+          target: syncState.key,
+          set: { value: new Date().toISOString(), updatedAt: sql`now()` },
+        });
+      if (verbose) console.log('[Senado] Histórico completo cargado ✓ (las próximas corridas serán incrementales y rápidas).');
+    } catch (error) {
+      console.warn('[Senado] No se pudo guardar el marcador de carga completa:', error instanceof Error ? error.message : String(error));
+    }
   }
 
   if (verbose) {

@@ -5,3 +5,4 @@ export * from './schema/project-snapshots';
 export * from './schema/lobby-activities';
 export * from './schema/project-cache';
 export * from './schema/portal-settings';
+export * from './schema/sync-state';

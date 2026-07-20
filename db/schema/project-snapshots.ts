@@ -3,8 +3,10 @@ import { pgTable, serial, text, timestamp, varchar, date, jsonb, index } from 'd
 export const projectSnapshots = pgTable('project_snapshots', {
   id: serial('id').primaryKey(),
   boletin: varchar('boletin', { length: 20 }).notNull(),
-  stage: varchar('stage', { length: 100 }),
-  chamberCurrent: varchar('chamber_current', { length: 50 }),
+  // text (no varchar acotado): las etapas/cámaras scrapeadas pueden ser largas
+  // y un límite fijo hacía fallar el insert de snapshots.
+  stage: text('stage'),
+  chamberCurrent: text('chamber_current'),
   lastAction: text('last_action'),
   lastActionDate: date('last_action_date'),
   urgency: varchar('urgency', { length: 50 }),

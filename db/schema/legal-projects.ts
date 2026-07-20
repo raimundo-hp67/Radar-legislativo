@@ -10,11 +10,14 @@ export const legalProjects = pgTable('legal_projects', {
   title: text('title').notNull(),
   relevance: varchar('relevance', { length: 10 }).notNull(), // LOW, MEDIUM, HIGH
   dateIngreso: date('date_ingreso'),
-  // Manual tracking fields (editable by user)
-  estado: varchar('estado', { length: 50 }), // primer trámite, segundo trámite, etc.
-  camara: varchar('camara', { length: 50 }), // Diputados, Senado
-  urgencia: varchar('urgencia', { length: 50 }), // Simple, Suma, Inmediata, Sin urgencia
-  comision: varchar('comision', { length: 100 }), // Comisión actual
+  // Campos de seguimiento (editables, y sobrescritos por el scraper).
+  // Son text (no varchar acotado): el Congreso usa etapas largas como
+  // "Comisión Mixta por rechazo de modificaciones (Senado)" que rompían
+  // el límite de 50 caracteres en cada ciclo de actualización.
+  estado: text('estado'), // primer trámite, segundo trámite, comisión mixta…
+  camara: text('camara'), // Diputados, Senado
+  urgencia: text('urgencia'), // Simple, Suma, Inmediata, Sin urgencia
+  comision: text('comision'), // Comisión actual
   // Enhanced fields
   autores: text('autores'), // Autores/patrocinadores separados por coma
   objetivo: text('objetivo'), // Resumen/objetivo del proyecto (más prominente que notas)
